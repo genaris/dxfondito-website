@@ -1,0 +1,41 @@
+# Local environment: PHP 8.5 and MySQL 5.7, the same versions as the host.
+services:
+  api:
+    build: docker/php
+    user: "${UID:-1000}:${GID:-1000}"
+    command: php -S 0.0.0.0:8080 -t public
+    environment:
+      COMPOSER_HOME: /tmp/composer
+      DB_HOST: db
+      DB_NAME: dxfondito
+      DB_USER: dxfondito
+      DB_PASSWORD: dxfondito
+      MIGRATION_SECRET: local-secret
+    volumes:
+      - ./api:/app/api
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:5.7
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: dxfondito
+      MYSQL_USER: dxfondito
+      MYSQL_PASSWORD: dxfondito
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:3307:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -udxfondito -pdxfondito -e 'SELECT 1' dxfondito"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  db-data:

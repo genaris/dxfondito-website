@@ -1,0 +1,120 @@
+# Tests for each push and each pull request.
+# Installation on the host for each push to main, when the DEPLOY_ENABLED variable is "true".
+name: Tests and installation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    name: API tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    services:
+      # The same database version as the host.
+      db:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: dxfondito
+          MYSQL_USER: dxfondito
+          MYSQL_PASSWORD: dxfondito
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: gd, mbstring, pdo_mysql
+          coverage: none
+      - run: composer install --no-interaction --no-progress
+      - run: vendor/bin/phpunit
+      - name: Apply the migrations on MySQL 5.7
+        env:
+          DB_HOST: 127.0.0.1
+        run: |
+          cp config.example.php config.php
+          php bin/migrate.php
+          php bin/migrate.php
+
+  web:
+    name: Browser program tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  install:
+    name: Installation on the host
+    needs: [api, web]
+    if: github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: gd, mbstring, pdo_mysql
+          coverage: none
+      - name: Make the files for the host
+        env:
+          PRIVATE_PATH: ${{ vars.PRIVATE_PATH || '../../dxfondito-app' }}
+        run: tools/build.sh
+      # The private folder goes first. Thus the public entry file always finds its source files.
+      - name: Upload the private folder
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          local-dir: dist/private/
+          server-dir: ${{ vars.FTP_PRIVATE_DIR || 'dxfondito-app/' }}
+      - name: Upload the public folder
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          local-dir: dist/public/
+          server-dir: ${{ vars.FTP_PUBLIC_DIR || 'public_html/' }}

@@ -1,0 +1,15 @@
+# Build result
+/dist/
+
+# API
+/api/vendor/
+/api/config.php
+/api/storage/
+/api/.phpunit.cache/
+
+# Browser program
+node_modules/
+
+# Local files
+.env
+.DS_Store

@@ -2,7 +2,7 @@
 
 | Item    | Value      |
 | ------- | ---------- |
-| Status  | Draft 4    |
+| Status  | Draft 5    |
 | Date    | 2026-10-01 |
 
 ## 1. Purpose
@@ -40,6 +40,7 @@ The system has three parts.
 | FPDF                 | The API puts the certificate image into a PDF file.   |
 | PHPUnit              | Tests of the API.                                     |
 | Vitest               | Tests of the browser program.                         |
+| pnpm                 | Package manager for the browser program.              |
 
 The API has its own ADIF reader.
 The ADIF text format is simple, and an own reader gives a clear cause for each record that is not valid.
@@ -371,14 +372,18 @@ Thus the web server needs no rewrite rules, and each page has an address that a 
 ### 10.1 Repository
 
 ```text
-docs/        Specification and design documents
-web/         Browser program (TypeScript, Vite)
+docs/               Specification and design documents
+web/                Browser program (TypeScript, Vite, pnpm)
 api/
-  public/    Entry file of the API
-  src/       PHP source files
-  migrations/ Numbered SQL files
-  tests/     PHPUnit tests
-tools/       Scripts for the host check and the installation
+  public/           Entry file of the API
+  src/              PHP source files
+  migrations/       Numbered SQL files
+  tests/            PHPUnit tests
+  bin/              Command line scripts
+docker/             Image of the PHP container
+compose.yaml        Local environment
+tools/              Scripts for the host check, the build and the installation
+.github/workflows/  Tests and installation
 ```
 
 ### 10.2 Host
@@ -387,13 +392,16 @@ tools/       Scripts for the host check and the installation
 public_html/
   index.html, assets/    Compiled browser program
   api/index.php          Entry file of the API
-private folder/          Above public_html, not available from the web
+  api/private-path.php   Location of the private folder. The build makes this file.
+dxfondito-app/           Private folder, adjacent to public_html, not available from the web
   src/, vendor/          PHP source files and libraries
   migrations/
   storage/logs/          Original ADIF files
   storage/templates/     Template images
-  config.php             Database data and secrets
+  config.php             Database data and secrets. The developer makes this file on the host.
 ```
+
+The installation does not change `config.php` or the `storage/` folder.
 
 ### 10.3 Installation
 
@@ -414,7 +422,9 @@ GitHub Actions connects the installation to Git:
 - The FTP user name and the FTP password are secrets of the GitHub repository. They are not in the source files.
 - The workflow uses FTPS if the host has it.
 - The migration page needs a secret from `config.php`.
-- A local script does steps 3 to 5. The developer uses it when the workflow is not available.
+- `tools/build.sh` does steps 3 and 4. The workflow and the developer use the same script.
+- `tools/deploy-ftp.sh` does step 5 from the computer of the developer, when the workflow is not available.
+- The workflow uploads files only when the `DEPLOY_ENABLED` variable of the repository is `true`.
 
 ### 10.4 Local environment
 

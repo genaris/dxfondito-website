@@ -1,0 +1,33 @@
+{
+    "name": "dxfondito/api",
+    "description": "API of the DX Fondito website",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.5",
+        "ext-gd": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "DxFondito\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DxFondito\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.3"
+    }
+}
