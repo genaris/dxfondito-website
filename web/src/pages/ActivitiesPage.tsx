@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { activitySchedule, readActivities, readSeasons } from '../activities.ts'
-import type { Activity, Seasons } from '../activities.ts'
+import type { ActivitySummary, Seasons } from '../activities.ts'
 import { href, navigate } from '../router.ts'
 import { SeasonSelect } from '../SeasonSelect.tsx'
 
-type State = { kind: 'loading' } | { kind: 'ready'; activities: Activity[] } | { kind: 'error' }
+type State = { kind: 'loading' } | { kind: 'ready'; activities: ActivitySummary[] } | { kind: 'error' }
 
 /**
- * The activities of a season, the most recent first (FR-PUB-13, FR-PUB-13a).
+ * The activities of a season with at least one contact, the most recent first (FR-PUB-13, FR-PUB-13a, FR-PUB-13b).
+ * The next activities are on the home page and in the calendar of the program.
  * Without a season in the path, the page shows the current season.
  */
 export function ActivitiesPage({ season }: { season: number | null }) {
@@ -27,7 +28,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
     let active = true
     readActivities(selected)
       .then((activities) => {
-        if (active) setState({ kind: 'ready', activities })
+        if (active) setState({ kind: 'ready', activities: activities.filter((activity) => activity.contactCount > 0) })
       })
       .catch(() => {
         if (active) setState({ kind: 'error' })
@@ -51,7 +52,12 @@ export function ActivitiesPage({ season }: { season: number | null }) {
       </div>
       {state.kind === 'loading' && <p>Cargando…</p>}
       {state.kind === 'error' && <p className="error">No se pudo leer la lista de actividades.</p>}
-      {state.kind === 'ready' && state.activities.length === 0 && <p>La temporada {selected} no tiene actividades.</p>}
+      {state.kind === 'ready' && state.activities.length === 0 && (
+        <p>
+          La temporada {selected} todavía no tiene actividades con contactos. Las próximas fechas están en{' '}
+          <a href={href('/programa')}>El programa</a>.
+        </p>
+      )}
       {state.kind === 'ready' && state.activities.length > 0 && (
         <div className="table-scroll">
           <table className="table">
@@ -60,6 +66,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
                 <th>Referencia</th>
                 <th>Nombre</th>
                 <th>Fecha y horario</th>
+                <th className="number">QSOs</th>
               </tr>
             </thead>
             <tbody>
@@ -70,6 +77,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
                   </td>
                   <td>{activity.reference.name}</td>
                   <td>{activitySchedule(activity)}</td>
+                  <td className="number">{activity.contactCount}</td>
                 </tr>
               ))}
             </tbody>

@@ -34,6 +34,11 @@ export interface Activity {
   description: string | null
 }
 
+/** An activity of the list of a season, with its number of contacts (FR-PUB-13b). */
+export interface ActivitySummary extends Activity {
+  contactCount: number
+}
+
 export interface Seasons {
   current: number
   /** The newest first. */
@@ -65,8 +70,8 @@ export function readSeasons(): Promise<Seasons> {
   return apiGet<Seasons>('/seasons')
 }
 
-export function readActivities(season: number): Promise<Activity[]> {
-  return apiGet<Activity[]>(`/seasons/${season}/activities`)
+export function readActivities(season: number): Promise<ActivitySummary[]> {
+  return apiGet<ActivitySummary[]>(`/seasons/${season}/activities`)
 }
 
 /** A contact of an activity (FR-PUB-15). */

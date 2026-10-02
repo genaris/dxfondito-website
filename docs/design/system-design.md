@@ -427,7 +427,7 @@ A visitor can use the public requests.
 | ------------------------------------------------------ | ---------------------------------------------- |
 | `GET /seasons`                                         | The list of seasons and the current season.    |
 | `GET /seasons/{season}/ranking`                        | The ranking of the season, and the levels with a certificate template (`certificateLevels`). |
-| `GET /seasons/{season}/activities`                     | The activities of the season.                  |
+| `GET /seasons/{season}/activities`                     | All activities of the season, each with `contactCount`. The public list shows those with contacts (FR-PUB-13b). |
 | `GET /activities/{id}`                                 | The activity, its operators, `participantCount`, and all its `contacts` in the order of time, each with `qsl`. |
 | `GET /participants/{call}`                             | The seasons, points, activities, certificates. Each certificate has `available`: true if its level has a template for the season. Each season has all `contacts`, each with `point` (true for the first contact with the reference) and `qsl`. |
 | `GET /participants/{call}/qsl/{contactId}`             | The QSL card of one contact, as a JPEG image (D-27). The contact must be of that participant. |

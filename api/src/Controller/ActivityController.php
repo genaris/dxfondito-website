@@ -64,9 +64,14 @@ final class ActivityController
      */
     public function bySeason(array $params): Response
     {
+        $season = PathId::season($params);
+        $counts = $this->activities->contactCounts($season);
+
+        // FR-PUB-13b: the public list shows only the activities with contacts. The list of the API has all activities:
+        // the next activity and the administration need them.
         return Response::json(array_map(
-            static fn (Activity $activity): array => $activity->publicData(),
-            $this->activities->bySeason(PathId::season($params)),
+            static fn (Activity $activity): array => $activity->publicData() + ['contactCount' => $counts[$activity->id] ?? 0],
+            $this->activities->bySeason($season),
         ));
     }
 

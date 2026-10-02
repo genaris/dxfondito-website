@@ -18,6 +18,13 @@ interface ActivityStore
 
     public function find(int $id): ?Activity;
 
+    /**
+     * The number of contacts of each activity of a season with contacts (FR-PUB-13b).
+     *
+     * @return array<int, int> The number of contacts by activity id.
+     */
+    public function contactCounts(int $season): array;
+
     public function findByStart(int $referenceId, string $startDate): ?Activity;
 
     public function create(int $referenceId, int $season, string $startDate, ?string $startTime, string $endDate, ?string $endTime, ?string $description): int;

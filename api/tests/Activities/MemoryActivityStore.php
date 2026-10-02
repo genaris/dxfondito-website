@@ -62,6 +62,14 @@ final class MemoryActivityStore implements ActivityStore
         );
     }
 
+    /** @var array<int, int> */
+    public array $contactCounts = [];
+
+    public function contactCounts(int $season): array
+    {
+        return $this->contactCounts;
+    }
+
     public function findByStart(int $referenceId, string $startDate): ?Activity
     {
         foreach ($this->rows as $id => $row) {

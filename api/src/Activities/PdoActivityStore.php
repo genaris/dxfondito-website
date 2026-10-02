@@ -45,6 +45,17 @@ final class PdoActivityStore implements ActivityStore
         return $this->findOne(self::SELECT . ' WHERE a.id = ?', [$id]);
     }
 
+    public function contactCounts(int $season): array
+    {
+        $statement = ($this->pdo)()->prepare(
+            'SELECT c.activity_id, COUNT(*) FROM contacts c JOIN activities a ON a.id = c.activity_id
+             WHERE a.season = ? GROUP BY c.activity_id'
+        );
+        $statement->execute([$season]);
+
+        return array_map('intval', $statement->fetchAll(PDO::FETCH_KEY_PAIR));
+    }
+
     public function findByStart(int $referenceId, string $startDate): ?Activity
     {
         return $this->findOne(self::SELECT . ' WHERE a.reference_id = ? AND a.start_date = ?', [$referenceId, $startDate]);
