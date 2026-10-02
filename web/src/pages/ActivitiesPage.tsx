@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { activityDates, readActivities, readSeasons } from '../activities.ts'
+import { activitySchedule, readActivities, readSeasons } from '../activities.ts'
 import type { Activity, Seasons } from '../activities.ts'
 import { href, navigate } from '../router.ts'
 import { SeasonSelect } from '../SeasonSelect.tsx'
@@ -59,7 +59,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
               <tr>
                 <th>Referencia</th>
                 <th>Nombre</th>
-                <th>Fechas (UTC)</th>
+                <th>Fecha y horario</th>
               </tr>
             </thead>
             <tbody>
@@ -69,7 +69,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
                     <a href={href(`/actividad/${activity.id}`)}>{activity.reference.code}</a>
                   </td>
                   <td>{activity.reference.name}</td>
-                  <td>{activityDates(activity)}</td>
+                  <td>{activitySchedule(activity)}</td>
                 </tr>
               ))}
             </tbody>

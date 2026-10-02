@@ -46,7 +46,7 @@ final class LogServiceTest extends TestCase
         $references = new MemoryReferenceStore();
         $activities = new MemoryActivityStore($references);
         $referenceId = $references->create(1, 1, 'Hospital', null);
-        $this->activityId = $activities->create($referenceId, 2026, '2026-05-10', '2026-05-10', null);
+        $this->activityId = $activities->create($referenceId, 2026, '2026-05-10', '13:00', '2026-05-10', '20:00', null);
 
         $this->logs = new MemoryLogStore($this->users);
         $this->files = new MemoryFileStore();

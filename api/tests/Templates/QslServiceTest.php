@@ -46,7 +46,7 @@ final class QslServiceTest extends TestCase
         $references = new MemoryReferenceStore();
         $activities = new MemoryActivityStore($references);
         $this->referenceId = $references->create(1, 1, 'Hospital', null);
-        $this->activityId = $activities->create($this->referenceId, 2026, '2026-05-10', '2026-05-10', null);
+        $this->activityId = $activities->create($this->referenceId, 2026, '2026-05-10', '13:00', '2026-05-10', '20:00', null);
 
         $this->templates = new MemoryQslTemplateStore();
         $this->ranking = new MemoryRankingStore();

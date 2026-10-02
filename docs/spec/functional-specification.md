@@ -202,6 +202,10 @@ The call sign of the user identifies the account.
   The activity page shows each operator with the station call sign of the log (FR-LOG-7b), such as LU2AOG/A for a DPS activity and LU2AOG for an EFE activity.
 - **FR-ACT-3** The dates of an activity are in UTC.
 - **FR-ACT-3a** The system calculates the season from the start date and shows it.
+- **FR-ACT-3b** An activity has a start time and an end time in UTC, as well as its dates. Each activity indicates its hours: in the parks they depend on the Puesto de Salud.
+  An activity of more than one day starts at the start time of the start date and ends at the end time of the end date. The end is after the start.
+  The pages show the hours in UTC and also in the time of Argentina (UTC−3).
+  An activity that the system had before this rule shows that its hours are not confirmed, until an administrator sets them.
 - **FR-ACT-4** An administrator can create more than one activity for the same reference in the same season.
 - **FR-ACT-5** The system identifies an activity by its reference code and its start date, such as "DPS-01 (2026-05-10)".
 - **FR-ACT-5a** The system refuses two activities with the same reference and the same start date.

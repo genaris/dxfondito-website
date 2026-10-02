@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { readActivities, readSeasons } from '../activities.ts'
+import { activityHours, argentinaHours, readActivities, readSeasons } from '../activities.ts'
 import type { Activity } from '../activities.ts'
-import { levelName, longDate, nextActivity, PROGRAM, todayUtc } from '../program.ts'
+import { activityState, levelName, longDate, nextActivity, nowUtc, PROGRAM } from '../program.ts'
 import { href } from '../router.ts'
 
 /**
@@ -50,12 +50,12 @@ function NextActivityCard() {
 
   useEffect(() => {
     let active = true
-    const today = todayUtc()
+    const now = nowUtc()
     readSeasons()
       .then(async (seasons) => {
         // The next activity can be in the next season, at the end of the year.
         const lists = await Promise.all([readActivities(seasons.current), readActivities(seasons.current + 1)])
-        if (active) setState({ kind: 'ready', activity: nextActivity(lists.flat(), today) })
+        if (active) setState({ kind: 'ready', activity: nextActivity(lists.flat(), now) })
       })
       .catch(() => {
         if (active) setState({ kind: 'error' })
@@ -79,17 +79,29 @@ function NextActivityCard() {
     )
   }
 
-  const today = todayUtc()
-  const isToday = activity.startDate <= today && activity.endDate >= today
+  const onAir = activityState(activity, nowUtc())
+  const hours = activityHours(activity)
+  const localHours = argentinaHours(activity)
+  const eyebrow = { live: '¡En el aire!', today: 'Hoy', later: 'Próxima actividad' }[onAir]
   return (
-    <aside className="next-card">
-      <p className="eyebrow">{isToday ? '¡Hoy en el aire!' : 'Próxima actividad'}</p>
+    <aside className={onAir === 'live' ? 'next-card live' : 'next-card'}>
+      <p className="eyebrow">{eyebrow}</p>
       <p className="next-code">{activity.reference.code}</p>
       <h2>{activity.reference.name}</h2>
       <p className="next-date">
         {activity.startDate === activity.endDate
           ? longDate(activity.startDate)
           : `${longDate(activity.startDate)} al ${longDate(activity.endDate)}`}
+      </p>
+      <p className="next-hours">
+        {hours ? (
+          <>
+            {hours}
+            <span className="hint"> · {localHours} hora argentina</span>
+          </>
+        ) : (
+          <span className="hint">Horario a confirmar</span>
+        )}
       </p>
       {activity.description && <p className="prewrap next-description">{activity.description}</p>}
       <a href={href(`/actividad/${activity.id}`)}>Ver la actividad</a>

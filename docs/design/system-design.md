@@ -93,7 +93,9 @@ All dates and times are in UTC.
 | `reference_id` | integer        | Link to `refs`.                                    |
 | `season`       | integer        | The year of `start_date`. The API calculates it.   |
 | `start_date`   | date           |                                                    |
+| `start_time`   | time, null     | UTC, on `start_date` (FR-ACT-3b). Migration 0004.  |
 | `end_date`     | date           |                                                    |
+| `end_time`     | time, null     | UTC, on `end_date`. Null for an activity before migration 0004. |
 | `description`  | text, null     |                                                    |
 
 `reference_id` and `start_date` are unique together.
@@ -497,6 +499,10 @@ The program page also shows:
   The calendar is a plan: the confirmed dates are the activities.
 The names of the certificate levels are Bronce (5), Plata (10) and Oro (15).
 The home page shows the activity in progress or the next one: the earliest activity that has not ended. It comes from the activities of the API, with its description.
+The end of an activity is its end date and end time. An activity without hours ends at the end of its last day.
+The card says "¡En el aire!" between the start and the end, "Hoy" before the start on the start date, and "Próxima actividad" for a later day.
+It shows the date, the hours in UTC and the hours of Argentina (UTC−3, all year).
+The API requires the hours for each new or changed activity. The warning of a log uses only the dates (FR-LOG-12).
 
 ## 10. Repository and installation
 

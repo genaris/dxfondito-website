@@ -34,19 +34,29 @@ final class ActivityService
      * @throws HttpException 422 for an incorrect value, 409 for a second activity of the reference
      *   with the same start date (FR-ACT-5a).
      */
-    public function create(User $actor, int $referenceId, string $startDate, string $endDate, ?string $description): Activity
-    {
+    public function create(
+        User $actor,
+        int $referenceId,
+        string $startDate,
+        string $startTime,
+        string $endDate,
+        string $endTime,
+        ?string $description,
+    ): Activity {
         $reference = $this->reference($referenceId);
         [$startDate, $endDate] = self::checkDates($startDate, $endDate);
+        [$startTime, $endTime] = self::checkTimes($startDate, $startTime, $endDate, $endTime);
         $description = TextInput::description($description);
         $this->requireFreeStart($referenceId, $startDate, null);
 
-        $id = $this->activities->create($referenceId, self::seasonOf($startDate), $startDate, $endDate, $description);
+        $id = $this->activities->create($referenceId, self::seasonOf($startDate), $startDate, $startTime, $endDate, $endTime, $description);
         $activity = $this->find($id);
         $this->audit->record($actor->id, AuditLog::ACTIVITY_CREATE, $id, [
             'label' => $activity->label(),
             'name' => $reference->name,
+            'startTime' => $startTime,
             'endDate' => $endDate,
+            'endTime' => $endTime,
             'description' => $description,
         ]);
 
@@ -58,11 +68,20 @@ final class ActivityService
      *
      * @throws HttpException 404, 422 or 409.
      */
-    public function update(User $actor, int $id, int $referenceId, string $startDate, string $endDate, ?string $description): Activity
-    {
+    public function update(
+        User $actor,
+        int $id,
+        int $referenceId,
+        string $startDate,
+        string $startTime,
+        string $endDate,
+        string $endTime,
+        ?string $description,
+    ): Activity {
         $activity = $this->find($id);
         $reference = $this->reference($referenceId);
         [$startDate, $endDate] = self::checkDates($startDate, $endDate);
+        [$startTime, $endTime] = self::checkTimes($startDate, $startTime, $endDate, $endTime);
         $description = TextInput::description($description);
         $this->requireFreeStart($referenceId, $startDate, $id);
 
@@ -70,13 +89,17 @@ final class ActivityService
             [
                 'reference' => $activity->reference->referenceCode(),
                 'startDate' => $activity->startDate,
+                'startTime' => $activity->startTime,
                 'endDate' => $activity->endDate,
+                'endTime' => $activity->endTime,
                 'description' => $activity->description,
             ],
             [
                 'reference' => $reference->referenceCode(),
                 'startDate' => $startDate,
+                'startTime' => $startTime,
                 'endDate' => $endDate,
+                'endTime' => $endTime,
                 'description' => $description,
             ],
         );
@@ -84,7 +107,7 @@ final class ActivityService
             return $activity;
         }
 
-        $this->activities->update($id, $referenceId, self::seasonOf($startDate), $startDate, $endDate, $description);
+        $this->activities->update($id, $referenceId, self::seasonOf($startDate), $startDate, $startTime, $endDate, $endTime, $description);
         $this->audit->record($actor->id, AuditLog::ACTIVITY_UPDATE, $id, [
             'label' => $activity->label(),
             'changes' => $changes,
@@ -146,6 +169,26 @@ final class ActivityService
         }
 
         return [$start, $end];
+    }
+
+    /**
+     * The hours of an activity (FR-ACT-3b): HH:MM in UTC. The end is after the start.
+     *
+     * @return array{0: string, 1: string}
+     * @throws HttpException 422 for an absent or incorrect time, or an end before the start.
+     */
+    private static function checkTimes(string $startDate, string $startTime, string $endDate, string $endTime): array
+    {
+        foreach ([$startTime, $endTime] as $time) {
+            if (preg_match('/^([01][0-9]|2[0-3]):[0-5][0-9]$/', $time) !== 1) {
+                throw new HttpException(422, 'A time must have the form HH:MM');
+            }
+        }
+        if ($startDate . ' ' . $startTime >= $endDate . ' ' . $endTime) {
+            throw new HttpException(422, 'The end must be after the start');
+        }
+
+        return [$startTime, $endTime];
     }
 
     private static function date(string $value): string

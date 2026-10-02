@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
-  activityDates,
+  activitySchedule,
   createActivity,
   deleteActivity,
   readActivities,
@@ -128,7 +128,7 @@ export function ActivitiesAdminPage() {
               <tr>
                 <th>Referencia</th>
                 <th>Nombre</th>
-                <th>Fechas (UTC)</th>
+                <th>Fecha y horario</th>
                 <th>
                   <span className="visually-hidden">Acciones</span>
                 </th>
@@ -151,7 +151,7 @@ export function ActivitiesAdminPage() {
                   <tr key={activity.id}>
                     <td className="nowrap">{activity.reference.code}</td>
                     <td>{activity.reference.name}</td>
-                    <td>{activityDates(activity)}</td>
+                    <td>{activitySchedule(activity)}</td>
                     <td className="row-actions">
                       <button type="button" className="link" onClick={() => open(activity.id)}>
                         Editar
@@ -185,6 +185,8 @@ function ActivityForm({
   const [referenceId, setReferenceId] = useState(activity?.reference.id ?? references[0].id)
   const [startDate, setStartDate] = useState(activity?.startDate ?? '')
   const [endDate, setEndDate] = useState(activity?.endDate ?? '')
+  const [startTime, setStartTime] = useState(activity?.startTime ?? '')
+  const [endTime, setEndTime] = useState(activity?.endTime ?? '')
   const [description, setDescription] = useState(activity?.description ?? '')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -203,9 +205,13 @@ function ActivityForm({
       setError('La fecha de fin no puede ser anterior a la fecha de inicio.')
       return
     }
+    if (`${endDate}T${endTime}` <= `${startDate}T${startTime}`) {
+      setError('El fin debe ser posterior al inicio.')
+      return
+    }
     setBusy(true)
     setError(null)
-    const data = { referenceId, startDate, endDate, description }
+    const data = { referenceId, startDate, startTime, endDate, endTime, description }
     try {
       onDone(activity ? await updateActivity(activity.id, data) : await createActivity(data))
     } catch (failure) {
@@ -236,11 +242,17 @@ function ActivityForm({
       </label>
       <div className="field-row">
         <label>
-          Inicio (UTC)
+          Fecha de inicio (UTC)
           <input type="date" value={startDate} onChange={(event) => changeStart(event.target.value)} required />
         </label>
         <label>
-          Fin (UTC)
+          Hora de inicio (UTC)
+          <input type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} required />
+        </label>
+      </div>
+      <div className="field-row">
+        <label>
+          Fecha de fin (UTC)
           <input
             type="date"
             value={endDate}
@@ -249,8 +261,15 @@ function ActivityForm({
             required
           />
         </label>
+        <label>
+          Hora de fin (UTC)
+          <input type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} required />
+        </label>
       </div>
-      <p className="hint">Temporada: {season ?? '—'}</p>
+      <p className="hint">
+        Temporada: {season ?? '—'}. Las horas van en UTC: la hora argentina más 3. Por ejemplo, de 10:00 a 15:00 en
+        Argentina es de 13:00 a 18:00 UTC.
+      </p>
       <label>
         Descripción (opcional)
         <textarea

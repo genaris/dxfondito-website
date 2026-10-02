@@ -335,6 +335,35 @@ main {
   text-transform: uppercase;
 }
 
+.next-hours {
+  margin: 0 0 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.next-card.live .eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: var(--red);
+  vertical-align: 0.05rem;
+  animation: on-air 1.4s ease-in-out infinite;
+}
+
+@keyframes on-air {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .next-card.live .eyebrow::before {
+    animation: none;
+  }
+}
+
 .next-description {
   max-height: 14rem;
   overflow-y: auto;

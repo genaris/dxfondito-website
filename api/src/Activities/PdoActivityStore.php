@@ -9,7 +9,7 @@ use PDO;
 
 final class PdoActivityStore implements ActivityStore
 {
-    private const SELECT = 'SELECT a.id AS activity_id, a.season, a.start_date, a.end_date, a.description AS activity_description,
+    private const SELECT = 'SELECT a.id AS activity_id, a.season, a.start_date, a.start_time, a.end_date, a.end_time, a.description AS activity_description,
             r.id, r.number, r.name, r.description, s.id AS series_id, s.code AS series_code, s.name AS series_name
         FROM activities a
         JOIN refs r ON r.id = a.reference_id
@@ -50,21 +50,23 @@ final class PdoActivityStore implements ActivityStore
         return $this->findOne(self::SELECT . ' WHERE a.reference_id = ? AND a.start_date = ?', [$referenceId, $startDate]);
     }
 
-    public function create(int $referenceId, int $season, string $startDate, string $endDate, ?string $description): int
+    public function create(int $referenceId, int $season, string $startDate, ?string $startTime, string $endDate, ?string $endTime, ?string $description): int
     {
         $pdo = ($this->pdo)();
         $pdo->prepare(
-            'INSERT INTO activities (reference_id, season, start_date, end_date, description) VALUES (?, ?, ?, ?, ?)'
-        )->execute([$referenceId, $season, $startDate, $endDate, $description]);
+            'INSERT INTO activities (reference_id, season, start_date, start_time, end_date, end_time, description)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
+        )->execute([$referenceId, $season, $startDate, $startTime, $endDate, $endTime, $description]);
 
         return (int) $pdo->lastInsertId();
     }
 
-    public function update(int $id, int $referenceId, int $season, string $startDate, string $endDate, ?string $description): void
+    public function update(int $id, int $referenceId, int $season, string $startDate, ?string $startTime, string $endDate, ?string $endTime, ?string $description): void
     {
         ($this->pdo)()->prepare(
-            'UPDATE activities SET reference_id = ?, season = ?, start_date = ?, end_date = ?, description = ? WHERE id = ?'
-        )->execute([$referenceId, $season, $startDate, $endDate, $description, $id]);
+            'UPDATE activities SET reference_id = ?, season = ?, start_date = ?, start_time = ?, end_date = ?, end_time = ?,
+             description = ? WHERE id = ?'
+        )->execute([$referenceId, $season, $startDate, $startTime, $endDate, $endTime, $description, $id]);
     }
 
     public function delete(int $id): void
@@ -112,6 +114,9 @@ final class PdoActivityStore implements ActivityStore
             startDate: $row['start_date'],
             endDate: $row['end_date'],
             description: $row['activity_description'],
+            // TIME gives HH:MM:SS.
+            startTime: $row['start_time'] === null ? null : substr($row['start_time'], 0, 5),
+            endTime: $row['end_time'] === null ? null : substr($row['end_time'], 0, 5),
         );
     }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { activityDates, referenceCode, seasonOf } from './activities.ts'
+import { activityDates, activitySchedule, argentinaHours, referenceCode, seasonOf } from './activities.ts'
 
 describe('referenceCode', () => {
   it('gives two or more digits', () => {
@@ -27,5 +27,25 @@ describe('seasonOf', () => {
   it('gives null without a complete date', () => {
     expect(seasonOf('')).toBeNull()
     expect(seasonOf('2026-1')).toBeNull()
+  })
+})
+
+describe('activitySchedule', () => {
+  it('gives the date and the hours of one day', () => {
+    const activity = { startDate: '2026-10-04', endDate: '2026-10-04', startTime: '13:00', endTime: '18:00' }
+    expect(activitySchedule(activity)).toBe('2026-10-04 · 13:00 a 18:00 UTC')
+    expect(argentinaHours(activity)).toBe('10:00 a 15:00')
+  })
+
+  it('gives the start and the end of more than one day', () => {
+    const activity = { startDate: '2026-10-02', endDate: '2026-10-03', startTime: '20:00', endTime: '02:00' }
+    expect(activitySchedule(activity)).toBe('2026-10-02 20:00 al 2026-10-03 02:00 UTC')
+    expect(argentinaHours(activity)).toBe('17:00 a 23:00')
+  })
+
+  it('tells that the hours of an old activity are not known', () => {
+    const activity = { startDate: '2026-10-04', endDate: '2026-10-04', startTime: null, endTime: null }
+    expect(activitySchedule(activity)).toBe('2026-10-04 · horario a confirmar')
+    expect(argentinaHours(activity)).toBeNull()
   })
 })

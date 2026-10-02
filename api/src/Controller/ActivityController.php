@@ -113,7 +113,9 @@ final class ActivityController
             $actor,
             self::referenceId($request),
             $request->string('startDate'),
+            $request->string('startTime'),
             $request->string('endDate'),
+            $request->string('endTime'),
             $request->string('description'),
         );
 
@@ -131,7 +133,9 @@ final class ActivityController
             PathId::from($params, self::NOT_FOUND),
             self::referenceId($request),
             $request->string('startDate'),
+            $request->string('startTime'),
             $request->string('endDate'),
+            $request->string('endTime'),
             $request->string('description'),
         );
 

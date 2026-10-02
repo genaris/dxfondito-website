@@ -9,7 +9,7 @@ use DxFondito\Activities\ActivityStore;
 
 final class MemoryActivityStore implements ActivityStore
 {
-    /** @var array<int, array{referenceId: int, season: int, startDate: string, endDate: string, description: ?string}> */
+    /** @var array<int, array{referenceId: int, season: int, startDate: string, startTime: ?string, endDate: string, endTime: ?string, description: ?string}> */
     public array $rows = [];
 
     /** @var array<int, true> The activities with logs. */
@@ -57,6 +57,8 @@ final class MemoryActivityStore implements ActivityStore
             $row['startDate'],
             $row['endDate'],
             $row['description'],
+            $row['startTime'],
+            $row['endTime'],
         );
     }
 
@@ -71,17 +73,17 @@ final class MemoryActivityStore implements ActivityStore
         return null;
     }
 
-    public function create(int $referenceId, int $season, string $startDate, string $endDate, ?string $description): int
+    public function create(int $referenceId, int $season, string $startDate, ?string $startTime, string $endDate, ?string $endTime, ?string $description): int
     {
         $id = $this->nextId++;
-        $this->update($id, $referenceId, $season, $startDate, $endDate, $description);
+        $this->update($id, $referenceId, $season, $startDate, $startTime, $endDate, $endTime, $description);
 
         return $id;
     }
 
-    public function update(int $id, int $referenceId, int $season, string $startDate, string $endDate, ?string $description): void
+    public function update(int $id, int $referenceId, int $season, string $startDate, ?string $startTime, string $endDate, ?string $endTime, ?string $description): void
     {
-        $this->rows[$id] = compact('referenceId', 'season', 'startDate', 'endDate', 'description');
+        $this->rows[$id] = compact('referenceId', 'season', 'startDate', 'startTime', 'endDate', 'endTime', 'description');
     }
 
     public function delete(int $id): void

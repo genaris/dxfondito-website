@@ -20,9 +20,9 @@ interface ActivityStore
 
     public function findByStart(int $referenceId, string $startDate): ?Activity;
 
-    public function create(int $referenceId, int $season, string $startDate, string $endDate, ?string $description): int;
+    public function create(int $referenceId, int $season, string $startDate, ?string $startTime, string $endDate, ?string $endTime, ?string $description): int;
 
-    public function update(int $id, int $referenceId, int $season, string $startDate, string $endDate, ?string $description): void;
+    public function update(int $id, int $referenceId, int $season, string $startDate, ?string $startTime, string $endDate, ?string $endTime, ?string $description): void;
 
     public function delete(int $id): void;
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { activityDates, readActivity } from '../activities.ts'
+import { activityDates, activityHours, argentinaHours, readActivity } from '../activities.ts'
 import type { ActivityDetail } from '../activities.ts'
 import { ApiError } from '../api.ts'
 import { frequencyText } from '../logs.ts'
@@ -45,8 +45,19 @@ export function ActivityPage({ id }: { id: number }) {
         {activity.reference.code} · {activity.reference.name}
       </h2>
       <dl className="facts">
-        <dt>Fechas (UTC)</dt>
+        <dt>{activity.startDate === activity.endDate ? 'Fecha (UTC)' : 'Fechas (UTC)'}</dt>
         <dd>{activityDates(activity)}</dd>
+        <dt>Horario</dt>
+        <dd>
+          {activityHours(activity) ? (
+            <>
+              {activityHours(activity)}
+              <span className="hint"> · {argentinaHours(activity)} hora argentina</span>
+            </>
+          ) : (
+            'A confirmar'
+          )}
+        </dd>
         <dt>Temporada</dt>
         <dd>{activity.season}</dd>
         <dt>Operadores</dt>

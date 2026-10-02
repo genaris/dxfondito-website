@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace DxFondito\Activities;
 
 /**
- * One operation of the group on the air for one reference. The dates are in UTC (FR-ACT-3).
+ * One operation of the group on the air for one reference. The dates and the hours are in UTC (FR-ACT-3, FR-ACT-3b).
  */
 final class Activity
 {
     /**
      * @param string $startDate YYYY-MM-DD.
      * @param string $endDate YYYY-MM-DD.
+     * @param string|null $startTime HH:MM on the start date, or null for an activity without hours.
+     * @param string|null $endTime HH:MM on the end date, or null for an activity without hours.
      */
     public function __construct(
         public readonly int $id,
@@ -20,6 +22,8 @@ final class Activity
         public readonly string $startDate,
         public readonly string $endDate,
         public readonly ?string $description,
+        public readonly ?string $startTime = null,
+        public readonly ?string $endTime = null,
     ) {
     }
 
@@ -43,6 +47,8 @@ final class Activity
             'season' => $this->season,
             'startDate' => $this->startDate,
             'endDate' => $this->endDate,
+            'startTime' => $this->startTime,
+            'endTime' => $this->endTime,
             'description' => $this->description,
         ];
     }

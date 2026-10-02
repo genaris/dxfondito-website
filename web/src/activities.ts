@@ -28,6 +28,9 @@ export interface Activity {
   /** YYYY-MM-DD, UTC. */
   startDate: string
   endDate: string
+  /** HH:MM, UTC (FR-ACT-3b). Null for an activity without hours: an activity before the change of 2026-10-02. */
+  startTime: string | null
+  endTime: string | null
   description: string | null
 }
 
@@ -52,7 +55,9 @@ export interface ReferenceData {
 export interface ActivityData {
   referenceId: number
   startDate: string
+  startTime: string
   endDate: string
+  endTime: string
   description: string
 }
 
@@ -134,6 +139,46 @@ export function activityDates(activity: Pick<Activity, 'startDate' | 'endDate'>)
   return activity.startDate === activity.endDate
     ? activity.startDate
     : `${activity.startDate} al ${activity.endDate}`
+}
+
+type Schedule = Pick<Activity, 'startDate' | 'endDate' | 'startTime' | 'endTime'>
+
+/** The hours of an activity, such as "13:00 a 18:00 UTC", or null for an activity without hours. */
+export function activityHours(activity: Schedule): string | null {
+  if (!activity.startTime || !activity.endTime) return null
+  return `${activity.startTime} a ${activity.endTime} UTC`
+}
+
+/** Argentina has UTC−3 all year. */
+const ARGENTINA_OFFSET = -3
+
+/** The hours of an activity in the time of Argentina, such as "10:00 a 15:00", or null without hours. */
+export function argentinaHours(activity: Schedule): string | null {
+  if (!activity.startTime || !activity.endTime) return null
+  const local = (time: string) => {
+    const hour = (Number(time.slice(0, 2)) + ARGENTINA_OFFSET + 24) % 24
+    return `${String(hour).padStart(2, '0')}${time.slice(2)}`
+  }
+  return `${local(activity.startTime)} a ${local(activity.endTime)}`
+}
+
+/**
+ * The dates and the hours of an activity in UTC, such as "2026-10-04 · 13:00 a 18:00 UTC",
+ * or "2026-10-02 20:00 al 2026-10-03 02:00 UTC" for an activity of more than one day.
+ */
+export function activitySchedule(activity: Schedule): string {
+  const hours = activityHours(activity)
+  if (!hours) return `${activityDates(activity)} · horario a confirmar`
+  if (activity.startDate === activity.endDate) return `${activity.startDate} · ${hours}`
+  return `${activity.startDate} ${activity.startTime} al ${activity.endDate} ${activity.endTime} UTC`
+}
+
+/** The start and the end of an activity as YYYY-MM-DDTHH:MM in UTC. Without hours, the whole days. */
+export function activityPeriod(activity: Schedule): { start: string; end: string } {
+  return {
+    start: `${activity.startDate}T${activity.startTime ?? '00:00'}`,
+    end: `${activity.endDate}T${activity.endTime ?? '23:59'}`,
+  }
 }
 
 /**

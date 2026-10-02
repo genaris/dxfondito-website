@@ -1,3 +1,4 @@
+import { activityPeriod } from './activities.ts'
 import type { Activity } from './activities.ts'
 
 // The texts of the program "Diplomas Puestos de Salud". The source is the page of LU2AOZ on QRZ.com.
@@ -85,15 +86,34 @@ export function levelClass(points: number): string {
   return `medal medal-${(LEVEL_NAMES[points] ?? 'other').toLowerCase()}`
 }
 
+type Schedule = Pick<Activity, 'startDate' | 'endDate' | 'startTime' | 'endTime'>
+
 /**
  * The activity in progress or the next one: the earliest activity that has not ended.
+ * An activity without hours ends at the end of its last day.
  *
- * @param today YYYY-MM-DD in UTC.
+ * @param now YYYY-MM-DDTHH:MM in UTC.
  */
-export function nextActivity<T extends Pick<Activity, 'startDate' | 'endDate'>>(activities: T[], today: string): T | null {
-  const open = activities.filter((activity) => activity.endDate >= today)
-  open.sort((a, b) => a.startDate.localeCompare(b.startDate))
+export function nextActivity<T extends Schedule>(activities: T[], now: string): T | null {
+  const open = activities.filter((activity) => activityPeriod(activity).end >= now)
+  open.sort((a, b) => activityPeriod(a).start.localeCompare(activityPeriod(b).start))
   return open[0] ?? null
+}
+
+/**
+ * The state of the next activity: on the air now, later today, or on a later day.
+ *
+ * @param now YYYY-MM-DDTHH:MM in UTC.
+ */
+export function activityState(activity: Schedule, now: string): 'live' | 'today' | 'later' {
+  const { start, end } = activityPeriod(activity)
+  if (start <= now && now <= end) return 'live'
+  return activity.startDate === now.slice(0, 10) ? 'today' : 'later'
+}
+
+/** Now in UTC, as YYYY-MM-DDTHH:MM. */
+export function nowUtc(now: Date = new Date()): string {
+  return now.toISOString().slice(0, 16)
 }
 
 /** Today in UTC, as YYYY-MM-DD. */
