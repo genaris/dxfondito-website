@@ -79,7 +79,7 @@ If the public folder has a different site, set `FTP_PUBLIC_DIR` to a subfolder b
 
 | Name               | Type     | Value                                                                       |
 | ------------------ | -------- | --------------------------------------------------------------------------- |
-| `FTP_SERVER`       | Secret   | Name of the FTP server.                                                     |
+| `FTP_SERVER`       | Secret   | Name of the FTP server, without `ftp://`. Example: `c1234567.ferozo.com`.   |
 | `FTP_USERNAME`     | Secret   | FTP user name.                                                              |
 | `FTP_PASSWORD`     | Secret   | FTP password.                                                               |
 | `DEPLOY_ENABLED`   | Variable | `true` starts the installation after each push to `main`.                   |

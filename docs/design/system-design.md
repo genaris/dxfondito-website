@@ -423,7 +423,7 @@ GitHub Actions connects the installation to Git:
 - The workflow uses FTPS if the host has it.
 - The migration page needs a secret from `config.php`.
 - `tools/build.sh` does steps 3 and 4. The workflow and the developer use the same script.
-- `tools/deploy-ftp.sh` does step 5 from the computer of the developer, when the workflow is not available.
+- `tools/deploy-ftp.sh` does step 5 with `lftp`. The workflow and the developer use the same script.
 - The workflow uploads files only when the `DEPLOY_ENABLED` variable of the repository is `true`.
 
 ### 10.4 Local environment

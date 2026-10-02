@@ -99,22 +99,15 @@ jobs:
         env:
           PRIVATE_PATH: ${{ vars.PRIVATE_PATH || '../../dxfondito-app' }}
         run: tools/build.sh
-      # The private folder goes first. Thus the public entry file always finds its source files.
-      - name: Upload the private folder
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
-          local-dir: dist/private/
-          server-dir: ${{ vars.FTP_PRIVATE_DIR || 'dxfondito-app/' }}
-      - name: Upload the public folder
-        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ${{ vars.FTP_PROTOCOL || 'ftps' }}
-          local-dir: dist/public/
-          server-dir: ${{ vars.FTP_PUBLIC_DIR || 'public_html/' }}
+      - name: Upload the files to the host
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+          tools/deploy-ftp.sh
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PROTOCOL: ${{ vars.FTP_PROTOCOL || 'ftps' }}
+          FTP_PUBLIC_DIR: ${{ vars.FTP_PUBLIC_DIR || 'public_html/' }}
+          FTP_PRIVATE_DIR: ${{ vars.FTP_PRIVATE_DIR || 'dxfondito-app/' }}
