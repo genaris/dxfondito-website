@@ -20,6 +20,10 @@ final class TextBox
     // GD measures small texts some pixels narrower than their ink. The margin keeps the ink in the box.
     public const FIT = 0.97;
 
+    // A text that needs a size below this part of the median size is an exception: it does not make the
+    // other fields smaller (sharedSizes).
+    public const OUTLIER = 0.75;
+
     /**
      * The font size in pixels for a text with this width at the full size.
      */
@@ -32,6 +36,27 @@ final class TextBox
         }
 
         return $size;
+    }
+
+    /**
+     * One size for all fields of a QSL card (system design, section 6.1): the smallest size that fits.
+     * A field that needs much less than the median size, such as a long name, keeps its own smaller size.
+     * Thus a long name does not make the whole card small.
+     *
+     * @param array<string, float> $fits The size at which the text of each field fits its box.
+     * @return array<string, float> The size of each field.
+     */
+    public static function sharedSizes(array $fits): array
+    {
+        if ($fits === []) {
+            return [];
+        }
+        $sorted = array_values($fits);
+        sort($sorted);
+        $median = $sorted[intdiv(count($sorted), 2)];
+        $common = min(array_filter($fits, static fn (float $size): bool => $size >= self::OUTLIER * $median));
+
+        return array_map(static fn (float $size): float => min($size, $common), $fits);
     }
 
     /**

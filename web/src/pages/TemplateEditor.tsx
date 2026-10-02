@@ -21,6 +21,7 @@ import {
   MIN_WIDTH,
   moveBox,
   resizeBox,
+  sharedSizes,
   textSize,
 } from '../qsl.ts'
 import type { Align, Box, Field, Fields, Font, Handle, TemplateKind } from '../qsl.ts'
@@ -327,6 +328,15 @@ export function TemplateEditor({
   }
 
   const field = fields?.[selected]
+  // The size of the sample text of each field, as the API writes it.
+  const fits: Record<string, number> = {}
+  if (fields) {
+    for (const name of kind.names) {
+      const item = fields[name]
+      fits[name] = textSize(item, measure(kind.sample[name], item.font, fullSize(item)))
+    }
+  }
+  const sizes = kind.sharedSize ? sharedSizes(fits) : fits
 
   return (
     <div className="qsl-editor">
@@ -360,7 +370,7 @@ export function TemplateEditor({
                 {kind.names.map((name) => {
                   const item = fields[name]
                   const isSelected = name === selected
-                  const fontSize = textSize(item, measure(kind.sample[name], item.font, fullSize(item)))
+                  const fontSize = sizes[name]
                   return (
                     <g key={name} className={isSelected ? 'field selected' : 'field'}>
                       <rect

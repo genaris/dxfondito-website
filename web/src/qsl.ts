@@ -33,6 +33,8 @@ export interface TemplateKind {
   defaultFields: (width: number, height: number) => Fields
   /** True if the editor searches the field boxes of the image (FR-QSL-12). */
   detect: boolean
+  /** True for one size for all fields (sharedSizes): the QSL cards. A certificate keeps the size of each field. */
+  sharedSize: boolean
 }
 
 export interface QslTemplate {
@@ -133,12 +135,26 @@ export const MAX_HEIGHT = 500
 const HEIGHT_TO_SIZE = 1.2
 const CAP_HEIGHT = 0.72
 const FIT = 0.97
+const OUTLIER = 0.75
 
 /** The font size in pixels for a text with this width at the full size of the box. */
 export function textSize(box: Box, fullTextWidth: number): number {
   let size = box.height / HEIGHT_TO_SIZE
   if (fullTextWidth > box.width && fullTextWidth > 0) size *= (box.width * FIT) / fullTextWidth
   return size
+}
+
+/**
+ * One size for all fields of a QSL card: the smallest size that fits. A field that needs much less than the median
+ * size, such as a long name, keeps its own smaller size. The API uses the same rule (TextBox::sharedSizes).
+ */
+export function sharedSizes(fits: Record<string, number>): Record<string, number> {
+  const values = Object.values(fits)
+  if (values.length === 0) return {}
+  const sorted = [...values].sort((a, b) => a - b)
+  const median = sorted[Math.floor(sorted.length / 2)]
+  const common = Math.min(...values.filter((size) => size >= OUTLIER * median))
+  return Object.fromEntries(Object.entries(fits).map(([name, size]) => [name, Math.min(size, common)]))
 }
 
 /** The full size of the text: the size before a wide text becomes smaller. */
@@ -246,4 +262,5 @@ export const QSL_KIND: TemplateKind = {
   sample: SAMPLE,
   defaultFields,
   detect: true,
+  sharedSize: true,
 }

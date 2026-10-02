@@ -45,6 +45,7 @@ export const CERTIFICATE_KIND: TemplateKind = {
   sample: CERTIFICATE_SAMPLE,
   defaultFields: defaultCertificateFields,
   detect: false,
+  sharedSize: false,
 }
 
 export interface CertificateTemplates {

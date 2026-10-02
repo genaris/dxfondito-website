@@ -23,8 +23,9 @@ final class TextRenderer
     /**
      * @param array<string, array{x: int, y: int, width: int, height: int, colour: string, align: string, font: string}> $fields
      * @param array<string, string> $values The text of each field.
+     * @param bool $sharedSize True for one size for all fields (TextBox::sharedSizes): the QSL cards.
      */
-    public function render(string $templateContent, array $fields, array $values): string
+    public function render(string $templateContent, array $fields, array $values, bool $sharedSize = false): string
     {
         $image = imagecreatefromstring($templateContent);
         if ($image === false) {
@@ -35,20 +36,20 @@ final class TextRenderer
             imagepalettetotruecolor($image);
         }
 
+        $fits = [];
         foreach ($fields as $name => $field) {
             $text = $values[$name] ?? '';
-            if ($text === '') {
-                continue;
+            if ($text !== '') {
+                $fits[$name] = $this->fit($field, $this->fonts->path($field['font']), $text);
             }
+        }
+        $sizes = $sharedSize ? TextBox::sharedSizes($fits) : $fits;
+
+        foreach ($sizes as $name => $size) {
+            $field = $fields[$name];
+            $text = $values[$name];
             $font = $this->fonts->path($field['font']);
-            [$fullWidth] = $this->measure($field['height'] / TextBox::HEIGHT_TO_SIZE, $font, $text);
-            $size = TextBox::size($field['width'], $field['height'], $fullWidth);
             [$textWidth, $offset] = $this->measure($size, $font, $text);
-            // GD does not scale the width of small texts in proportion. Thus a second measure can be necessary.
-            for ($step = 0; $step < 8 && $textWidth > $field['width']; $step++) {
-                $size *= $field['width'] * TextBox::FIT / $textWidth;
-                [$textWidth, $offset] = $this->measure($size, $font, $text);
-            }
             [$red, $green, $blue] = sscanf($field['colour'], '#%02x%02x%02x');
             imagettftext(
                 $image,
@@ -67,6 +68,25 @@ final class TextRenderer
         imagejpeg($image, null, self::JPEG_QUALITY);
 
         return (string) ob_get_clean();
+    }
+
+    /**
+     * The size at which the text fits the box of the field: the full size, or smaller for a wide text.
+     *
+     * @param array{width: int, height: int} $field
+     */
+    private function fit(array $field, string $font, string $text): float
+    {
+        [$fullWidth] = $this->measure($field['height'] / TextBox::HEIGHT_TO_SIZE, $font, $text);
+        $size = TextBox::size($field['width'], $field['height'], $fullWidth);
+        [$textWidth] = $this->measure($size, $font, $text);
+        // GD does not scale the width of small texts in proportion. Thus a second measure can be necessary.
+        for ($step = 0; $step < 8 && $textWidth > $field['width']; $step++) {
+            $size *= $field['width'] * TextBox::FIT / $textWidth;
+            [$textWidth] = $this->measure($size, $font, $text);
+        }
+
+        return $size;
     }
 
     /**

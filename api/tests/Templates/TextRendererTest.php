@@ -49,6 +49,25 @@ final class TextRendererTest extends TestCase
         self::assertSame(0, $this->darkPixels($result, 173, 400));
     }
 
+    public function testTheFieldsOfAQslCardShareOneSize(): void
+    {
+        $image = imagecreatetruecolor(400, 100);
+        imagefill($image, 0, 0, imagecolorallocate($image, 255, 255, 255));
+        ob_start();
+        imagepng($image);
+        $png = (string) ob_get_clean();
+        $box = ['y' => 20, 'height' => 60, 'colour' => '#000000', 'align' => 'left', 'font' => 'sans'];
+        // The frequency becomes a little smaller to fit its box: not an exception. The RST has space for the full size.
+        $fields = ['frequency' => ['x' => 5, 'width' => 220] + $box, 'rst' => ['x' => 250, 'width' => 140] + $box];
+        $values = ['frequency' => '7.142 MHz', 'rst' => '59'];
+
+        $own = imagecreatefromstring($this->renderer()->render($png, $fields, $values));
+        $shared = imagecreatefromstring($this->renderer()->render($png, $fields, $values, true));
+
+        self::assertGreaterThan($this->inkHeight($shared, 240, 400) + 3, $this->inkHeight($own, 240, 400));
+        self::assertEqualsWithDelta($this->inkHeight($shared, 0, 230), $this->inkHeight($shared, 240, 400), 2);
+    }
+
     public function testAcceptsAPalettePng(): void
     {
         $image = imagecreate(400, 100);
@@ -84,6 +103,23 @@ final class TextRendererTest extends TestCase
     private function renderer(): TextRenderer
     {
         return new TextRenderer(new Fonts(dirname(__DIR__, 2) . '/fonts'));
+    }
+
+    /**
+     * The height of the dark pixels between two columns: the height of the digits.
+     */
+    private function inkHeight(GdImage $image, int $fromX, int $toX): int
+    {
+        $rows = [];
+        for ($x = $fromX; $x < min($toX, imagesx($image)); $x++) {
+            for ($y = 0; $y < imagesy($image); $y++) {
+                if ((imagecolorat($image, $x, $y) & 0xFF) < 100) {
+                    $rows[$y] = true;
+                }
+            }
+        }
+
+        return $rows === [] ? 0 : max(array_keys($rows)) - min(array_keys($rows)) + 1;
     }
 
     private function darkPixels(GdImage $image, int $fromX, int $toX): int

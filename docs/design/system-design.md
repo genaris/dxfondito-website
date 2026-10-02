@@ -313,6 +313,10 @@ For a certificate, the fields are `call_sign` and `date`.
   `width` is 10 or more. `height` is 6 to 500.
 - The text fills the height of the box: the font size is `height / 1.2` pixels.
   If the text is wider than the box, it becomes smaller, to 0.97 of the box width. Thus a long name stays in the box.
+- On a QSL card, all fields share one size: the smallest size at which each text fits its box (`TextBox::sharedSizes`).
+  A field that needs less than 0.75 of the median size, such as a long name, keeps its own smaller size. Thus a long name does not make the whole card small.
+  The API calculates the shared size for each card with its own texts. The editor uses the same rule with the example data.
+  A certificate keeps the size of each field: a large call sign and a smaller date.
 - The base line puts the capital letters in the vertical centre of the box: `y + (height + 0.72 × size) / 2`.
 - `align` puts the text at the left side, in the centre or at the right side of the box.
 - GD uses points at 96 dots for each inch. Thus the API uses `size × 0.75` points.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { anchorX, baseline, defaultFields, FIELD_NAMES, fitBox, moveBox, qslCardUrl, qslFileName, resizeBox, textSize } from './qsl.ts'
+import { anchorX, baseline, defaultFields, FIELD_NAMES, fitBox, moveBox, qslCardUrl, qslFileName, resizeBox, sharedSizes, textSize } from './qsl.ts'
 
 describe('the text in the box (the same values as TextBoxTest.php)', () => {
   it('fills the height of the box', () => {
@@ -91,5 +91,30 @@ describe('QSL card of a contact', () => {
   it('gives the address and the name of the file', () => {
     expect(qslCardUrl('LU1ABC', 188)).toBe('api/index.php?r=/participants/LU1ABC/qsl/188')
     expect(qslFileName('LU1ABC', 'DPS-05', '2026-10-04T14:30:00Z')).toBe('QSL_LU1ABC_DPS-05_20261004_1430.jpg')
+  })
+})
+
+describe('sharedSizes (the same values as TextBoxTest.php)', () => {
+  it('gives all fields the size of the tightest field', () => {
+    expect(sharedSizes({ call_sign: 35, date: 29.6, time: 35, frequency: 28.5 })).toEqual({
+      call_sign: 28.5,
+      date: 28.5,
+      time: 28.5,
+      frequency: 28.5,
+    })
+  })
+
+  it('keeps the own smaller size of a very long text', () => {
+    expect(sharedSizes({ call_sign: 35, name: 18.3, time: 35, mode: 35, frequency: 28.5 })).toEqual({
+      call_sign: 28.5,
+      name: 18.3,
+      time: 28.5,
+      mode: 28.5,
+      frequency: 28.5,
+    })
+  })
+
+  it('gives no sizes for no fields', () => {
+    expect(sharedSizes({})).toEqual({})
   })
 })

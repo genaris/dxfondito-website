@@ -125,7 +125,7 @@ final class QslService
         }
         $fields = FieldLayout::check(FieldLayout::decode($fieldsJson), FieldLayout::QSL_FIELDS, $image->width, $image->height);
 
-        return $this->renderer->render($image->content, $fields, QslCard::sample());
+        return $this->renderer->render($image->content, $fields, QslCard::sample(), true);
     }
 
     /**
@@ -152,7 +152,7 @@ final class QslService
         $content = $this->files->read($template->storedName) ?? throw new HttpException(404, 'The QSL card is not available');
 
         return [
-            'content' => $this->renderer->render($content, $template->fields, QslCard::values($contact, $this->name($baseCallSign))),
+            'content' => $this->renderer->render($content, $template->fields, QslCard::values($contact, $this->name($baseCallSign)), true),
             'name' => sprintf(
                 'QSL_%s_%s_%s_%s.jpg',
                 $baseCallSign,
