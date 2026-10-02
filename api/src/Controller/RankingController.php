@@ -13,6 +13,7 @@ use DxFondito\Http\Response;
 use DxFondito\Ranking\Calculator;
 use DxFondito\Ranking\ContactRow;
 use DxFondito\Ranking\RankingStore;
+use DxFondito\Templates\QslTemplateStore;
 
 /**
  * The ranking and the participant page (FR-PUB-1 to FR-PUB-12). A visitor can use these requests.
@@ -27,6 +28,7 @@ final class RankingController
      */
     public function __construct(
         private readonly RankingStore $store,
+        private readonly QslTemplateStore $templates,
         ?Closure $now = null,
     ) {
         $this->now = $now ?? static fn (): DateTimeImmutable => new DateTimeImmutable();
@@ -63,9 +65,14 @@ final class RankingController
         $levels = $this->store->levels();
         $current = (int) ($this->now)()->format('Y');
         $bySeason = [];
-        foreach (Calculator::firstContacts($this->store->byParticipant($callSign)) as $contact) {
+        $firstContacts = Calculator::firstContacts($this->store->byParticipant($callSign));
+        foreach ($firstContacts as $contact) {
             $bySeason[$contact->season][] = $contact;
         }
+        // FR-QSL-11: a QSL card needs the template of the operator of the first contact, for its activity.
+        $templates = array_flip($this->templates->keys(array_values(array_unique(
+            array_map(static fn (ContactRow $contact): int => $contact->activityId, $firstContacts),
+        ))));
         uksort($bySeason, static fn (int $a, int $b): int => [$a !== $current, -$a] <=> [$b !== $current, -$b]);
 
         $seasons = [];
@@ -76,7 +83,11 @@ final class RankingController
                 'season' => $season,
                 'points' => $points,
                 'pointsToNextLevel' => $season === $current ? Calculator::pointsToNextLevel($points, $levels) : null,
-                'references' => array_map(self::firstContactData(...), $contacts),
+                'references' => array_map(
+                    static fn (ContactRow $contact): array => self::firstContactData($contact)
+                        + ['qsl' => isset($templates[$contact->activityId . ':' . $contact->operatorId])],
+                    $contacts,
+                ),
                 'certificates' => Calculator::certificates($contacts, $levels),
             ];
         }

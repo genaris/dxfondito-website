@@ -28,6 +28,8 @@ export interface FirstContact {
   band: string | null
   mode: string
   operator: string
+  /** True if the operator of the first contact has a QSL card template for its activity (FR-QSL-11). */
+  qsl: boolean
 }
 
 export interface ParticipantSeason {

@@ -147,6 +147,14 @@ final class ActivityServiceTest extends TestCase
         $this->assertStatus(409, fn () => $this->activities->delete($this->admin, $id));
     }
 
+    public function testRefusesToDeleteAnActivityWithQslCardTemplates(): void
+    {
+        $id = $this->activities->create($this->admin, $this->dps01, '2026-05-10', '2026-05-10', null)->id;
+        $this->store->withTemplates[$id] = true;
+
+        $this->assertStatus(409, fn () => $this->activities->delete($this->admin, $id));
+    }
+
     private function assertStatus(int $status, callable $action): void
     {
         try {

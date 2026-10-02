@@ -94,15 +94,18 @@ final class ActivityService
     }
 
     /**
-     * FR-ACT-8.
+     * FR-ACT-8. An activity with QSL card templates also stays.
      *
-     * @throws HttpException 404, or 409 if the activity has logs.
+     * @throws HttpException 404, or 409 if the activity has logs or QSL card templates.
      */
     public function delete(User $actor, int $id): void
     {
         $activity = $this->find($id);
         if ($this->activities->hasLogs($id)) {
             throw new HttpException(409, 'The activity has logs');
+        }
+        if ($this->activities->hasQslTemplates($id)) {
+            throw new HttpException(409, 'The activity has QSL card templates');
         }
 
         $this->activities->delete($id);

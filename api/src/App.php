@@ -18,6 +18,7 @@ use DxFondito\Controller\AuditController;
 use DxFondito\Controller\HealthController;
 use DxFondito\Controller\LogController;
 use DxFondito\Controller\MigrationController;
+use DxFondito\Controller\QslController;
 use DxFondito\Controller\RankingController;
 use DxFondito\Controller\ReferenceController;
 use DxFondito\Controller\SessionController;
@@ -32,6 +33,10 @@ use DxFondito\Logs\LocalFileStore;
 use DxFondito\Logs\LogService;
 use DxFondito\Logs\PdoLogStore;
 use DxFondito\Ranking\PdoRankingStore;
+use DxFondito\Templates\Fonts;
+use DxFondito\Templates\PdoQslTemplateStore;
+use DxFondito\Templates\QslService;
+use DxFondito\Templates\TextRenderer;
 use PDO;
 use Throwable;
 
@@ -75,7 +80,9 @@ final class App
         $activityStore = new PdoActivityStore($pdo);
         $logStore = new PdoLogStore($pdo);
         $rankingStore = new PdoRankingStore($pdo);
-        $ranking = new RankingController($rankingStore);
+        $qslTemplates = new PdoQslTemplateStore($pdo);
+        $fonts = new Fonts($this->root . '/fonts');
+        $ranking = new RankingController($rankingStore, $qslTemplates);
         $references = new ReferenceController($auth, new ReferenceService($referenceStore, $audit));
         $activities = new ActivityController(
             $auth,
@@ -91,6 +98,16 @@ final class App
             new LocalFileStore($config->storageDir . '/logs'),
             $audit,
         ));
+
+        $qsl = new QslController($auth, new QslService(
+            $qslTemplates,
+            $activityStore,
+            $users,
+            $rankingStore,
+            new LocalFileStore($config->storageDir . '/templates'),
+            new TextRenderer($fonts),
+            $audit,
+        ), $fonts);
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
@@ -119,6 +136,13 @@ final class App
         $router->add('GET', '/logs/{id}', fn (Request $request, array $params): Response => $logs->show($request, $params));
         $router->add('GET', '/logs/{id}/file', fn (Request $request, array $params): Response => $logs->file($request, $params));
         $router->add('DELETE', '/logs/{id}', fn (Request $request, array $params): Response => $logs->delete($request, $params));
+        $router->add('GET', '/activities/{id}/qsl-templates', fn (Request $request, array $params): Response => $qsl->list($request, $params));
+        $router->add('GET', '/activities/{id}/qsl-templates/{operatorId}/image', fn (Request $request, array $params): Response => $qsl->image($request, $params));
+        $router->add('POST', '/activities/{id}/qsl-templates/{operatorId}', fn (Request $request, array $params): Response => $qsl->save($request, $params));
+        $router->add('DELETE', '/activities/{id}/qsl-templates/{operatorId}', fn (Request $request, array $params): Response => $qsl->delete($request, $params));
+        $router->add('POST', '/template-preview', fn (Request $request): Response => $qsl->preview($request));
+        $router->add('GET', '/participants/{call}/qsl/{season}/{referenceId}', fn (Request $request, array $params): Response => $qsl->card($params));
+        $router->add('GET', '/fonts/{name}', fn (Request $request, array $params): Response => $qsl->font($params));
         $router->add('GET', '/references', fn (Request $request): Response => $references->list($request));
         $router->add('POST', '/references', fn (Request $request): Response => $references->create($request));
         $router->add('PUT', '/references/{id}', fn (Request $request, array $params): Response => $references->update($request, $params));

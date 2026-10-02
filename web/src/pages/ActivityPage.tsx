@@ -5,6 +5,7 @@ import { ApiError } from '../api.ts'
 import { href } from '../router.ts'
 import { useSession } from '../useSession.ts'
 import { LogsSection } from './LogsSection.tsx'
+import { QslTemplatesSection } from './QslTemplatesSection.tsx'
 
 type State = { kind: 'loading' } | { kind: 'ready'; activity: ActivityDetail } | { kind: 'missing' } | { kind: 'error' }
 
@@ -81,6 +82,7 @@ export function ActivityPage({ id }: { id: number }) {
         )}
       </section>
       {user && <LogsSection activityId={activity.id} user={user} onChange={load} />}
+      {user && <QslTemplatesSection activityId={activity.id} user={user} />}
     </>
   )
 }

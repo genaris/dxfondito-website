@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { frequencyText } from '../logs.ts'
 import { levelClass, levelName } from '../program.ts'
+import { qslCardUrl } from '../qsl.ts'
 import { readParticipant } from '../ranking.ts'
 import type { Participant, ParticipantSeason } from '../ranking.ts'
 import { href } from '../router.ts'
@@ -89,6 +90,7 @@ function SeasonSection({
               <th>Operador</th>
               <th>Frecuencia</th>
               <th>Modo</th>
+              <th>QSL</th>
             </tr>
           </thead>
           <tbody>
@@ -106,6 +108,19 @@ function SeasonSection({
                 <td>{contact.operator}</td>
                 <td className="nowrap">{frequencyText(contact)}</td>
                 <td>{contact.mode}</td>
+                <td className="nowrap">
+                  {contact.qsl ? (
+                    <a
+                      className="qsl-link"
+                      href={qslCardUrl(baseCallSign, season.season, contact.referenceId)}
+                      download={`QSL_${baseCallSign}_${contact.reference}_${season.season}.jpg`}
+                    >
+                      Descargar
+                    </a>
+                  ) : (
+                    <span className="hint">No disponible</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

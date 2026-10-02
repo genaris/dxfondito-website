@@ -247,6 +247,15 @@ All QSL cards have the same fields.
 - **FR-QSL-9** The QSL card uses the template of the operator of the first contact, for the activity of that contact.
 - **FR-QSL-10** The system supplies the QSL card as a JPEG image.
 - **FR-QSL-11** If that operator has no template for the activity, the page shows that the QSL card is not available.
+- **FR-QSL-12** When a user uploads the image of a new template, the system tries to find the field boxes of the image.
+  Most templates have a box of one colour for each field. If the system finds one box for each field, it puts the fields in these boxes.
+- **FR-QSL-12a** The system cannot read the labels of the boxes. It gives the boxes to the fields in the usual order of a QSL card: date, call sign, name, frequency, time, mode and RST.
+  It tells the user this order, and the user checks it.
+- **FR-QSL-12b** The user can exchange the boxes of two fields with one action.
+- **FR-QSL-12c** The user can start the search again, for example after a change of the image.
+  The user can also choose the colour of the boxes with a click on one box of the image. Thus the search also finds boxes of a grey or a light colour.
+- **FR-QSL-12d** If the system does not find one box for each field, it tells the user the number of boxes that it found. The user puts the fields in their place as in FR-QSL-4.
+- **FR-QSL-12e** The result of the search is only a proposal. The user can change each field before the save operation (FR-QSL-4).
 
 | Field on the QSL card | Source in the log                                      |
 | --------------------- | ------------------------------------------------------ |
@@ -324,6 +333,7 @@ The group made these decisions on 2026-10-01.
 | D-23     | A reference can have a second activity in a season. It gives no second point (R-PTS-2a). This closes Q17. |
 | D-24     | A participant gets one QSL card for each reference in a season, for the first contact (FR-QSL-7). This closes Q18. |
 | D-25     | Each line of the ranking shows the list of the references of the participant, not the number for each series. A column for each certificate level shows the reached levels (FR-PUB-2, FR-PUB-3). The model is the ranking of the events of Log de Argentina. Decision of 2026-10-02. |
+| D-26     | The template editor finds the field boxes of the image (FR-QSL-12). The search is in the browser, before the save operation, and uses only the colours of the image. The fields go in the boxes in the usual order of a QSL card. Decision of 2026-10-02. |
 
 ## 9. Open questions
 

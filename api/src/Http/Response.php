@@ -44,6 +44,21 @@ final class Response
         ]);
     }
 
+    /**
+     * An image or a font that the browser shows or uses.
+     *
+     * @param string|null $fileName The name for a download, or null.
+     */
+    public static function file(string $content, string $type, ?string $fileName = null, string $cache = 'no-store'): self
+    {
+        $headers = ['Content-Type' => $type, 'Cache-Control' => $cache];
+        if ($fileName !== null) {
+            $headers['Content-Disposition'] = sprintf('inline; filename="%s"', preg_replace('/[^A-Za-z0-9._-]/', '_', $fileName));
+        }
+
+        return new self(200, $content, $headers);
+    }
+
     public static function error(int $status, string $message): self
     {
         return self::json(['error' => $message], $status);
@@ -55,7 +70,9 @@ final class Response
         foreach ($this->headers as $name => $value) {
             header($name . ': ' . $value);
         }
-        header('Cache-Control: no-store');
+        if (!isset($this->headers['Cache-Control'])) {
+            header('Cache-Control: no-store');
+        }
         header('X-Content-Type-Options: nosniff');
         echo $this->body;
     }

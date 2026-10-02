@@ -54,17 +54,33 @@ export async function apiSend<T>(
  * Sends a multipart form, such as a form with a file. The browser sets the content type.
  */
 export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' }
-  if (sessionToken !== null) headers[TOKEN_HEADER] = sessionToken
-
-  const response = await fetch(apiUrl(path), { method: 'POST', headers, body: form })
+  const response = await postForm(path, form)
   return readResponse<T>(response, path)
 }
 
-async function readResponse<T>(response: Response, path: string): Promise<T> {
+/**
+ * Sends a multipart form and gives the answer as a file, such as an image.
+ */
+export async function apiUploadBlob(path: string, form: FormData): Promise<Blob> {
+  const response = await postForm(path, form)
+  await requireOk(response, path)
+  return response.blob()
+}
+
+function postForm(path: string, form: FormData): Promise<Response> {
+  const headers: Record<string, string> = {}
+  if (sessionToken !== null) headers[TOKEN_HEADER] = sessionToken
+  return fetch(apiUrl(path), { method: 'POST', headers, body: form })
+}
+
+async function requireOk(response: Response, path: string): Promise<void> {
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as { error?: string } | null
     throw new ApiError(response.status, data?.error ?? `API request failed: ${path}`)
   }
+}
+
+async function readResponse<T>(response: Response, path: string): Promise<T> {
+  await requireOk(response, path)
   return (await response.json()) as T
 }

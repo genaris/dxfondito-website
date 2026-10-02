@@ -30,6 +30,8 @@ final class ContactRow
         public readonly string $referenceCode,
         public readonly string $referenceName,
         public readonly string $operatorCallSign,
+        public readonly int $operatorId = 0,
+        public readonly ?string $rstSent = null,
     ) {
     }
 

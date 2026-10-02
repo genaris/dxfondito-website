@@ -80,6 +80,14 @@ final class PdoActivityStore implements ActivityStore
         return $statement->fetchColumn() !== false;
     }
 
+    public function hasQslTemplates(int $id): bool
+    {
+        $statement = ($this->pdo)()->prepare('SELECT 1 FROM qsl_templates WHERE activity_id = ? LIMIT 1');
+        $statement->execute([$id]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
     /**
      * @param list<mixed> $params
      */

@@ -27,4 +27,6 @@ interface ActivityStore
     public function delete(int $id): void;
 
     public function hasLogs(int $id): bool;
+
+    public function hasQslTemplates(int $id): bool;
 }

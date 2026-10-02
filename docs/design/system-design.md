@@ -175,6 +175,7 @@ Indexes: (`activity_id`, `base_call_sign`, `qso_at`) and (`base_call_sign`).
 | `detail`     | JSON, null   | For example the file name of a deleted log.  |
 | `created_at` | datetime     |                                              |
 
+The actions of the QSL card templates are `qsl-template.save` and `qsl-template.delete`.
 The actions of the accounts are `user.create`, `user.update`, `user.password.reset` (an administrator sets an initial password) and `user.password.change` (the user changes the own password).
 The detail has the call sign of the account. For `user.update`, it has only the changed values, each with the old and the new value.
 The record never has a password.
@@ -274,7 +275,7 @@ The API keeps no data between the summary and the save operation.
 3. The API reads the file again and saves the log and its contacts in one database transaction.
 
 The API accepts ADIF files up to 5 MB.
-The build puts a `.user.ini` file next to `api/index.php` with `upload_max_filesize = 6M` and `post_max_size = 8M`.
+The build puts a `.user.ini` file next to `api/index.php` with the upload limits (section 6.3).
 
 - An operator uploads logs only for the same operator. An administrator selects the operator (FR-LOG-4).
 - The API saves the original file with a random name in `storage/logs/`. If the database transaction fails, the API deletes the file.
@@ -291,21 +292,66 @@ For a certificate, the fields are `call_sign` and `date`.
 
 ```json
 {
-  "call_sign": { "x": 420, "y": 310, "size": 48, "colour": "#1A1A1A", "align": "center", "font": "sans-bold" }
+  "call_sign": { "x": 420, "y": 250, "width": 360, "height": 60, "colour": "#1A1A1A", "align": "center", "font": "sans-bold" }
 }
 ```
 
-- `x` and `y` are in pixels of the template image.
-- `font` is the name of one of the TrueType fonts that the system includes. The fonts have an open licence.
-- In the browser, the user moves each field on the template image and sees the result immediately.
+- Each field is a box: `x`, `y`, `width` and `height` are in pixels of the template image. The box must be in the image.
+  `width` is 10 or more. `height` is 6 to 500.
+- The text fills the height of the box: the font size is `height / 1.2` pixels.
+  If the text is wider than the box, it becomes smaller, to 0.97 of the box width. Thus a long name stays in the box.
+- The base line puts the capital letters in the vertical centre of the box: `y + (height + 0.72 × size) / 2`.
+- `align` puts the text at the left side, in the centre or at the right side of the box.
+- GD uses points at 96 dots for each inch. Thus the API uses `size × 0.75` points.
+  GD does not scale the width of small texts in proportion. Thus the API measures again after it makes a text smaller.
+- `api/src/Templates/TextBox.php` and `web/src/qsl.ts` have the same rules and the same tests.
+- `font` is `sans`, `sans-bold`, `serif`, `serif-bold` or `mono-bold`: the DejaVu fonts of `api/fonts/`, with a free licence.
+  `GET /fonts/{name}` supplies them. Thus the editor of the browser draws the text with the same fonts as the API.
+- The editor shows each field as a box with its name, on an SVG layer in the pixels of the image.
+  The user moves a box with the mouse or a finger, and changes its size with its corners and sides.
 - Before the save operation, the API makes a sample image with example data (FR-QSL-5).
 
-### 6.2 Image and PDF
+### 6.2 Search of the field boxes
+
+The editor tries to find the field boxes of a new template image (FR-QSL-12). The code is `web/src/detect.ts`.
+The source of the method is `qsl_send/detect.py` of the qsl-send program. The two give the same boxes for the six templates of 2026.
+
+- The search is in the browser, on the pixels of the image in a canvas. It needs no request to the API, and the image needs no save operation first.
+  It takes about 25 ms for an image of 1600 × 1060 pixels.
+- It uses only the colours of the image. It does not read the texts, and it uses no external service.
+- The steps:
+  1. The candidate colours are the 6 most common saturated colours in the part below 55 % of the height.
+     A saturated colour has 25 or more of difference between its largest and its smallest channel. Thus the search skips white, black and grey.
+     The search counts each second pixel of each second line, with the colours in steps of 8. Then it takes the exact most common colour of each step.
+  2. For each candidate colour, the pixels with each channel at 26 or less from the colour make connected areas.
+     An area is a box if it is 40 × 18 pixels or more, and the colour fills 75 % or more of its rectangle. Thus texts and drawings are not boxes.
+     Areas that start above 55 % of the height are not boxes. Areas smaller than 15 % of the median box are not boxes.
+  3. The candidate with the most boxes wins, not the candidate with the most pixels. A background of one colour has more pixels than seven boxes.
+     This choice uses a copy of the image of 400 pixels of width. Then the search finds the boxes of the winner on the full image.
+  4. The boxes go in rows from top to bottom, and from left to right in each row.
+     A box starts a new row if its top is below the bottom of the row less a third of its height.
+- If the search finds exactly 7 boxes, they go to the fields in the order `date`, `call_sign`, `name`, `frequency`, `time`, `mode`, `rst` (FR-QSL-12a).
+  The text goes in the centre of each box. The fields keep their colour and font.
+  The box keeps the limits of the API: for example, a height of 500 pixels at most.
+- With a different number of boxes, a new template gets the first layout of `defaultFields`, and an existing template keeps its fields.
+  The editor shows the number of boxes (FR-QSL-12d).
+- The search runs by itself when the user chooses the image of a new template.
+  For a new image of an existing template, the fields stay. The button "Detectar recuadros" starts the search.
+- The button "Elegir el color" waits for a click on the image. The colour of that pixel is the only candidate (FR-QSL-12c).
+- "Cambiar lugar con" exchanges the boxes of the selected field and a different field. The two fields keep their colour, alignment and font (FR-QSL-12b).
+- If the browser cannot read the pixels of the image, the editor tells the user, and the user puts the fields in place with the mouse.
+
+### 6.3 Image and PDF
 
 - The API makes each document when a visitor downloads it. It keeps no copy.
 - For a QSL card, the API opens the template with GD, writes the fields with `imagettftext()`, and sends a JPEG image.
 - For a certificate, the API makes the image in the same way. Then FPDF puts the image on one PDF page.
-- The API accepts JPEG and PNG templates up to 10 MB.
+- The API accepts JPEG and PNG templates up to 10 MB and 4096 pixels on each side. Larger images need more memory than PHP has on a shared host.
+- The build puts `upload_max_filesize = 11M` and `post_max_size = 12M` in the `.user.ini` file of `api/`.
+- The API keeps the template images in `storage/templates/` with a random name. A new image deletes the old file.
+- The texts of the QSL card: the date as `DD/MM/YYYY`, the time as `HH:MM` (UTC), the frequency as `7.13 MHz`, or the band if the log has no frequency.
+- The sample image (FR-QSL-5) uses example data: `LU1ABC/P`, `Juana Pérez`, `04/10/2026`, `14:30`, `7.130 MHz`, `SSB`, `59`.
+- An activity with QSL card templates cannot be deleted, as an activity with logs (FR-ACT-8).
 - The API opens each uploaded template with GD before it saves the file. It refuses a file that GD cannot read.
 
 ## 7. Security
@@ -339,6 +385,7 @@ A visitor can use the public requests.
 | `GET /activities/{id}`                                 | The activity, its operators, its participants. |
 | `GET /participants/{call}`                             | The seasons, points, activities, certificates. |
 | `GET /participants/{call}/qsl/{season}/{referenceId}`  | The QSL card as a JPEG image.                  |
+| `GET /fonts/{name}`                                    | A TrueType font, for the field editor.         |
 | `GET /participants/{call}/certificates/{season}/{points}` | The certificate as a PDF file.              |
 
 ### 8.2 Session requests
@@ -360,9 +407,12 @@ A visitor can use the public requests.
 | `GET /logs/{id}/file`                             | The original file.                                |
 | `DELETE /logs/{id}`                               | The deletion of the log.                          |
 | `GET /activities/{id}/qsl-templates`              | The templates of the activity.                    |
-| `PUT /activities/{id}/qsl-templates/{operatorId}` | A new or changed template.                        |
+| `GET /activities/{id}/qsl-templates/{operatorId}/image` | The image of the template.                  |
+| `POST /activities/{id}/qsl-templates/{operatorId}` | A new or changed template (multipart: `fields`, and `file` for a new image). |
 | `DELETE /activities/{id}/qsl-templates/{operatorId}` | The deletion of the template.                  |
-| `POST /template-preview`                          | A sample image for a template and its fields.     |
+| `POST /template-preview`                          | A sample image for a template and its fields (`file`, or `activityId` and `operatorId`). |
+
+The save operation of a template uses `POST`, not `PUT`, because PHP reads the files of a multipart body only for `POST`.
 
 ### 8.4 Administrator requests
 
@@ -447,6 +497,7 @@ public_html/
   api/private-path.php   Location of the private folder. The build makes this file.
 dxfondito-app/           Private folder, adjacent to public_html, not available from the web
   src/, vendor/          PHP source files and libraries
+  fonts/                 TrueType fonts for the QSL cards and the certificates
   migrations/
   storage/logs/          Original ADIF files
   storage/templates/     Template images

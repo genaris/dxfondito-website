@@ -31,7 +31,7 @@ fi
 cp "$root/docker/php/uploads.ini" "$dist/public/api/.user.ini"
 
 echo "== API source files and libraries"
-cp -R "$root/api/src" "$root/api/migrations" "$dist/private/"
+cp -R "$root/api/src" "$root/api/migrations" "$root/api/fonts" "$dist/private/"
 cp "$root/api/composer.json" "$root/api/composer.lock" "$root/api/config.example.php" "$dist/private/"
 
 composer_args=(install --no-dev --optimize-autoloader --no-interaction --no-progress)

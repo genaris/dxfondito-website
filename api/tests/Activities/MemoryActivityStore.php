@@ -15,6 +15,9 @@ final class MemoryActivityStore implements ActivityStore
     /** @var array<int, true> The activities with logs. */
     public array $withLogs = [];
 
+    /** @var array<int, true> The activities with QSL card templates. */
+    public array $withTemplates = [];
+
     private int $nextId = 1;
 
     public function __construct(private readonly MemoryReferenceStore $references)
@@ -89,5 +92,10 @@ final class MemoryActivityStore implements ActivityStore
     public function hasLogs(int $id): bool
     {
         return isset($this->withLogs[$id]);
+    }
+
+    public function hasQslTemplates(int $id): bool
+    {
+        return isset($this->withTemplates[$id]);
     }
 }
