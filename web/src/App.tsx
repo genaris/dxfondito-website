@@ -1,47 +1,56 @@
-import { useEffect, useState } from 'react'
-import { apiGet } from './api.ts'
-
-interface Health {
-  status: string
-  database: boolean
-  schema: string | null
-}
-
-type HealthState = { kind: 'loading' } | { kind: 'ready'; health: Health } | { kind: 'error' }
+import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
+import { HomePage } from './pages/HomePage.tsx'
+import { SignInPage } from './pages/SignInPage.tsx'
+import { href, useHashPath } from './router.ts'
+import { useSession } from './useSession.ts'
 
 function App() {
-  const [state, setState] = useState<HealthState>({ kind: 'loading' })
-
-  useEffect(() => {
-    let active = true
-    apiGet<Health>('/health')
-      .then((health) => {
-        if (active) setState({ kind: 'ready', health })
-      })
-      .catch(() => {
-        if (active) setState({ kind: 'error' })
-      })
-    return () => {
-      active = false
-    }
-  }, [])
+  const path = useHashPath()
+  const { ready, user, signOut } = useSession()
 
   return (
-    <main>
-      <h1>DX Fondito</h1>
-      <p>Sitio en construcción.</p>
-      <h2>Estado del sistema</h2>
-      {state.kind === 'loading' && <p>Consultando…</p>}
-      {state.kind === 'error' && <p>La API no responde.</p>}
-      {state.kind === 'ready' && (
-        <ul>
-          <li>API: {state.health.status === 'ok' ? 'en línea' : 'con errores'}</li>
-          <li>Base de datos: {state.health.database ? 'conectada' : 'sin conexión'}</li>
-          <li>Esquema: {state.health.schema ?? 'sin migraciones'}</li>
-        </ul>
-      )}
-    </main>
+    <>
+      <header className="site-header">
+        <a className="site-name" href={href('/')}>
+          DX Fondito
+        </a>
+        {ready && (
+          <nav className="session">
+            {user ? (
+              <>
+                <span>{user.callSign}</span>
+                {!user.mustChangePassword && <a href={href('/contrasena')}>Contraseña</a>}
+                <button type="button" className="link" onClick={() => void signOut()}>
+                  Salir
+                </button>
+              </>
+            ) : (
+              path !== '/ingresar' && <a href={href('/ingresar')}>Ingresar</a>
+            )}
+          </nav>
+        )}
+      </header>
+      <main>{ready ? <Page path={path} /> : <p>Cargando…</p>}</main>
+    </>
   )
+}
+
+function Page({ path }: { path: string }) {
+  const { user } = useSession()
+
+  // A user with an initial password must change it before all other actions (FR-AUT-3).
+  if (user?.mustChangePassword) return <ChangePasswordPage required />
+
+  switch (path) {
+    case '/':
+      return <HomePage />
+    case '/ingresar':
+      return user ? <p>Ya ingresó como {user.callSign}.</p> : <SignInPage />
+    case '/contrasena':
+      return user ? <ChangePasswordPage required={false} /> : <SignInPage />
+    default:
+      return <p>La página no existe.</p>
+  }
 }
 
 export default App

@@ -359,6 +359,7 @@ A visitor can use the public requests.
 | `/actividad/{id}`            | Activity, participants, logs, QSL card templates | Visitor, operator |
 | `/participante/{call}`       | Participant, QSL cards, certificates             | Visitor       |
 | `/ingresar`                  | Sign-in                                          | Visitor       |
+| `/contrasena`                | Password change                                  | Operator, administrator |
 | `/admin/referencias`         | References                                       | Administrator |
 | `/admin/actividades`         | Activities                                       | Administrator |
 | `/admin/usuarios`            | Accounts                                         | Administrator |
@@ -368,6 +369,8 @@ A visitor can use the public requests.
 The browser program uses hash paths, such as `/#/participante/LU1ABC`.
 The table shows the part of the path after the `#` character.
 Thus the web server needs no rewrite rules, and each page has an address that a user can share.
+
+A user with an initial password sees only the password change page until the change (FR-AUT-3).
 
 ## 10. Repository and installation
 
