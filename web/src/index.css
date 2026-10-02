@@ -1045,3 +1045,129 @@ a.medal-link:focus-visible .medal {
   color: var(--muted);
   background: var(--surface-alt);
 }
+
+/* Activators */
+
+.activators {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.activators li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.activators a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.activators a:hover span,
+.activators a:focus-visible span {
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+.activators a img {
+  transition: transform 0.15s;
+}
+
+.activators a:hover img,
+.activators a:focus-visible img {
+  transform: scale(1.05);
+}
+
+.activators img {
+  width: 7.5rem;
+  height: 7.5rem;
+  object-fit: contain;
+}
+
+/* Season calendar */
+
+.calendar {
+  margin: 0.75rem 0 1.5rem;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.calendar li {
+  display: grid;
+  grid-template-columns: 13rem auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.calendar li:first-child {
+  border-top: none;
+}
+
+.calendar-date {
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-date::first-letter {
+  text-transform: uppercase;
+}
+
+.calendar .tag {
+  margin: 0;
+}
+
+.calendar .series-dps {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.calendar .series-efe {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.calendar li.past {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.calendar li.next {
+  background: var(--surface-alt);
+  font-weight: 700;
+}
+
+.calendar-next {
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: var(--red);
+  color: #ffffff;
+  font-size: 0.8em;
+}
+
+@media (max-width: 720px) {
+  .calendar li {
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.5rem;
+  }
+
+  .calendar-date {
+    grid-column: 1 / -1;
+  }
+}

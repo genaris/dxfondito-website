@@ -7,7 +7,10 @@ export function SiteFooter() {
         {PROGRAM.group} ({PROGRAM.groupShort}) · Diploma {PROGRAM.name}
       </p>
       <p>
-        Todos los horarios están en UTC · <a href={PROGRAM.source.url}>{PROGRAM.source.text}</a>
+        Todos los horarios están en UTC ·{' '}
+        <a href={PROGRAM.facebook.url} target="_blank" rel="noopener noreferrer">
+          {PROGRAM.facebook.text}
+        </a>
       </p>
     </footer>
   )

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { levelName, longDate, nextActivity, todayUtc } from './program.ts'
+import { CALENDAR, levelName, longDate, nextActivity, todayUtc } from './program.ts'
 
 describe('levelName', () => {
   it('names the three levels', () => {
@@ -43,5 +43,13 @@ describe('dates', () => {
 
   it('gives a date in words', () => {
     expect(longDate('2026-10-04')).toBe('domingo 4 de octubre')
+  })
+})
+
+describe('CALENDAR', () => {
+  it('has the events of the season in the order of the dates', () => {
+    const dates = CALENDAR.events.map((event) => event.date)
+    expect(dates).toEqual([...dates].sort())
+    expect(dates.every((date) => date.startsWith(`${CALENDAR.season}-`))).toBe(true)
   })
 })

@@ -488,7 +488,13 @@ Thus the web server needs no rewrite rules, and each page has an address that a 
 
 A user with an initial password sees only the password change page until the change (FR-AUT-3).
 
-The texts of the program (purpose, bands, modes, certificates) are in `web/src/program.ts`. Their source is the page of LU2AOZ on QRZ.com.
+The texts of the program (purpose, bands, modes, hours, certificates) are in `web/src/program.ts`. Their source is the page of LU2AOZ on QRZ.com.
+The footer and the program page link to the Facebook group of the group: https://www.facebook.com/groups/1097332786007967.
+The program page also shows:
+- the logos of the activators, from the page of LU2AOZ on QRZ.com, in `web/src/assets/activators/`: WebP images with a transparent background, 320 pixels at most. LU2AOZ comes first, with the logo of the group;
+- the planned calendar of the season (`CALENDAR` in `web/src/program.ts`). The past events are pale and the next event has a mark.
+  An event links to the activity of the API with the same date and series, if the group already loaded it.
+  The calendar is a plan: the confirmed dates are the activities.
 The names of the certificate levels are Bronce (5), Plata (10) and Oro (15).
 The home page shows the activity in progress or the next one: the earliest activity that has not ended. It comes from the activities of the API, with its description.
 

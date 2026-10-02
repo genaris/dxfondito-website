@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { activityDates, readActivities, readSeasons } from '../activities.ts'
+import { readActivities, readSeasons } from '../activities.ts'
 import type { Activity } from '../activities.ts'
 import { levelName, longDate, nextActivity, PROGRAM, todayUtc } from '../program.ts'
 import { href } from '../router.ts'
@@ -22,7 +22,7 @@ export function ProgramHero() {
             <span className="fact-label">Modo</span> {PROGRAM.modes}
           </li>
           <li>
-            <span className="fact-label">Horarios</span> Todo en UTC
+            <span className="fact-label">Horarios</span> {PROGRAM.hours}
           </li>
         </ul>
         <p className="levels-line">
@@ -90,7 +90,6 @@ function NextActivityCard() {
         {activity.startDate === activity.endDate
           ? longDate(activity.startDate)
           : `${longDate(activity.startDate)} al ${longDate(activity.endDate)}`}
-        <span className="hint"> · {activityDates(activity)} UTC</span>
       </p>
       {activity.description && <p className="prewrap next-description">{activity.description}</p>}
       <a href={href(`/actividad/${activity.id}`)}>Ver la actividad</a>

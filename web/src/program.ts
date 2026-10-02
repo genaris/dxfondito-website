@@ -20,6 +20,7 @@ export const PROGRAM = {
     'entre Puestos de Salud en los parques y efemérides.',
   bands: '2 m (145,750 MHz y la frecuencia de encuentro), 40 m y 80 m',
   modes: 'Solo fonía',
+  hours: '13:00 a 20:00 UTC',
   power: 'Por la mañana se transmite en QRP, como ejercicio y para experimentar.',
   schedule:
     'Cada actividad indica sus horarios. En los parques dependen del Puesto de Salud y la activación ' +
@@ -32,8 +33,45 @@ export const PROGRAM = {
   certificateRule:
     'Cuentan las referencias distintas contactadas en el año. Los contactos con distintos operadores ' +
     'en la misma actividad no suman más.',
-  source: { text: 'LU2AOZ en QRZ.com', url: 'https://www.qrz.com/db/LU2AOZ' },
+  activators: 'De a poco se van sumando al equipo de activadores.',
+  facebook: { text: 'Grupo en Facebook', url: 'https://www.facebook.com/groups/1097332786007967' },
 } as const
+
+/** A planned event of the season: a Puesto de Salud in a park (DPS) or an efemérides of health (EFE). */
+export interface CalendarEvent {
+  /** YYYY-MM-DD. */
+  date: string
+  series: 'DPS' | 'EFE'
+  name: string
+}
+
+/**
+ * The planned calendar of the season, from the page of LU2AOZ on QRZ.com. The dates can change, and the group can
+ * add more efemérides. The confirmed activities come from the API.
+ */
+export const CALENDAR: { season: number; events: CalendarEvent[] } = {
+  season: 2026,
+  events: [
+    { date: '2026-07-04', series: 'EFE', name: 'Día Nacional del Médico Rural' },
+    { date: '2026-07-12', series: 'EFE', name: 'Día Nacional de la Medicina Social' },
+    { date: '2026-07-14', series: 'EFE', name: 'Día Mundial del Auxiliar de Enfermería' },
+    { date: '2026-08-23', series: 'DPS', name: 'Puesto de Salud Parque Chacabuco' },
+    { date: '2026-08-30', series: 'DPS', name: 'Puesto de Salud Parque Patricios' },
+    { date: '2026-09-13', series: 'DPS', name: 'Puesto de Salud Rosedal' },
+    { date: '2026-09-22', series: 'EFE', name: 'Dr. Luis Agote' },
+    { date: '2026-09-27', series: 'DPS', name: 'Puesto de Salud Parque Centenario' },
+    { date: '2026-10-04', series: 'DPS', name: 'Puesto de Salud Parque Rivadavia' },
+    { date: '2026-10-11', series: 'DPS', name: 'Puesto de Salud Parque Saavedra' },
+    { date: '2026-10-12', series: 'EFE', name: 'Día del Farmacéutico Argentino' },
+    { date: '2026-10-13', series: 'EFE', name: 'Día del Psicólogo' },
+    { date: '2026-10-20', series: 'EFE', name: 'Día del Pediatra' },
+    { date: '2026-11-08', series: 'EFE', name: 'Día Mundial de la Radiología' },
+    { date: '2026-11-21', series: 'EFE', name: 'Día del Enfermero' },
+    { date: '2026-11-22', series: 'EFE', name: 'Natalicio de la Dra. Cecilia Grierson' },
+    { date: '2026-12-03', series: 'EFE', name: 'Día del Médico' },
+    { date: '2026-12-13', series: 'EFE', name: 'Dr. Julio César Palmaz' },
+  ],
+}
 
 /** The names of the certificate levels (R-CER-1). */
 const LEVEL_NAMES: Record<number, string> = { 5: 'Bronce', 10: 'Plata', 15: 'Oro' }
