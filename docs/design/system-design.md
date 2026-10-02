@@ -251,6 +251,12 @@ The query uses a `MIN(qso_at)` subquery, because MySQL 5.7 has no window functio
 - If the data is not valid UTF-8, the reader changes it from ISO-8859-1 to UTF-8. Thus names with accents stay correct.
 - `QSO_DATE` must have the form `YYYYMMDD`. `TIME_ON` must have the form `HHMM` or `HHMMSS`.
 - The reader gives the record number and the cause for each record that is not valid.
+- A last record without `<EOR>` is also a record. Thus the summary shows it.
+- `CALL` has 3 to 20 letters, digits or `/` characters. `MODE` has 1 to 20 letters, digits, `-` or `/` characters.
+- `FREQ` is a positive number of MHz below 10000. The API keeps six decimals or fewer.
+- `BAND` has the ADIF form, such as `40m` or `70cm`.
+- The API cuts `NAME` to 100 characters and `RST_SENT`, `RST_RCVD` to 10 characters.
+- The `STATION_CALLSIGN` warning compares base call signs. Thus `LU1ABC/P` gives no warning for the operator `LU1ABC`.
 
 ### 5.2 Upload in two steps
 
@@ -261,6 +267,12 @@ The API keeps no data between the summary and the save operation.
 3. The API reads the file again and saves the log and its contacts in one database transaction.
 
 The API accepts ADIF files up to 5 MB.
+The build puts a `.user.ini` file next to `api/index.php` with `upload_max_filesize = 6M` and `post_max_size = 8M`.
+
+- An operator uploads logs only for the same operator. An administrator selects the operator (FR-LOG-4).
+- The API saves the original file with a random name in `storage/logs/`. If the database transaction fails, the API deletes the file.
+- `GET /activities/{id}` also gives the call signs of the operators with a log (FR-ACT-2a).
+- `GET /activities/{id}/logs` and `GET /logs/{id}` need a session. The download of the file needs the operator of the log or an administrator.
 
 ## 6. QSL cards and certificates
 
@@ -376,6 +388,7 @@ A new initial password also opens a locked account.
 | `/actividades/{season}`      | Activity list of a different season              | Visitor       |
 | `/actividad/{id}`            | Activity, participants, logs, QSL card templates | Visitor, operator |
 | `/participante/{call}`       | Participant, QSL cards, certificates             | Visitor       |
+| `/log/{id}`                  | Contacts of a log                                | Operator, administrator |
 | `/ingresar`                  | Sign-in                                          | Visitor       |
 | `/contrasena`                | Password change                                  | Operator, administrator |
 | `/admin/referencias`         | References                                       | Administrator |

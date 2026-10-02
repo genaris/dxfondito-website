@@ -50,6 +50,17 @@ export async function apiSend<T>(
   return readResponse<T>(response, path)
 }
 
+/**
+ * Sends a multipart form, such as a form with a file. The browser sets the content type.
+ */
+export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  if (sessionToken !== null) headers[TOKEN_HEADER] = sessionToken
+
+  const response = await fetch(apiUrl(path), { method: 'POST', headers, body: form })
+  return readResponse<T>(response, path)
+}
+
 async function readResponse<T>(response: Response, path: string): Promise<T> {
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as { error?: string } | null

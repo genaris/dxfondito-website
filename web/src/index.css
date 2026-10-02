@@ -231,3 +231,23 @@ button.link {
 .prewrap {
   white-space: pre-wrap;
 }
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 0.5rem;
+}
+
+.summary p {
+  margin: 0.25rem 0;
+}
+
+.summary-list {
+  max-height: 16rem;
+  overflow-y: auto;
+  margin: 0.25rem 0 0.75rem;
+}

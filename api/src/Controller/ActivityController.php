@@ -14,6 +14,7 @@ use DxFondito\Http\HttpException;
 use DxFondito\Http\PathId;
 use DxFondito\Http\Request;
 use DxFondito\Http\Response;
+use DxFondito\Logs\LogStore;
 
 /**
  * The public season and activity requests (section 8.1), and the activity requests of an administrator (section 8.4).
@@ -32,6 +33,7 @@ final class ActivityController
         private readonly Authenticator $auth,
         private readonly ActivityStore $activities,
         private readonly ActivityService $service,
+        private readonly LogStore $logs,
         ?Closure $now = null,
     ) {
         $this->now = $now ?? static fn (): DateTimeImmutable => new DateTimeImmutable();
@@ -68,13 +70,20 @@ final class ActivityController
     }
 
     /**
-     * FR-PUB-14. The operators and the participants come with the logs.
+     * FR-PUB-14 and FR-ACT-2a: the activity and the operators with a log in it.
      *
      * @param array<string, string> $params
      */
     public function show(array $params): Response
     {
-        return Response::json($this->service->find(PathId::from($params, self::NOT_FOUND))->publicData());
+        $activity = $this->service->find(PathId::from($params, self::NOT_FOUND));
+
+        return Response::json($activity->publicData() + [
+            'operators' => array_map(
+                static fn (array $operator): string => $operator['callSign'],
+                $this->logs->operators($activity->id),
+            ),
+        ]);
     }
 
     public function create(Request $request): Response

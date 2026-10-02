@@ -1,31 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { activityDates, readActivity } from '../activities.ts'
-import type { Activity } from '../activities.ts'
+import type { ActivityDetail } from '../activities.ts'
 import { ApiError } from '../api.ts'
 import { href } from '../router.ts'
+import { useSession } from '../useSession.ts'
+import { LogsSection } from './LogsSection.tsx'
 
-type State = { kind: 'loading' } | { kind: 'ready'; activity: Activity } | { kind: 'missing' } | { kind: 'error' }
+type State = { kind: 'loading' } | { kind: 'ready'; activity: ActivityDetail } | { kind: 'missing' } | { kind: 'error' }
 
 /**
- * The data of an activity (FR-PUB-14). The operators and the participants come with the logs.
+ * The data of an activity and its operators (FR-PUB-14). The signed-in users also see its logs (FR-LOG-19).
+ * The participants come with the ranking.
  */
 export function ActivityPage({ id }: { id: number }) {
+  const { user } = useSession()
   const [state, setState] = useState<State>({ kind: 'loading' })
 
-  useEffect(() => {
-    // The page has a new instance for each activity. Thus the first state is 'loading'.
-    let active = true
+  // The page has a new instance for each activity. Thus the first state is 'loading'.
+  const load = useCallback(() => {
     readActivity(id)
-      .then((activity) => {
-        if (active) setState({ kind: 'ready', activity })
-      })
+      .then((activity) => setState({ kind: 'ready', activity }))
       .catch((error: unknown) => {
-        if (active) setState({ kind: error instanceof ApiError && error.status === 404 ? 'missing' : 'error' })
+        setState({ kind: error instanceof ApiError && error.status === 404 ? 'missing' : 'error' })
       })
-    return () => {
-      active = false
-    }
   }, [id])
+
+  useEffect(load, [load])
 
   if (state.kind === 'loading') return <p>Cargando…</p>
   if (state.kind === 'missing') return <p>La actividad no existe.</p>
@@ -45,9 +45,12 @@ export function ActivityPage({ id }: { id: number }) {
         <dd>{activityDates(activity)}</dd>
         <dt>Temporada</dt>
         <dd>{activity.season}</dd>
+        <dt>Operadores</dt>
+        <dd>{activity.operators.length > 0 ? activity.operators.join(', ') : 'Todavía no hay logs.'}</dd>
       </dl>
       {activity.reference.description && <p className="prewrap">{activity.reference.description}</p>}
       {activity.description && <p className="prewrap">{activity.description}</p>}
+      {user && <LogsSection activityId={activity.id} user={user} onChange={load} />}
     </>
   )
 }

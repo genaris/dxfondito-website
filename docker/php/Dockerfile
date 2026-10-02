@@ -8,5 +8,6 @@ RUN apt-get update \
     && docker-php-ext-install -j"$(nproc)" gd pdo_mysql
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 
 WORKDIR /app/api

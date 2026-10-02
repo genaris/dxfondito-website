@@ -12,7 +12,7 @@ describe('actionName', () => {
   })
 
   it('gives the code of an unknown action', () => {
-    expect(actionName('log.upload')).toBe('log.upload')
+    expect(actionName('template.upload')).toBe('template.upload')
   })
 })
 
@@ -65,5 +65,14 @@ describe('detailLines of references and activities', () => {
       entry('reference.update', { code: 'DPS-01', changes: { code: ['DPS-01', 'DPS-02'] } }),
     )
     expect(lines).toEqual(['Referencia DPS-01', 'Código: DPS-01 → DPS-02'])
+  })
+})
+
+describe('detailLines of logs', () => {
+  it('explains an upload', () => {
+    const lines = detailLines(
+      entry('log.upload', { label: 'DPS-01 (2026-05-10)', fileName: 'a.adi', operator: 'LU1ABC', contacts: 12 }),
+    )
+    expect(lines).toEqual(['Actividad DPS-01 (2026-05-10)', 'Archivo: a.adi', 'Operador: LU1ABC', 'Contactos: 12'])
   })
 })

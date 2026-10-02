@@ -21,4 +21,20 @@ final class CallSign
     {
         return preg_match('#^[A-Z0-9/]{3,20}$#', $callSign) === 1;
     }
+
+    /**
+     * The base call sign (system design, section 4.1): the longest part between the `/` characters.
+     * If two parts have the same length, the first part. LU1ABC/P and CX/LU1ABC give LU1ABC.
+     */
+    public static function base(string $callSign): string
+    {
+        $base = '';
+        foreach (explode('/', self::normalize($callSign)) as $part) {
+            if (strlen($part) > strlen($base)) {
+                $base = $part;
+            }
+        }
+
+        return $base;
+    }
 }

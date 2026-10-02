@@ -16,6 +16,7 @@ use DxFondito\Auth\PhpSession;
 use DxFondito\Controller\ActivityController;
 use DxFondito\Controller\AuditController;
 use DxFondito\Controller\HealthController;
+use DxFondito\Controller\LogController;
 use DxFondito\Controller\MigrationController;
 use DxFondito\Controller\ReferenceController;
 use DxFondito\Controller\SessionController;
@@ -26,6 +27,9 @@ use DxFondito\Http\HttpException;
 use DxFondito\Http\Request;
 use DxFondito\Http\Response;
 use DxFondito\Http\Router;
+use DxFondito\Logs\LocalFileStore;
+use DxFondito\Logs\LogService;
+use DxFondito\Logs\PdoLogStore;
 use PDO;
 use Throwable;
 
@@ -67,12 +71,21 @@ final class App
         $auditRecord = new AuditController($auth, $audit);
         $referenceStore = new PdoReferenceStore($pdo);
         $activityStore = new PdoActivityStore($pdo);
+        $logStore = new PdoLogStore($pdo);
         $references = new ReferenceController($auth, new ReferenceService($referenceStore, $audit));
         $activities = new ActivityController(
             $auth,
             $activityStore,
             new ActivityService($activityStore, $referenceStore, $audit),
+            $logStore,
         );
+        $logs = new LogController($auth, new LogService(
+            $logStore,
+            $activityStore,
+            $users,
+            new LocalFileStore($config->storageDir . '/logs'),
+            $audit,
+        ));
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
@@ -94,6 +107,11 @@ final class App
         $router->add('POST', '/activities', fn (Request $request): Response => $activities->create($request));
         $router->add('PUT', '/activities/{id}', fn (Request $request, array $params): Response => $activities->update($request, $params));
         $router->add('DELETE', '/activities/{id}', fn (Request $request, array $params): Response => $activities->delete($request, $params));
+        $router->add('POST', '/activities/{id}/logs', fn (Request $request, array $params): Response => $logs->upload($request, $params));
+        $router->add('GET', '/activities/{id}/logs', fn (Request $request, array $params): Response => $logs->byActivity($request, $params));
+        $router->add('GET', '/logs/{id}', fn (Request $request, array $params): Response => $logs->show($request, $params));
+        $router->add('GET', '/logs/{id}/file', fn (Request $request, array $params): Response => $logs->file($request, $params));
+        $router->add('DELETE', '/logs/{id}', fn (Request $request, array $params): Response => $logs->delete($request, $params));
         $router->add('GET', '/references', fn (Request $request): Response => $references->list($request));
         $router->add('POST', '/references', fn (Request $request): Response => $references->create($request));
         $router->add('PUT', '/references/{id}', fn (Request $request, array $params): Response => $references->update($request, $params));

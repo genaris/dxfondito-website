@@ -9,11 +9,16 @@ final class Request
     /** @var array<string, string> */
     public readonly array $headers;
 
+    /** @var array<string, UploadedFile> */
+    public readonly array $files;
+
     /**
      * @param array<string, mixed> $query
      * @param array<string, mixed> $body
      * @param array<string, string> $headers
      * @param bool $secure True if the request came through HTTPS.
+     * @param array<string, UploadedFile> $files
+     * @param bool $bodyTooLarge True if PHP refused the body because of its size (post_max_size).
      */
     public function __construct(
         public readonly string $method,
@@ -22,7 +27,10 @@ final class Request
         public readonly array $body = [],
         array $headers = [],
         public readonly bool $secure = false,
+        array $files = [],
+        public readonly bool $bodyTooLarge = false,
     ) {
+        $this->files = $files;
         // The names of the headers are not case-sensitive.
         $this->headers = array_change_key_case($headers, CASE_LOWER);
     }
@@ -41,6 +49,10 @@ final class Request
             body: self::readBody(),
             headers: self::readHeaders(),
             secure: self::isSecure(),
+            files: self::readFiles(),
+            // PHP gives no body and no files when the body is larger than post_max_size.
+            bodyTooLarge: $_POST === [] && $_FILES === [] && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0
+                && str_starts_with($_SERVER['CONTENT_TYPE'] ?? '', 'multipart/form-data'),
         );
     }
 
@@ -118,5 +130,20 @@ final class Request
 
         // Some hosts end HTTPS at a proxy in front of PHP.
         return strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    }
+
+    /**
+     * @return array<string, UploadedFile> The files of the request. The reader ignores lists of files.
+     */
+    private static function readFiles(): array
+    {
+        $files = [];
+        foreach ($_FILES as $key => $file) {
+            if (is_array($file) && is_string($file['name'] ?? null) && is_string($file['tmp_name'] ?? null)) {
+                $files[$key] = new UploadedFile($file['name'], $file['tmp_name'], (int) $file['size'], (int) $file['error']);
+            }
+        }
+
+        return $files;
     }
 }

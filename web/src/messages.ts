@@ -81,3 +81,14 @@ export function changeError(error: unknown, texts: { action: string; conflict: s
   }
   return `No se pudo ${texts.action}. Pruebe de nuevo más tarde.`
 }
+
+export function uploadError(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 413) return 'El archivo es demasiado grande. El máximo es 5 MB.'
+    if (error.status === 422) return 'El archivo no es válido. Debe ser un archivo ADIF (.adi o .adif) con registros válidos.'
+    if (error.status === 404) return 'La actividad ya no existe.'
+    if (error.status === 401) return 'La sesión terminó. Ingrese de nuevo.'
+    if (error.status === 403) return 'No tiene permiso para subir este log.'
+  }
+  return 'No se pudo leer el archivo. Pruebe de nuevo más tarde.'
+}

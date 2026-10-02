@@ -64,8 +64,13 @@ export function readActivities(season: number): Promise<Activity[]> {
   return apiGet<Activity[]>(`/seasons/${season}/activities`)
 }
 
-export function readActivity(id: number): Promise<Activity> {
-  return apiGet<Activity>(`/activities/${id}`)
+/** An activity with the call signs of its operators (FR-ACT-2a). */
+export interface ActivityDetail extends Activity {
+  operators: string[]
+}
+
+export function readActivity(id: number): Promise<ActivityDetail> {
+  return apiGet<ActivityDetail>(`/activities/${id}`)
 }
 
 export function readReferences(): Promise<ReferenceOverview> {

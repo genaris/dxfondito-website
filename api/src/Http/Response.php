@@ -30,6 +30,20 @@ final class Response
         return new self($status, $html, ['Content-Type' => 'text/html; charset=utf-8']);
     }
 
+    /**
+     * A file that the browser saves with its name.
+     */
+    public static function download(string $content, string $fileName): self
+    {
+        // The plain name is for old browsers. filename* keeps the characters that are not ASCII.
+        $plain = preg_replace('/[^A-Za-z0-9._-]/', '_', $fileName);
+
+        return new self(200, $content, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => sprintf("attachment; filename=\"%s\"; filename*=UTF-8''%s", $plain, rawurlencode($fileName)),
+        ]);
+    }
+
     public static function error(int $status, string $message): self
     {
         return self::json(['error' => $message], $status);

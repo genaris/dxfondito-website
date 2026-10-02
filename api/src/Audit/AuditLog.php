@@ -19,6 +19,8 @@ interface AuditLog
     public const ACTIVITY_CREATE = 'activity.create';
     public const ACTIVITY_UPDATE = 'activity.update';
     public const ACTIVITY_DELETE = 'activity.delete';
+    public const LOG_UPLOAD = 'log.upload';
+    public const LOG_DELETE = 'log.delete';
 
     /**
      * @param int $userId The user who did the action.

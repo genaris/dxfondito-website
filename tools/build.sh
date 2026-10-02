@@ -27,6 +27,9 @@ else
     printf "<?php\n\nreturn __DIR__ . '/%s';\n" "$private_path" > "$dist/public/api/private-path.php"
 fi
 
+# PHP-FPM reads .user.ini in the folder of the script. The API accepts ADIF files up to 5 MB.
+cp "$root/docker/php/uploads.ini" "$dist/public/api/.user.ini"
+
 echo "== API source files and libraries"
 cp -R "$root/api/src" "$root/api/migrations" "$dist/private/"
 cp "$root/api/composer.json" "$root/api/composer.lock" "$root/api/config.example.php" "$dist/private/"

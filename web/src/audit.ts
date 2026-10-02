@@ -33,6 +33,8 @@ const ACTION_NAMES: Record<string, string> = {
   'activity.create': 'Creó una actividad',
   'activity.update': 'Cambió una actividad',
   'activity.delete': 'Borró una actividad',
+  'log.upload': 'Subió un log',
+  'log.delete': 'Borró un log',
 }
 
 const FIELD_NAMES: Record<string, string> = {
@@ -45,6 +47,9 @@ const FIELD_NAMES: Record<string, string> = {
   reference: 'Referencia',
   startDate: 'Inicio',
   endDate: 'Fin',
+  fileName: 'Archivo',
+  operator: 'Operador',
+  contacts: 'Contactos',
 }
 
 export function actionName(action: string): string {
@@ -84,6 +89,8 @@ export function detailLines(entry: AuditEntry): string[] {
     'reference.delete': ['name'],
     'activity.create': ['name', 'endDate', 'description'],
     'activity.delete': ['name'],
+    'log.upload': ['fileName', 'operator', 'contacts'],
+    'log.delete': ['fileName', 'operator', 'contacts'],
   }
   for (const field of createdFields[entry.action] ?? []) {
     if (field in detail) lines.push(`${FIELD_NAMES[field]}: ${formatValue(field, detail[field])}`)

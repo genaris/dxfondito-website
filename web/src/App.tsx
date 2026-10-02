@@ -7,6 +7,7 @@ import { ActivitiesPage } from './pages/ActivitiesPage.tsx'
 import { ActivityPage } from './pages/ActivityPage.tsx'
 import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
 import { HomePage } from './pages/HomePage.tsx'
+import { LogPage } from './pages/LogPage.tsx'
 import { SignInPage } from './pages/SignInPage.tsx'
 import { href, matchPath, useHashPath } from './router.ts'
 import { useSession } from './useSession.ts'
@@ -92,6 +93,12 @@ function Page({ path }: { path: string }) {
   const activityPage = matchPath('/actividad/:id', path)
   if (activityPage) {
     return /^\d+$/.test(activityPage.id) ? <ActivityPage key={activityPage.id} id={Number(activityPage.id)} /> : <NotFound />
+  }
+
+  const logPage = matchPath('/log/:id', path)
+  if (logPage) {
+    if (!user) return <SignInPage />
+    return /^\d+$/.test(logPage.id) ? <LogPage key={logPage.id} id={Number(logPage.id)} /> : <NotFound />
   }
 
   switch (path) {
