@@ -590,6 +590,11 @@ GitHub Actions connects the installation to Git:
   The host has no command line. Thus this is the only way to make the first account.
 - `tools/build.sh` does steps 3 and 4. The workflow and the developer use the same script.
 - `tools/deploy-ftp.sh` does step 5 with `lftp`. The workflow and the developer use the same script.
+- The script uploads only the changed files. The modification times cannot tell them: the workflow makes all files again for each installation.
+  Thus the private folder on the host keeps `.deploy-manifest`, with the SHA-256 of each uploaded file. The script reads it, uploads the files with a different SHA-256, and then uploads the new manifest.
+  A failed upload does not change the manifest. Thus the next installation uploads these files again.
+- The order of the upload makes the time with a mix of old and new files short: first the private files, then `src/App.php` and the autoload files of Composer, then the public files, and last `api/index.php` and `index.html`.
+- The script does not delete files on the host. Thus `config.php` and `storage/` stay.
 - The workflow uploads files only when the `DEPLOY_ENABLED` variable of the repository is `true`.
 
 ### 10.4 Local environment

@@ -104,4 +104,8 @@ tools/build.sh
 FTP_SERVER=... FTP_USERNAME=... FTP_PASSWORD=... tools/deploy-ftp.sh
 ```
 
-`tools/deploy-ftp.sh` needs `lftp`.
+`tools/deploy-ftp.sh` needs `lftp`. It uploads only the changed files: the private folder on the host keeps a list
+of the SHA-256 of each uploaded file (`.deploy-manifest`). Options:
+
+- `DRY_RUN=true` shows the files to upload, and uploads nothing.
+- `FTP_FULL_UPLOAD=true` uploads all files, for example after a manual change of a file on the host.
