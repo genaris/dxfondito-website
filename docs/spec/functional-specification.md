@@ -211,6 +211,7 @@ The call sign of the user identifies the account.
 - **FR-LOG-5** An operator can have more than one log in an activity.
 - **FR-LOG-6** The system reads these mandatory fields from each record: `CALL`, `QSO_DATE`, `TIME_ON`, `MODE`.
 - **FR-LOG-7** Each record must also have a `FREQ` field or a `BAND` field.
+- **FR-LOG-7a** The system shows a frequency in MHz with three decimals or more, such as `7.130 MHz`. A log often gives `7.13` for this frequency. More decimals stay if they are not zero, such as `7.1305 MHz`.
 - **FR-LOG-8** The system reads these optional fields from each record: `NAME`, `RST_SENT`, `RST_RCVD`.
 - **FR-LOG-9** A record is not valid when a mandatory field is absent or has an incorrect value.
 - **FR-LOG-10** Before the system saves a log, it shows a summary to the user.

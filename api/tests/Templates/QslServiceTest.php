@@ -179,7 +179,7 @@ final class QslServiceTest extends TestCase
         $values = QslCard::values($this->contact('2026-05-10 14:07:00', $this->operator));
 
         self::assertSame(
-            ['call_sign' => 'LU9ZZ/P', 'name' => 'Ana', 'date' => '10/05/2026', 'time' => '14:07', 'frequency' => '7.13 MHz', 'mode' => 'SSB', 'rst' => '59'],
+            ['call_sign' => 'LU9ZZ/P', 'name' => 'Ana', 'date' => '10/05/2026', 'time' => '14:07', 'frequency' => '7.130 MHz', 'mode' => 'SSB', 'rst' => '59'],
             $values,
         );
     }
@@ -191,7 +191,7 @@ final class QslServiceTest extends TestCase
         self::assertSame('40m', QslCard::values($contact)['frequency']);
     }
 
-    private function contact(string $qsoAt, User $operator, ?string $frequency = '7.13'): ContactRow
+    private function contact(string $qsoAt, User $operator, ?string $frequency = '7.130'): ContactRow
     {
         static $id = 1;
 

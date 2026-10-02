@@ -46,6 +46,15 @@ final class RecordReaderTest extends TestCase
         self::assertSame('2026-05-10 14:32:05', $this->contact(['TIME_ON' => '143205'])->qsoAt);
     }
 
+    public function testTheFrequencyKeepsThreeDecimals(): void
+    {
+        // A log often gives 7.13 for 7.130 MHz. The QSL card shows 7.130 MHz.
+        self::assertSame('7.130', $this->contact(['FREQ' => '7.13'])->frequency);
+        self::assertSame('146.520', $this->contact(['FREQ' => '146.52'])->frequency);
+        self::assertSame('14.000', $this->contact(['FREQ' => '14'])->frequency);
+        self::assertSame('7.1305', $this->contact(['FREQ' => '7.130500'])->frequency);
+    }
+
     public function testABandIsSufficientWithoutAFrequency(): void
     {
         $contact = $this->contact(['FREQ' => null, 'BAND' => '40M']);

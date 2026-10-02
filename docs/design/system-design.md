@@ -358,7 +358,8 @@ The source of the method is `qsl_send/detect.py` of the qsl-send program. The tw
 - The API accepts JPEG and PNG templates up to 10 MB and 4096 pixels on each side. Larger images need more memory than PHP has on a shared host.
 - The build puts `upload_max_filesize = 11M` and `post_max_size = 12M` in the `.user.ini` file of `api/`.
 - The API keeps the template images in `storage/templates/` with a random name. A new image deletes the old file.
-- The texts of the QSL card: the date as `DD/MM/YYYY`, the time as `HH:MM` (UTC), the frequency as `7.13 MHz`, or the band if the log has no frequency.
+- The texts of the QSL card: the date as `DD/MM/YYYY`, the time as `HH:MM` (UTC), the frequency as `7.130 MHz` (FR-LOG-7a), or the band if the log has no frequency.
+  `api/src/Logs/Frequency.php` makes the text of the frequency for the ADIF reader, the log pages, the participant page and the QSL card.
 - The sample image (FR-QSL-5) uses example data: `LU1ABC/P`, `Juana Pérez`, `04/10/2026`, `14:30`, `7.130 MHz`, `SSB`, `59`.
 - An activity with QSL card templates cannot be deleted, as an activity with logs (FR-ACT-8).
 - The API opens each uploaded template with GD before it saves the file. It refuses a file that GD cannot read.

@@ -111,7 +111,7 @@ final class PdoLogStore implements LogStore
                 name: $row['name'],
                 qsoAt: $row['qso_at'],
                 // DECIMAL(10, 6) gives zeros at the end, such as 7.074000.
-                frequency: $row['frequency'] === null ? null : rtrim(rtrim($row['frequency'], '0'), '.'),
+                frequency: $row['frequency'] === null ? null : Frequency::text($row['frequency']),
                 band: $row['band'],
                 mode: $row['mode'],
                 rstSent: $row['rst_sent'],

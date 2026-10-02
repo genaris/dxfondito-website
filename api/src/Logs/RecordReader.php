@@ -125,16 +125,16 @@ final class RecordReader
     }
 
     /**
-     * The frequency in MHz with six or fewer decimals, or null for an incorrect value.
+     * The frequency in MHz with six or fewer decimals and three or more, or null for an incorrect value.
      */
     private static function frequency(string $value): ?string
     {
         if (preg_match('/^[0-9]{1,4}(\.[0-9]+)?$/', $value) !== 1 || (float) $value <= 0) {
             return null;
         }
-        $rounded = rtrim(rtrim(number_format(round((float) $value, 6), 6, '.', ''), '0'), '.');
+        $rounded = number_format(round((float) $value, 6), 6, '.', '');
 
-        return $rounded === '0' ? null : $rounded;
+        return (float) $rounded <= 0 ? null : Frequency::text($rounded);
     }
 
     /**

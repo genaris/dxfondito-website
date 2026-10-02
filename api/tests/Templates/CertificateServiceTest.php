@@ -155,7 +155,7 @@ final class CertificateServiceTest extends TestCase
                 callSign: 'LU9ZZ',
                 name: null,
                 qsoAt: $date . ' 12:00:00',
-                frequency: '7.13',
+                frequency: '7.130',
                 band: '40m',
                 mode: 'SSB',
                 activityId: $i,

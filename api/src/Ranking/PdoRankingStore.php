@@ -6,6 +6,7 @@ namespace DxFondito\Ranking;
 
 use Closure;
 use DxFondito\Activities\Reference;
+use DxFondito\Logs\Frequency;
 use PDO;
 
 final class PdoRankingStore implements RankingStore
@@ -83,7 +84,7 @@ final class PdoRankingStore implements RankingStore
                 callSign: $row['call_sign'],
                 name: $row['name'],
                 qsoAt: $row['qso_at'],
-                frequency: $row['frequency'] === null ? null : rtrim(rtrim($row['frequency'], '0'), '.'),
+                frequency: $row['frequency'] === null ? null : Frequency::text($row['frequency']),
                 band: $row['band'],
                 mode: $row['mode'],
                 activityId: (int) $row['activity_id'],
