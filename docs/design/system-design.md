@@ -208,21 +208,28 @@ With the indexes of section 3.1, these queries are fast.
 
 ### 4.2 Points and ranking
 
-For one season, the API counts the different references for each base call sign.
-Thus a second activity of a reference gives no second point (R-PTS-2a).
+For one season, the API reads one line for each participant and reference, not one line for each contact:
 
 ```sql
-SELECT c.base_call_sign,
-       COUNT(DISTINCT a.reference_id) AS points
-FROM contacts c
-JOIN activities a ON a.id = c.activity_id
-WHERE a.season = :season
-GROUP BY c.base_call_sign
-ORDER BY points DESC, c.base_call_sign;
+SELECT DISTINCT c.base_call_sign, a.reference_id, s.code, r.number
+FROM activities a
+JOIN contacts c ON c.activity_id = a.id
+JOIN refs r ON r.id = a.reference_id
+JOIN series s ON s.id = r.series_id
+WHERE a.season = :season;
 ```
 
-The same query counts the references of each series for FR-PUB-3.
+- The index (`activity_id`, `base_call_sign`, `qso_at`) of `contacts` gives the base call signs without a read of the contact lines.
+- The points of a participant are the number of its lines. Thus a second activity of a reference gives no second point (R-PTS-2a).
+- The same lines give the list of the references of each line of the ranking (FR-PUB-3, D-25). Thus the list needs no second query.
+- The ranking needs no first contact and no operator. Thus the query has no join with `logs` and `users`.
+
 The API gives the same position to participants with equal points.
+The next position skips the shared positions: 1, 1, 3.
+
+The participant page and the certificates need the first contacts (section 4.3).
+For them, the API reads the contacts with their activity, reference and log operator,
+and calculates the first contacts in PHP (`Ranking\Calculator`).
 
 ### 4.3 First contact
 
@@ -389,6 +396,7 @@ A new initial password also opens a locked account.
 | `/actividad/{id}`            | Activity, participants, logs, QSL card templates | Visitor, operator |
 | `/participante/{call}`       | Participant, QSL cards, certificates             | Visitor       |
 | `/log/{id}`                  | Contacts of a log                                | Operator, administrator |
+| `/estado`                    | Status of the API and the database               | Visitor       |
 | `/ingresar`                  | Sign-in                                          | Visitor       |
 | `/contrasena`                | Password change                                  | Operator, administrator |
 | `/admin/referencias`         | References                                       | Administrator |
@@ -396,6 +404,9 @@ A new initial password also opens a locked account.
 | `/admin/usuarios`            | Accounts                                         | Administrator |
 | `/admin/certificados`        | Certificate templates                            | Administrator |
 | `/admin/registro`            | Record of actions                                | Administrator |
+
+The paths of the pages are in Spanish, as the user interface (C-6). Users see them and share them.
+The paths of the API (section 8), the source code and the documents are in English.
 
 The browser program uses hash paths, such as `/#/participante/LU1ABC`.
 The table shows the part of the path after the `#` character.

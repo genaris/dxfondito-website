@@ -15,6 +15,9 @@ use DxFondito\Http\PathId;
 use DxFondito\Http\Request;
 use DxFondito\Http\Response;
 use DxFondito\Logs\LogStore;
+use DxFondito\Ranking\Calculator;
+use DxFondito\Ranking\ContactRow;
+use DxFondito\Ranking\RankingStore;
 
 /**
  * The public season and activity requests (section 8.1), and the activity requests of an administrator (section 8.4).
@@ -34,6 +37,7 @@ final class ActivityController
         private readonly ActivityStore $activities,
         private readonly ActivityService $service,
         private readonly LogStore $logs,
+        private readonly RankingStore $ranking,
         ?Closure $now = null,
     ) {
         $this->now = $now ?? static fn (): DateTimeImmutable => new DateTimeImmutable();
@@ -58,19 +62,15 @@ final class ActivityController
      */
     public function bySeason(array $params): Response
     {
-        $season = $params['season'] ?? '';
-        if (preg_match('/^[0-9]{4}$/', $season) !== 1) {
-            throw new HttpException(404, 'The season does not exist');
-        }
-
         return Response::json(array_map(
             static fn (Activity $activity): array => $activity->publicData(),
-            $this->activities->bySeason((int) $season),
+            $this->activities->bySeason(PathId::season($params)),
         ));
     }
 
     /**
-     * FR-PUB-14 and FR-ACT-2a: the activity and the operators with a log in it.
+     * FR-PUB-14, FR-PUB-15 and FR-ACT-2a: the activity, the operators with a log in it,
+     * and the participants with the operator of their earliest contact in the activity.
      *
      * @param array<string, string> $params
      */
@@ -82,6 +82,14 @@ final class ActivityController
             'operators' => array_map(
                 static fn (array $operator): string => $operator['callSign'],
                 $this->logs->operators($activity->id),
+            ),
+            'participants' => array_map(
+                static fn (ContactRow $contact): array => [
+                    'callSign' => $contact->baseCallSign,
+                    'operator' => $contact->operatorCallSign,
+                    'qsoAt' => str_replace(' ', 'T', $contact->qsoAt) . 'Z',
+                ],
+                Calculator::activityParticipants($this->ranking->byActivity($activity->id)),
             ),
         ]);
     }

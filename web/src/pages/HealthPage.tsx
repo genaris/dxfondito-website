@@ -9,7 +9,10 @@ interface Health {
 
 type HealthState = { kind: 'loading' } | { kind: 'ready'; health: Health } | { kind: 'error' }
 
-export function HomePage() {
+/**
+ * The status of the API and the database, to check an installation.
+ */
+export function HealthPage() {
   const [state, setState] = useState<HealthState>({ kind: 'loading' })
 
   useEffect(() => {
@@ -28,7 +31,6 @@ export function HomePage() {
 
   return (
     <>
-      <p>Sitio en construcción.</p>
       <h2>Estado del sistema</h2>
       {state.kind === 'loading' && <p>Consultando…</p>}
       {state.kind === 'error' && <p>La API no responde.</p>}

@@ -143,7 +143,7 @@ The call sign of the user identifies the account.
 - **FR-PUB-1** The home page shows the ranking of the current season.
 - **FR-PUB-1a** A visitor can select a different season to see its ranking.
 - **FR-PUB-2** Each line of the ranking shows the position, the call sign, the points and the certificate levels.
-- **FR-PUB-3** Each line also shows the number of DPS references and the number of EFE references.
+- **FR-PUB-3** Each line also shows the codes of the references where the participant has a contact, such as DPS-01 and EFE-03 (D-25).
 - **FR-PUB-4** The ranking shows the participants in the order of their points, from high to low.
 - **FR-PUB-5** Participants with equal points have the same position. The system shows them in alphabetical order.
 - **FR-PUB-6** A visitor can search the ranking for a call sign.
@@ -323,6 +323,7 @@ The group made these decisions on 2026-10-01.
 | D-22     | The certificates start again each season. Each season has its own templates. This closes Q16. |
 | D-23     | A reference can have a second activity in a season. It gives no second point (R-PTS-2a). This closes Q17. |
 | D-24     | A participant gets one QSL card for each reference in a season, for the first contact (FR-QSL-7). This closes Q18. |
+| D-25     | Each line of the ranking shows the list of the references of the participant, not the number for each series. A column for each certificate level shows the reached levels (FR-PUB-2, FR-PUB-3). The model is the ranking of the events of Log de Argentina. Decision of 2026-10-02. |
 
 ## 9. Open questions
 

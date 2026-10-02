@@ -73,7 +73,7 @@ The workflow uploads files only when the `DEPLOY_ENABLED` variable is `true`.
 7. While there are no accounts, the page then shows a form for the first administrator.
    Enter the migration secret again, the call sign, the name and the password of the administrator.
    The form is not available after the first account exists.
-8. Open `https://<domain>/`. The page shows the status of the API and of the database.
+8. Open `https://<domain>/#/estado`. The page shows the status of the API and of the database.
 
 CAUTION: The workflow replaces `index.html` in the public folder.
 If the public folder has a different site, set `FTP_PUBLIC_DIR` to a subfolder before step 3.

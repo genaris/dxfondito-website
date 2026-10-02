@@ -9,8 +9,7 @@ import { LogsSection } from './LogsSection.tsx'
 type State = { kind: 'loading' } | { kind: 'ready'; activity: ActivityDetail } | { kind: 'missing' } | { kind: 'error' }
 
 /**
- * The data of an activity and its operators (FR-PUB-14). The signed-in users also see its logs (FR-LOG-19).
- * The participants come with the ranking.
+ * The data of an activity, its operators and its participants (FR-PUB-14, FR-PUB-15). The signed-in users also see its logs (FR-LOG-19).
  */
 export function ActivityPage({ id }: { id: number }) {
   const { user } = useSession()
@@ -50,6 +49,37 @@ export function ActivityPage({ id }: { id: number }) {
       </dl>
       {activity.reference.description && <p className="prewrap">{activity.reference.description}</p>}
       {activity.description && <p className="prewrap">{activity.description}</p>}
+      <section>
+        <h3>Participantes ({activity.participants.length})</h3>
+        {activity.participants.length === 0 ? (
+          <p>Todavía no hay contactos.</p>
+        ) : (
+          <div className="table-scroll">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Indicativo</th>
+                  <th>Operador</th>
+                  <th>Primer contacto (UTC)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activity.participants.map((participant) => (
+                  <tr key={participant.callSign}>
+                    <td>
+                      <a href={href(`/participante/${participant.callSign}`)}>{participant.callSign}</a>
+                    </td>
+                    <td>{participant.operator}</td>
+                    <td className="nowrap">
+                      {participant.qsoAt.slice(0, 10)} {participant.qsoAt.slice(11, 16)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
       {user && <LogsSection activityId={activity.id} user={user} onChange={load} />}
     </>
   )

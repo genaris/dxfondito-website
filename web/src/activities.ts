@@ -67,6 +67,8 @@ export function readActivities(season: number): Promise<Activity[]> {
 /** An activity with the call signs of its operators (FR-ACT-2a). */
 export interface ActivityDetail extends Activity {
   operators: string[]
+  /** Each participant with the operator of the earliest contact in the activity (FR-PUB-15). */
+  participants: { callSign: string; operator: string; qsoAt: string }[]
 }
 
 export function readActivity(id: number): Promise<ActivityDetail> {

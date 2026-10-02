@@ -6,9 +6,12 @@ import { UsersPage } from './pages/admin/UsersPage.tsx'
 import { ActivitiesPage } from './pages/ActivitiesPage.tsx'
 import { ActivityPage } from './pages/ActivityPage.tsx'
 import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
-import { HomePage } from './pages/HomePage.tsx'
+import { HealthPage } from './pages/HealthPage.tsx'
 import { LogPage } from './pages/LogPage.tsx'
+import { ParticipantPage } from './pages/ParticipantPage.tsx'
+import { RankingPage } from './pages/RankingPage.tsx'
 import { SignInPage } from './pages/SignInPage.tsx'
+import { baseCallSign } from './ranking.ts'
 import { href, matchPath, useHashPath } from './router.ts'
 import { useSession } from './useSession.ts'
 
@@ -32,6 +35,9 @@ function App() {
             DX Fondito
           </a>
           <nav className="site-nav" aria-label="Secciones">
+            <NavLink path="/" current={path} isActive={(current) => current === '/' || current.startsWith('/temporada/')}>
+              Ranking
+            </NavLink>
             <NavLink path="/actividades" current={path}>
               Actividades
             </NavLink>
@@ -67,8 +73,22 @@ function App() {
   )
 }
 
-function NavLink({ path, current, children }: { path: string; current: string; children: ReactNode }) {
-  const active = current === path || current.startsWith(`${path}/`)
+/**
+ * A link that shows when its section is the current page.
+ * By default, the section is the path of the link and the paths below it.
+ */
+function NavLink({
+  path,
+  current,
+  isActive = (value) => value === path || value.startsWith(`${path}/`),
+  children,
+}: {
+  path: string
+  current: string
+  isActive?: (current: string) => boolean
+  children: ReactNode
+}) {
+  const active = isActive(current)
   return (
     <a href={href(path)} aria-current={active ? 'page' : undefined}>
       {children}
@@ -95,6 +115,19 @@ function Page({ path }: { path: string }) {
     return /^\d+$/.test(activityPage.id) ? <ActivityPage key={activityPage.id} id={Number(activityPage.id)} /> : <NotFound />
   }
 
+  const rankingPage = matchPath('/temporada/:season', path)
+  if (rankingPage) {
+    return /^\d{4}$/.test(rankingPage.season) ? (
+      <RankingPage key={rankingPage.season} season={Number(rankingPage.season)} />
+    ) : (
+      <NotFound />
+    )
+  }
+  const participantPage = matchPath('/participante/:call', path)
+  if (participantPage) {
+    const callSign = baseCallSign(participantPage.call)
+    return /^[A-Z0-9]{3,20}$/.test(callSign) ? <ParticipantPage key={callSign} callSign={callSign} /> : <NotFound />
+  }
   const logPage = matchPath('/log/:id', path)
   if (logPage) {
     if (!user) return <SignInPage />
@@ -103,7 +136,9 @@ function Page({ path }: { path: string }) {
 
   switch (path) {
     case '/':
-      return <HomePage />
+      return <RankingPage season={null} />
+    case '/estado':
+      return <HealthPage />
     case '/actividades':
       return <ActivitiesPage season={null} />
     case '/ingresar':

@@ -251,3 +251,52 @@ button.link {
   overflow-y: auto;
   margin: 0.25rem 0 0.75rem;
 }
+
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th.number {
+  text-align: right;
+}
+
+.badge {
+  display: inline-block;
+  margin: 0 0.25rem 0.25rem 0;
+  padding: 0 0.5rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.search input {
+  font: inherit;
+  padding: 0.25rem 0.5rem;
+  width: 10rem;
+}
+
+.season + .season {
+  margin-top: 2rem;
+}
+
+.table .level {
+  text-align: center;
+  width: 2.5rem;
+}
+
+.references {
+  min-width: 12rem;
+}
+
+.tag {
+  display: inline-block;
+  margin: 0.1rem 0.25rem 0.1rem 0;
+  padding: 0 0.35rem;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

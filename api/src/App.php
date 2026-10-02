@@ -18,6 +18,7 @@ use DxFondito\Controller\AuditController;
 use DxFondito\Controller\HealthController;
 use DxFondito\Controller\LogController;
 use DxFondito\Controller\MigrationController;
+use DxFondito\Controller\RankingController;
 use DxFondito\Controller\ReferenceController;
 use DxFondito\Controller\SessionController;
 use DxFondito\Controller\UserController;
@@ -30,6 +31,7 @@ use DxFondito\Http\Router;
 use DxFondito\Logs\LocalFileStore;
 use DxFondito\Logs\LogService;
 use DxFondito\Logs\PdoLogStore;
+use DxFondito\Ranking\PdoRankingStore;
 use PDO;
 use Throwable;
 
@@ -72,12 +74,15 @@ final class App
         $referenceStore = new PdoReferenceStore($pdo);
         $activityStore = new PdoActivityStore($pdo);
         $logStore = new PdoLogStore($pdo);
+        $rankingStore = new PdoRankingStore($pdo);
+        $ranking = new RankingController($rankingStore);
         $references = new ReferenceController($auth, new ReferenceService($referenceStore, $audit));
         $activities = new ActivityController(
             $auth,
             $activityStore,
             new ActivityService($activityStore, $referenceStore, $audit),
             $logStore,
+            $rankingStore,
         );
         $logs = new LogController($auth, new LogService(
             $logStore,
@@ -102,6 +107,8 @@ final class App
         $router->add('PUT', '/users/{id}/password', fn (Request $request, array $params): Response => $accounts->setPassword($request, $params));
         $router->add('GET', '/audit', fn (Request $request): Response => $auditRecord->list($request));
         $router->add('GET', '/seasons', fn (): Response => $activities->seasons());
+        $router->add('GET', '/seasons/{season}/ranking', fn (Request $request, array $params): Response => $ranking->ranking($params));
+        $router->add('GET', '/participants/{call}', fn (Request $request, array $params): Response => $ranking->participant($params));
         $router->add('GET', '/seasons/{season}/activities', fn (Request $request, array $params): Response => $activities->bySeason($params));
         $router->add('GET', '/activities/{id}', fn (Request $request, array $params): Response => $activities->show($params));
         $router->add('POST', '/activities', fn (Request $request): Response => $activities->create($request));
