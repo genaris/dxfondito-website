@@ -9,6 +9,7 @@ use DxFondito\Auth\Authenticator;
 use DxFondito\Auth\User;
 use DxFondito\Http\HttpException;
 use DxFondito\Http\Request;
+use DxFondito\Tests\Audit\MemoryAuditLog;
 use PHPUnit\Framework\TestCase;
 
 final class AuthenticatorTest extends TestCase
@@ -17,6 +18,7 @@ final class AuthenticatorTest extends TestCase
 
     private MemoryUserStore $users;
     private MemorySession $session;
+    private MemoryAuditLog $audit;
     private DateTimeImmutable $now;
     private int $userId;
 
@@ -24,6 +26,7 @@ final class AuthenticatorTest extends TestCase
     {
         $this->users = new MemoryUserStore();
         $this->session = new MemorySession();
+        $this->audit = new MemoryAuditLog();
         $this->now = new DateTimeImmutable('2026-10-01 12:00:00');
         // A low cost keeps the tests fast.
         $hash = password_hash(self::PASSWORD, PASSWORD_BCRYPT, ['cost' => 4]);
@@ -204,6 +207,7 @@ final class AuthenticatorTest extends TestCase
         self::assertFalse($changed->mustChangePassword);
         self::assertFalse($auth->current()?->mustChangePassword);
         self::assertSame(2, $this->session->regenerations);
+        self::assertSame(['user.password.change'], $this->audit->actions());
     }
 
     public function testThePasswordChangeNeedsTheCurrentPassword(): void
@@ -223,7 +227,7 @@ final class AuthenticatorTest extends TestCase
 
     private function auth(): Authenticator
     {
-        return new Authenticator($this->users, $this->session, fn (): DateTimeImmutable => $this->now);
+        return new Authenticator($this->users, $this->session, $this->audit, fn (): DateTimeImmutable => $this->now);
     }
 
     private function request(string $method, ?string $token): Request

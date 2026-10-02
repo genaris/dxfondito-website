@@ -6,6 +6,7 @@ namespace DxFondito\Auth;
 
 use Closure;
 use DateTimeImmutable;
+use DxFondito\Audit\AuditLog;
 use DxFondito\CallSign;
 use DxFondito\Http\HttpException;
 use DxFondito\Http\Request;
@@ -32,6 +33,7 @@ final class Authenticator
     public function __construct(
         private readonly UserStore $users,
         private readonly Session $session,
+        private readonly AuditLog $audit,
         ?Closure $now = null,
     ) {
         $this->now = $now ?? static fn (): DateTimeImmutable => new DateTimeImmutable();
@@ -201,6 +203,7 @@ final class Authenticator
         }
 
         $this->users->setPassword($user->id, PasswordRules::hash($newPassword), false);
+        $this->audit->record($user->id, AuditLog::USER_PASSWORD_CHANGE, $user->id, ['callSign' => $user->callSign]);
         $this->session->regenerate();
         $this->current = $this->users->findById($user->id);
     }

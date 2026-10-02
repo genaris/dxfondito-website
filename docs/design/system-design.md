@@ -169,6 +169,11 @@ Indexes: (`activity_id`, `base_call_sign`, `qso_at`) and (`base_call_sign`).
 | `detail`     | JSON, null   | For example the file name of a deleted log.  |
 | `created_at` | datetime     |                                              |
 
+The actions of the accounts are `user.create`, `user.update`, `user.password.reset` (an administrator sets an initial password) and `user.password.change` (the user changes the own password).
+The detail has the call sign of the account. For `user.update`, it has only the changed values, each with the old and the new value.
+The record never has a password.
+`GET /audit` gives 50 entries for each page, the newest first.
+
 **`schema_migrations`**: the list of the database changes that the host has.
 
 ### 3.2 No stored points

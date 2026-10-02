@@ -36,8 +36,9 @@ final class UserController
 
     public function create(Request $request): Response
     {
-        $this->auth->requireAdministrator($request);
+        $actor = $this->auth->requireAdministrator($request);
         $user = $this->accounts->create(
+            $actor,
             $request->string('callSign'),
             $request->string('name'),
             $request->string('email'),
@@ -53,12 +54,13 @@ final class UserController
      */
     public function update(Request $request, array $params): Response
     {
-        $this->auth->requireAdministrator($request);
+        $actor = $this->auth->requireAdministrator($request);
         $active = $request->body['active'] ?? null;
         if (!is_bool($active)) {
             throw new HttpException(422, 'The value of active must be true or false');
         }
         $user = $this->accounts->update(
+            $actor,
             self::id($params),
             $request->string('name'),
             $request->string('email'),
@@ -74,8 +76,8 @@ final class UserController
      */
     public function setPassword(Request $request, array $params): Response
     {
-        $this->auth->requireAdministrator($request);
-        $user = $this->accounts->setInitialPassword(self::id($params), $request->string('password'));
+        $actor = $this->auth->requireAdministrator($request);
+        $user = $this->accounts->setInitialPassword($actor, self::id($params), $request->string('password'));
 
         return $this->one($user);
     }

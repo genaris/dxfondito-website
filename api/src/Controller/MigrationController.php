@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DxFondito\Controller;
 
 use Closure;
+use DxFondito\Audit\AuditLog;
 use DxFondito\Auth\PasswordRules;
 use DxFondito\Auth\User;
 use DxFondito\Auth\UserStore;
@@ -26,6 +27,7 @@ final class MigrationController
     public function __construct(
         private readonly Closure $migrator,
         private readonly UserStore $users,
+        private readonly AuditLog $audit,
         private readonly string $secret,
     ) {
     }
@@ -101,7 +103,15 @@ final class MigrationController
         }
 
         // The developer chose this password. Thus it is not an initial password.
-        $this->users->create($callSign, $name, null, User::ADMINISTRATOR, PasswordRules::hash($password), false);
+        $id = $this->users->create($callSign, $name, null, User::ADMINISTRATOR, PasswordRules::hash($password), false);
+        // There is no other user. Thus the new administrator is the user of the entry.
+        $this->audit->record($id, AuditLog::USER_CREATE, $id, [
+            'callSign' => $callSign,
+            'name' => $name,
+            'email' => null,
+            'role' => User::ADMINISTRATOR,
+            'firstAdministrator' => true,
+        ]);
 
         return Response::html($this->page(
             '<p>Se creó la cuenta de administrador ' . self::escape($callSign) . '.</p>'

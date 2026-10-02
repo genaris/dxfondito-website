@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace DxFondito\Auth;
 
+use DxFondito\Audit\AuditLog;
 use DxFondito\CallSign;
 use DxFondito\Http\HttpException;
 
 /**
  * The administration of the accounts (FR-USR-1 to FR-USR-8).
  * The system does not delete accounts. An administrator deactivates them (FR-USR-5, FR-USR-7).
+ * The record of actions gets each change (FR-AUD-2).
  */
 final class AccountService
 {
-    public function __construct(private readonly UserStore $users)
-    {
+    public function __construct(
+        private readonly UserStore $users,
+        private readonly AuditLog $audit,
+    ) {
     }
 
     /**
@@ -30,7 +34,7 @@ final class AccountService
      *
      * @throws HttpException 422 for an incorrect value, 409 if the call sign has an account.
      */
-    public function create(string $callSign, string $name, ?string $email, string $role, string $initialPassword): User
+    public function create(User $actor, string $callSign, string $name, ?string $email, string $role, string $initialPassword): User
     {
         $callSign = CallSign::normalize($callSign);
         if (!CallSign::isValid($callSign)) {
@@ -46,6 +50,12 @@ final class AccountService
         }
 
         $id = $this->users->create($callSign, $name, $email, $role, PasswordRules::hash($initialPassword), true);
+        $this->audit->record($actor->id, AuditLog::USER_CREATE, $id, [
+            'callSign' => $callSign,
+            'name' => $name,
+            'email' => $email,
+            'role' => $role,
+        ]);
 
         return $this->find($id);
     }
@@ -55,7 +65,7 @@ final class AccountService
      *
      * @throws HttpException 404, 422, or 409 if no active administrator would remain (FR-USR-8).
      */
-    public function update(int $id, string $name, ?string $email, string $role, bool $active): User
+    public function update(User $actor, int $id, string $name, ?string $email, string $role, bool $active): User
     {
         $user = $this->find($id);
         $name = self::checkName($name);
@@ -68,7 +78,16 @@ final class AccountService
             throw new HttpException(409, 'The system must keep one or more active administrators');
         }
 
+        $changes = self::changes(
+            ['name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'active' => $user->active],
+            ['name' => $name, 'email' => $email, 'role' => $role, 'active' => $active],
+        );
+        if ($changes === []) {
+            return $user;
+        }
+
         $this->users->update($id, $name, $email, $role, $active);
+        $this->audit->record($actor->id, AuditLog::USER_UPDATE, $id, ['callSign' => $user->callSign, 'changes' => $changes]);
 
         return $this->find($id);
     }
@@ -78,15 +97,35 @@ final class AccountService
      *
      * @throws HttpException 404 or 422.
      */
-    public function setInitialPassword(int $id, string $initialPassword): User
+    public function setInitialPassword(User $actor, int $id, string $initialPassword): User
     {
         $user = $this->find($id);
         PasswordRules::check($initialPassword);
 
         $this->users->setPassword($user->id, PasswordRules::hash($initialPassword), true);
         $this->users->recordFailedAttempts($user->id, 0, null);
+        $this->audit->record($actor->id, AuditLog::USER_PASSWORD_RESET, $user->id, ['callSign' => $user->callSign]);
 
         return $this->find($id);
+    }
+
+    /**
+     * The values that changed, each with the old and the new value.
+     *
+     * @param array<string, mixed> $old
+     * @param array<string, mixed> $new
+     * @return array<string, array{0: mixed, 1: mixed}>
+     */
+    private static function changes(array $old, array $new): array
+    {
+        $changes = [];
+        foreach ($new as $key => $value) {
+            if ($old[$key] !== $value) {
+                $changes[$key] = [$old[$key], $value];
+            }
+        }
+
+        return $changes;
     }
 
     private function find(int $id): User

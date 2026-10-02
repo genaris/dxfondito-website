@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace DxFondito;
 
+use DxFondito\Audit\PdoAuditLog;
 use DxFondito\Auth\AccountService;
 use DxFondito\Auth\Authenticator;
 use DxFondito\Auth\PdoUserStore;
 use DxFondito\Auth\PhpSession;
+use DxFondito\Controller\AuditController;
 use DxFondito\Controller\HealthController;
 use DxFondito\Controller\MigrationController;
 use DxFondito\Controller\SessionController;
@@ -49,12 +51,14 @@ final class App
         $pdo = fn (): PDO => $this->pdo ??= Connection::open($config);
         $migrator = fn (): Migrator => new Migrator($pdo(), $this->root . '/migrations');
         $users = new PdoUserStore($pdo);
-        $auth = new Authenticator($users, new PhpSession($config->storageDir . '/sessions', $request->secure));
+        $audit = new PdoAuditLog($pdo);
+        $auth = new Authenticator($users, new PhpSession($config->storageDir . '/sessions', $request->secure), $audit);
 
         $health = new HealthController($migrator);
-        $migration = new MigrationController($migrator, $users, $config->migrationSecret);
+        $migration = new MigrationController($migrator, $users, $audit, $config->migrationSecret);
         $session = new SessionController($auth);
-        $accounts = new UserController($auth, new AccountService($users));
+        $accounts = new UserController($auth, new AccountService($users, $audit));
+        $auditRecord = new AuditController($auth, $audit);
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
@@ -68,6 +72,7 @@ final class App
         $router->add('GET', '/users', fn (Request $request): Response => $accounts->list($request));
         $router->add('POST', '/users', fn (Request $request): Response => $accounts->create($request));
         $router->add('PUT', '/users/{id}', fn (Request $request, array $params): Response => $accounts->update($request, $params));
+        $router->add('GET', '/audit', fn (Request $request): Response => $auditRecord->list($request));
         $router->add('PUT', '/users/{id}/password', fn (Request $request, array $params): Response => $accounts->setPassword($request, $params));
 
         return $router;

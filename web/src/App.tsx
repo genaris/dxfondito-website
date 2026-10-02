@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AuditPage } from './pages/admin/AuditPage.tsx'
 import { UsersPage } from './pages/admin/UsersPage.tsx'
 import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
 import { HomePage } from './pages/HomePage.tsx'
@@ -21,7 +22,10 @@ function App() {
             {user ? (
               <>
                 {user.role === 'administrator' && !user.mustChangePassword && (
-                  <a href={href('/admin/usuarios')}>Cuentas</a>
+                  <>
+                    <a href={href('/admin/usuarios')}>Cuentas</a>
+                    <a href={href('/admin/registro')}>Registro</a>
+                  </>
                 )}
                 <span>{user.callSign}</span>
                 {!user.mustChangePassword && <a href={href('/contrasena')}>Contraseña</a>}
@@ -54,7 +58,17 @@ function Page({ path }: { path: string }) {
     case '/contrasena':
       return user ? <ChangePasswordPage required={false} /> : <SignInPage />
     case '/admin/usuarios':
-      return <AdministratorOnly><UsersPage /></AdministratorOnly>
+      return (
+        <AdministratorOnly>
+          <UsersPage />
+        </AdministratorOnly>
+      )
+    case '/admin/registro':
+      return (
+        <AdministratorOnly>
+          <AuditPage />
+        </AdministratorOnly>
+      )
     default:
       return <p>La página no existe.</p>
   }
