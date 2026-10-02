@@ -377,6 +377,25 @@ The source of the method is `qsl_send/detect.py` of the qsl-send program. The tw
 - An activity with QSL card templates cannot be deleted, as an activity with logs (FR-ACT-8).
 - The API opens each uploaded template with GD before it saves the file. It refuses a file that GD cannot read.
 
+### 6.4 Lists of licensees
+
+The name on a QSL card comes from the official lists of licensees (FR-QSL-3a). The code is in `api/src/Registry/`.
+
+| Country   | Source | Page | Format |
+| --------- | ------ | ---- | ------ |
+| Argentina | ENACOM | `https://hertz.enacom.gob.ar/se/portal/arg/publico/ListadoRadioaficionado.php` | An HTML table. The page shows all licensees after a POST request with its CSRF token and `mostrarTodos=1`. About 16 000 lines, 7 MB. |
+| Uruguay   | URSEC  | `https://www.gub.uy/unidad-reguladora-servicios-comunicaciones/tematica/radioaficionados` | The page links an ODS file each month, such as `files/2026-07/Nomina CX Vigentes Julio 2026.ods`. About 1 300 lines. |
+
+- The button "Actualizar" of `/admin/licencias` sends `POST /registries/{ar|uy}`. The API downloads the list with curl and replaces the licensees of that country in one transaction.
+- ENACOM: the columns "Radioaficionado" (the name) and "Señal Distintiva". URSEC: "Distintivo de Llamada", "Nombres" and "Apellidos/Razón Social". The name is the given names and then the surnames.
+- The system keeps only the call sign and the name. The lists have other data, such as the city and the validity of a certificate of criminal records. The system does not keep these.
+- A list with fewer than 5 000 (Argentina) or 300 (Uruguay) licensees means a change of the source page. The API refuses it and keeps the old list.
+- The ODS file is a ZIP archive. The shared host can lack the zip extension of PHP. Thus `ZipReader` reads `content.xml` with the zlib extension.
+- The server of ENACOM does not send its intermediate certificate. Browsers find it, but curl does not. Thus `api/certs/sectigo-r36-chain.pem` has the intermediate certificate and the root of Sectigo, and the API verifies the server with this file. The intermediate certificate is valid until 2036.
+- The QSL card shows the name with a capital letter at the start of each word (`LicenseeName`). Particles such as "de" and "del" stay in lowercase letters. The lists of Argentina have no accents.
+- The table `licensees` has `call_sign` (key), `country` and `name`. The table `licensee_updates` has the date and the number of licensees of the last update of each country. Migration 0005.
+- The action of the record is `registry.update`, with the country and the number of licensees.
+
 ## 7. Security
 
 - All database queries use prepared statements.
@@ -452,6 +471,8 @@ The save operation of a template uses `POST`, not `PUT`, because PHP reads the f
 | `GET /certificate-templates/{season}/{points}/image`   | The image of the template.          |
 | `POST`, `DELETE /certificate-templates/{season}/{points}` | A new or changed template (multipart: `fields`, and `file` for a new image), a deletion. |
 | `POST /certificate-preview`                            | A sample image for a certificate template and its fields (`file`, or `season` and `points`). |
+| `GET /registries`                                      | The last update of each list of licensees. |
+| `POST /registries/{country}`                           | Downloads the list of `ar` or `uy` (section 6.4). |
 | `GET /audit`                                           | The record of actions.              |
 
 `GET /seasons` gives the seasons with activities and always the current season, the newest first.
@@ -479,6 +500,7 @@ A new initial password also opens a locked account.
 | `/admin/actividades`         | Activities                                       | Administrator |
 | `/admin/usuarios`            | Accounts                                         | Administrator |
 | `/admin/certificados`        | Certificate templates                            | Administrator |
+| `/admin/licencias`           | Lists of licensees of Argentina and Uruguay      | Administrator |
 | `/admin/registro`            | Record of actions                                | Administrator |
 
 The paths of the pages are in Spanish, as the user interface (C-6). Users see them and share them.

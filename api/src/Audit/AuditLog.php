@@ -25,6 +25,7 @@ interface AuditLog
     public const QSL_TEMPLATE_DELETE = 'qsl-template.delete';
     public const CERTIFICATE_TEMPLATE_SAVE = 'certificate-template.save';
     public const CERTIFICATE_TEMPLATE_DELETE = 'certificate-template.delete';
+    public const REGISTRY_UPDATE = 'registry.update';
 
     /**
      * @param int $userId The user who did the action.

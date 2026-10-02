@@ -13,6 +13,8 @@ use DxFondito\Http\HttpException;
 use DxFondito\Http\UploadedFile;
 use DxFondito\Logs\FileStore;
 use DxFondito\Ranking\RankingStore;
+use DxFondito\Registry\LicenseeName;
+use DxFondito\Registry\LicenseeStore;
 
 /**
  * The QSL card templates and the QSL cards (FR-QSL-1 to FR-QSL-11). Each contact has its QSL card (D-27).
@@ -27,6 +29,7 @@ final class QslService
         private readonly FileStore $files,
         private readonly TextRenderer $renderer,
         private readonly AuditLog $audit,
+        private readonly LicenseeStore $licensees,
     ) {
     }
 
@@ -149,7 +152,7 @@ final class QslService
         $content = $this->files->read($template->storedName) ?? throw new HttpException(404, 'The QSL card is not available');
 
         return [
-            'content' => $this->renderer->render($content, $template->fields, QslCard::values($contact)),
+            'content' => $this->renderer->render($content, $template->fields, QslCard::values($contact, $this->name($baseCallSign))),
             'name' => sprintf(
                 'QSL_%s_%s_%s_%s.jpg',
                 $baseCallSign,
@@ -158,6 +161,16 @@ final class QslService
                 str_replace(':', '', substr($contact->qsoAt, 11, 5)),
             ),
         ];
+    }
+
+    /**
+     * FR-QSL-3a: the name of the participant in the registries of Argentina and Uruguay, or an empty text.
+     */
+    private function name(string $baseCallSign): string
+    {
+        $name = $this->licensees->name($baseCallSign);
+
+        return $name === null ? '' : LicenseeName::format($name);
     }
 
     public static function canEdit(User $actor, int $operatorId): bool

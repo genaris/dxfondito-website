@@ -39,6 +39,7 @@ const ACTION_NAMES: Record<string, string> = {
   'qsl-template.delete': 'Borró una plantilla QSL',
   'certificate-template.save': 'Guardó una plantilla de certificado',
   'certificate-template.delete': 'Borró una plantilla de certificado',
+  'registry.update': 'Actualizó un listado de licencias',
 }
 
 const FIELD_NAMES: Record<string, string> = {
@@ -58,6 +59,8 @@ const FIELD_NAMES: Record<string, string> = {
   contacts: 'Contactos',
   season: 'Temporada',
   points: 'Puntos',
+  country: 'País',
+  licensees: 'Licencias',
 }
 
 export function actionName(action: string): string {
@@ -103,6 +106,7 @@ export function detailLines(entry: AuditEntry): string[] {
     'qsl-template.delete': ['operator'],
     'certificate-template.save': ['season', 'points'],
     'certificate-template.delete': ['season', 'points'],
+    'registry.update': ['country', 'licensees'],
   }
   for (const field of createdFields[entry.action] ?? []) {
     if (field in detail) lines.push(`${FIELD_NAMES[field]}: ${formatValue(field, detail[field])}`)

@@ -22,7 +22,7 @@ export const PROGRAM = {
   bands: '2 m (145,750 MHz y la frecuencia de encuentro), 40 m y 80 m',
   modes: 'Solo fonía',
   hours: '13:00 a 20:00 UTC',
-  power: 'Por la mañana se transmite en QRP, como ejercicio y para experimentar.',
+  power: 'Por la mañana intentamos transmitir en QRP, como ejercicio y para experimentar.',
   schedule:
     'Cada actividad indica sus horarios. En los parques dependen del Puesto de Salud y la activación ' +
     'se puede suspender por mal tiempo.',
@@ -30,6 +30,9 @@ export const PROGRAM = {
   qsl:
     'Por cada activación se envía en forma virtual la QSL Especial confirmatoria: una sola por cada ' +
     'Puesto de Salud contactado. También se confirma con QSL estándar en las plataformas habituales.',
+  qslName:
+    'El nombre de la QSL es el de los listados oficiales de licencias de ENACOM (Argentina) y URSEC (Uruguay). ' +
+    'Para otros países, la QSL no lleva nombre.',
   listeners: 'Pueden participar los radioescuchas que envíen el log de cada contacto.',
   certificateRule:
     'Cuentan las referencias distintas contactadas en el año. Los contactos con distintos operadores ' +

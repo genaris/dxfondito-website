@@ -17,6 +17,7 @@ use DxFondito\Tests\Activities\MemoryReferenceStore;
 use DxFondito\Tests\Audit\MemoryAuditLog;
 use DxFondito\Tests\Auth\MemoryUserStore;
 use DxFondito\Tests\Logs\MemoryFileStore;
+use DxFondito\Tests\Registry\MemoryLicenseeStore;
 use PHPUnit\Framework\TestCase;
 
 final class QslServiceTest extends TestCase
@@ -26,6 +27,7 @@ final class QslServiceTest extends TestCase
     private MemoryRankingStore $ranking;
     private MemoryFileStore $files;
     private MemoryAuditLog $audit;
+    private MemoryLicenseeStore $licensees;
     private QslService $service;
     private User $admin;
     private User $operator;
@@ -52,6 +54,7 @@ final class QslServiceTest extends TestCase
         $this->ranking = new MemoryRankingStore();
         $this->files = new MemoryFileStore();
         $this->audit = new MemoryAuditLog();
+        $this->licensees = new MemoryLicenseeStore();
         $this->service = new QslService(
             $this->templates,
             $activities,
@@ -60,6 +63,7 @@ final class QslServiceTest extends TestCase
             $this->files,
             new TextRenderer(new Fonts(dirname(__DIR__, 2) . '/fonts')),
             $this->audit,
+            $this->licensees,
         );
     }
 
@@ -151,6 +155,20 @@ final class QslServiceTest extends TestCase
         self::assertSame('QSL_LU9ZZ_DPS-01_20260510_1200.jpg', $this->service->card('LU9ZZ', $first->id)['name']);
     }
 
+    public function testTheNameOfTheCardComesFromTheRegistriesNotFromTheLog(): void
+    {
+        // FR-QSL-3a: the log says "Ana". The QSL card has the name of the registry, or no name.
+        $this->service->save($this->operator, $this->activityId, $this->operator->id, $this->image(), $this->fields());
+        $contact = $this->contact('2026-05-10 12:00:00', $this->operator);
+        $this->ranking->contacts = [$contact];
+        $plain = $this->service->card('LU9ZZ', $contact->id)['content'];
+
+        $this->licensees->replace('AR', ['LU9ZZ' => 'ANA MARIA PEREZ'], 'test');
+        $named = $this->service->card('LU9ZZ', $contact->id)['content'];
+
+        self::assertNotSame($plain, $named);
+    }
+
     public function testTheCardIsNotAvailableWithoutTheTemplateOfThatOperator(): void
     {
         // The template of a different operator does not apply (FR-QSL-9, FR-QSL-11).
@@ -184,10 +202,10 @@ final class QslServiceTest extends TestCase
 
     public function testTheValuesOfTheCard(): void
     {
-        $values = QslCard::values($this->contact('2026-05-10 14:07:00', $this->operator));
+        $values = QslCard::values($this->contact('2026-05-10 14:07:00', $this->operator), 'Ana Perez');
 
         self::assertSame(
-            ['call_sign' => 'LU9ZZ/P', 'name' => 'Ana', 'date' => '10/05/2026', 'time' => '14:07', 'frequency' => '7.130 MHz', 'mode' => 'SSB', 'rst' => '59'],
+            ['call_sign' => 'LU9ZZ/P', 'name' => 'Ana Perez', 'date' => '10/05/2026', 'time' => '14:07', 'frequency' => '7.130 MHz', 'mode' => 'SSB', 'rst' => '59'],
             $values,
         );
     }
@@ -196,7 +214,7 @@ final class QslServiceTest extends TestCase
     {
         $contact = $this->contact('2026-05-10 14:07:00', $this->operator, frequency: null);
 
-        self::assertSame('40m', QslCard::values($contact)['frequency']);
+        self::assertSame('40m', QslCard::values($contact, '')['frequency']);
     }
 
     private function contact(string $qsoAt, User $operator, ?string $frequency = '7.130'): ContactRow

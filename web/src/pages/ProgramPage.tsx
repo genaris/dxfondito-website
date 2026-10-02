@@ -68,6 +68,7 @@ export function ProgramPage() {
         <section className="card">
           <h3>QSL Especial</h3>
           <p>{PROGRAM.qsl}</p>
+          <p>{PROGRAM.qslName}</p>
           <p>{PROGRAM.listeners}</p>
         </section>
       </div>

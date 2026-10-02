@@ -254,6 +254,13 @@ All QSL cards have the same fields.
 - **FR-QSL-1** Each QSL card template is for one operator in one activity. The template is a JPEG or PNG image.
 - **FR-QSL-2** An operator can upload the templates of the same operator. An administrator can upload all templates.
 - **FR-QSL-3** The system writes the fields of the table below on the template.
+- **FR-QSL-3a** The name on the QSL card comes from the official lists of licensees of Argentina (ENACOM) and Uruguay (URSEC), by the base call sign of the participant.
+  The name is the full name of the list, with a capital letter at the start of each word, such as "Juana Isabel Ejemplo" for "JUANA ISABEL EJEMPLO".
+  A participant of a different country, or a participant who is not on these lists, gets the QSL card with an empty name.
+  The `NAME` field of the log is not on the public QSL card. The QSL card is public, and the name of the log comes from the operator, not from the participant.
+- **FR-QSL-3b** An administrator updates each list with a button. The system downloads the list from the site of ENACOM or URSEC.
+  If the download fails, or the list is much smaller than usual, the system keeps the old list.
+  The system keeps only the call sign and the name of each licensee.
 - **FR-QSL-4** The user who uploads a template sets the position, the size and the colour of each field.
 - **FR-QSL-5** The system shows a sample QSL card before the user saves the template.
 - **FR-QSL-6** The system makes the QSL card when a visitor downloads it.
@@ -276,7 +283,7 @@ All QSL cards have the same fields.
 | Field on the QSL card | Source in the log                                      |
 | --------------------- | ------------------------------------------------------ |
 | Call sign             | `CALL`, as the log gives it                            |
-| Name                  | `NAME`. The field stays empty if it is absent.         |
+| Name                  | The official registries of licensees (FR-QSL-3a).      |
 | Date                  | `QSO_DATE`                                             |
 | Time (UTC)            | `TIME_ON`                                              |
 | Frequency             | `FREQ`. If it is absent, the system writes `BAND`.     |
@@ -337,7 +344,7 @@ The group made these decisions on 2026-10-01.
 | D-10     | Each operator has a different QSL card design for each activity (FR-QSL-1). This closes Q5.   |
 | D-11     | The QSL card fields are date, call sign, name, frequency, time, mode and RST (FR-QSL-3).      |
 | D-12     | The operator of a contact is the operator of its log (R-OPR-2). This closes Q11.              |
-| D-13     | The name on the QSL card is the participant name from the `NAME` field. This closes Q12.      |
+| D-13     | The name on the QSL card is the participant name from the `NAME` field. This closes Q12. Replaced by D-28. |
 | D-14     | The operator or an administrator uploads the QSL card template (FR-QSL-2). This closes Q13.   |
 | D-15     | A certificate shows the call sign and the date. It has no serial number. It is a PDF file. This closes Q6. |
 | D-16     | An operator can upload a log to all activities (FR-LOG-2). This closes Q7.                    |
@@ -352,6 +359,7 @@ The group made these decisions on 2026-10-01.
 | D-25     | Each line of the ranking shows the list of the references of the participant, not the number for each series. A column for each certificate level shows the reached levels (FR-PUB-2, FR-PUB-3). The model is the ranking of the events of Log de Argentina. Decision of 2026-10-02. |
 | D-26     | The template editor finds the field boxes of the image (FR-QSL-12). The search is in the browser, before the save operation, and uses only the colours of the image. The fields go in the boxes in the usual order of a QSL card. Decision of 2026-10-02. |
 | D-27     | Each contact gives a QSL card, with the template of its operator for its activity. Only the first contact with a reference in a season gives a point (FR-QSL-7, R-OPR-5). This replaces D-9 for the QSL cards, and D-24. Decision of 2026-10-02. |
+| D-28     | The name on the public QSL card comes from the official lists of licensees of Argentina and Uruguay, not from the log (FR-QSL-3a). These lists are public sources. A participant of a different country gets no name. Decision of 2026-10-02. |
 
 ## 9. Open questions
 

@@ -12,15 +12,17 @@ use DxFondito\Ranking\ContactRow;
 final class QslCard
 {
     /**
-     * The data of the first contact (FR-QSL-8).
+     * The data of the contact (FR-QSL-8).
      *
+     * @param string $name The name of the participant in the official registries, or an empty text (FR-QSL-3a).
+     *   The NAME field of the log is not on the public QSL card.
      * @return array<string, string>
      */
-    public static function values(ContactRow $contact): array
+    public static function values(ContactRow $contact, string $name): array
     {
         return [
             'call_sign' => $contact->callSign,
-            'name' => $contact->name ?? '',
+            'name' => $name,
             // DD/MM/YYYY and HH:MM in UTC.
             'date' => substr($contact->qsoAt, 8, 2) . '/' . substr($contact->qsoAt, 5, 2) . '/' . substr($contact->qsoAt, 0, 4),
             'time' => substr($contact->qsoAt, 11, 5),

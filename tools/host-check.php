@@ -21,7 +21,8 @@ echo "PHP interface: " . PHP_SAPI . "\n";
 echo "\n";
 
 echo "Extensions\n";
-$extensions = array('pdo_mysql', 'mysqli', 'gd', 'mbstring', 'fileinfo', 'json', 'session', 'zlib');
+// curl downloads the lists of licensees of ENACOM and URSEC. zlib reads the ODS file of URSEC.
+$extensions = array('pdo_mysql', 'mysqli', 'gd', 'mbstring', 'fileinfo', 'json', 'session', 'zlib', 'curl');
 foreach ($extensions as $extension) {
     echo "  " . $extension . ": " . yes_no(extension_loaded($extension)) . "\n";
 }

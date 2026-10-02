@@ -22,6 +22,7 @@ use DxFondito\Controller\MigrationController;
 use DxFondito\Controller\QslController;
 use DxFondito\Controller\RankingController;
 use DxFondito\Controller\ReferenceController;
+use DxFondito\Controller\RegistryController;
 use DxFondito\Controller\SessionController;
 use DxFondito\Controller\UserController;
 use DxFondito\Database\Connection;
@@ -34,6 +35,9 @@ use DxFondito\Logs\LocalFileStore;
 use DxFondito\Logs\LogService;
 use DxFondito\Logs\PdoLogStore;
 use DxFondito\Ranking\PdoRankingStore;
+use DxFondito\Registry\CurlHttpClient;
+use DxFondito\Registry\PdoLicenseeStore;
+use DxFondito\Registry\RegistryService;
 use DxFondito\Templates\CertificateService;
 use DxFondito\Templates\Fonts;
 use DxFondito\Templates\PdoCertificateTemplateStore;
@@ -85,6 +89,7 @@ final class App
         $rankingStore = new PdoRankingStore($pdo);
         $qslTemplates = new PdoQslTemplateStore($pdo);
         $certificateTemplates = new PdoCertificateTemplateStore($pdo);
+        $licensees = new PdoLicenseeStore($pdo);
         $fonts = new Fonts($this->root . '/fonts');
         $renderer = new TextRenderer($fonts);
         $templateFiles = new LocalFileStore($config->storageDir . '/templates');
@@ -114,7 +119,14 @@ final class App
             $templateFiles,
             $renderer,
             $audit,
+            $licensees,
         ), $fonts);
+        $registries = new RegistryController($auth, new RegistryService(
+            $licensees,
+            new CurlHttpClient(),
+            $audit,
+            $this->root . '/certs/sectigo-r36-chain.pem',
+        ));
         $certificates = new CertificateController($auth, new CertificateService(
             $certificateTemplates,
             $rankingStore,
@@ -162,6 +174,8 @@ final class App
         $router->add('POST', '/certificate-templates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->save($request, $params));
         $router->add('DELETE', '/certificate-templates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->delete($request, $params));
         $router->add('POST', '/certificate-preview', fn (Request $request): Response => $certificates->preview($request));
+        $router->add('GET', '/registries', fn (Request $request): Response => $registries->list($request));
+        $router->add('POST', '/registries/{country}', fn (Request $request, array $params): Response => $registries->update($request, $params));
         $router->add('GET', '/fonts/{name}', fn (Request $request, array $params): Response => $qsl->font($params));
         $router->add('GET', '/references', fn (Request $request): Response => $references->list($request));
         $router->add('POST', '/references', fn (Request $request): Response => $references->create($request));
