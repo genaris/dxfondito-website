@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { readSeasons } from '../activities.ts'
 import type { Seasons } from '../activities.ts'
+import { levelClass, levelName } from '../program.ts'
 import { readRanking, searchRanking } from '../ranking.ts'
 import type { Ranking } from '../ranking.ts'
 import { href, navigate } from '../router.ts'
@@ -48,6 +49,9 @@ export function RankingPage({ season }: { season: number | null }) {
     <>
       <div className="title-row">
         <h2>Ranking {selected ?? ''}</h2>
+        {state.kind === 'ready' && state.ranking.rows.length > 0 && (
+          <span className="hint">{state.ranking.rows.length} participantes</span>
+        )}
         {selected !== null && options.length > 0 && (
           <SeasonSelect seasons={options} value={selected} onChange={(value) => navigate(`/temporada/${value}`)} />
         )}
@@ -88,8 +92,8 @@ function RankingTable({
               <th>Indicativo</th>
               <th className="number">Puntos</th>
               {ranking.levels.map((level) => (
-                <th key={level} className="level" title={`Certificado de ${level} puntos`}>
-                  {level}
+                <th key={level} className="level" title={`Certificado de ${level} referencias`}>
+                  {levelName(level)}
                 </th>
               ))}
               <th>Referencias</th>
@@ -97,8 +101,8 @@ function RankingTable({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.callSign}>
-                <td className="number">{row.position}</td>
+              <tr key={row.callSign} className={row.position <= 3 ? `podium podium-${row.position}` : undefined}>
+                <td className="number position">{row.position}</td>
                 <td>
                   <a href={href(`/participante/${row.callSign}`)}>{row.callSign}</a>
                 </td>
@@ -107,7 +111,9 @@ function RankingTable({
                 </td>
                 {ranking.levels.map((level) => (
                   <td key={level} className="level">
-                    {row.levels.includes(level) && <span aria-label={`Certificado de ${level} puntos`}>✓</span>}
+                    {row.levels.includes(level) && (
+                      <span className={levelClass(level)} role="img" aria-label={`Certificado ${levelName(level)}`} />
+                    )}
                   </td>
                 ))}
                 <td className="references">

@@ -397,6 +397,7 @@ A new initial password also opens a locked account.
 | `/participante/{call}`       | Participant, QSL cards, certificates             | Visitor       |
 | `/log/{id}`                  | Contacts of a log                                | Operator, administrator |
 | `/estado`                    | Status of the API and the database               | Visitor       |
+| `/programa`                  | Rules of the program                             | Visitor       |
 | `/ingresar`                  | Sign-in                                          | Visitor       |
 | `/contrasena`                | Password change                                  | Operator, administrator |
 | `/admin/referencias`         | References                                       | Administrator |
@@ -413,6 +414,10 @@ The table shows the part of the path after the `#` character.
 Thus the web server needs no rewrite rules, and each page has an address that a user can share.
 
 A user with an initial password sees only the password change page until the change (FR-AUT-3).
+
+The texts of the program (purpose, bands, modes, certificates) are in `web/src/program.ts`. Their source is the page of LU2AOZ on QRZ.com.
+The names of the certificate levels are Bronce (5), Plata (10) and Oro (15).
+The home page shows the activity in progress or the next one: the earliest activity that has not ended. It comes from the activities of the API, with its description.
 
 ## 10. Repository and installation
 

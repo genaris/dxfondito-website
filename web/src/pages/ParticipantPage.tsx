@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { frequencyText } from '../logs.ts'
+import { levelClass, levelName } from '../program.ts'
 import { readParticipant } from '../ranking.ts'
 import type { Participant, ParticipantSeason } from '../ranking.ts'
 import { href } from '../router.ts'
@@ -66,14 +67,15 @@ function SeasonSection({
       <p>
         <strong>{season.points}</strong> {season.points === 1 ? 'punto' : 'puntos'}.{' '}
         {season.pointsToNextLevel !== null &&
-          `Le ${season.pointsToNextLevel === 1 ? 'falta 1 punto' : `faltan ${season.pointsToNextLevel} puntos`} para el próximo certificado.`}
+          `Le ${season.pointsToNextLevel === 1 ? 'falta 1 punto' : `faltan ${season.pointsToNextLevel} puntos`} para el certificado ${levelName(season.points + season.pointsToNextLevel)}.`}
       </p>
       {season.certificates.length > 0 && (
         <p>
           Certificados:{' '}
           {season.certificates.map((certificate) => (
             <span key={certificate.points} className="badge" title={`Fecha: ${certificate.date}`}>
-              {certificate.points} puntos · {certificate.date}
+              <span className={levelClass(certificate.points)} aria-hidden="true" /> {levelName(certificate.points)} ·{' '}
+              {certificate.date}
             </span>
           ))}
         </p>
