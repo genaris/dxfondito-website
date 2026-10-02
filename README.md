@@ -70,7 +70,10 @@ The workflow uploads files only when the `DEPLOY_ENABLED` variable is `true`.
 4. Through FTP, copy `dxfondito-app/config.example.php` to `dxfondito-app/config.php` on the host.
 5. In `config.php`, replace the database values and set a long random value for `migration_secret`.
 6. Open `https://<domain>/api/index.php?r=/migrate` and enter the migration secret.
-7. Open `https://<domain>/`. The page shows the status of the API and of the database.
+7. While there are no accounts, the page then shows a form for the first administrator.
+   Enter the migration secret again, the call sign, the name and the password of the administrator.
+   The form is not available after the first account exists.
+8. Open `https://<domain>/`. The page shows the status of the API and of the database.
 
 CAUTION: The workflow replaces `index.html` in the public folder.
 If the public folder has a different site, set `FTP_PUBLIC_DIR` to a subfolder before step 3.

@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace DxFondito;
 
+use DxFondito\Auth\Authenticator;
+use DxFondito\Auth\PdoUserStore;
+use DxFondito\Auth\PhpSession;
 use DxFondito\Controller\HealthController;
 use DxFondito\Controller\MigrationController;
+use DxFondito\Controller\SessionController;
 use DxFondito\Database\Connection;
 use DxFondito\Database\Migrator;
 use DxFondito\Http\HttpException;
@@ -26,7 +30,7 @@ final class App
     public function handle(Request $request): Response
     {
         try {
-            return $this->router(Config::load($this->root))->dispatch($request);
+            return $this->router(Config::load($this->root), $request)->dispatch($request);
         } catch (HttpException $e) {
             return Response::error($e->status, $e->getMessage());
         } catch (Throwable $e) {
@@ -37,21 +41,27 @@ final class App
         }
     }
 
-    private function router(Config $config): Router
+    private function router(Config $config, Request $request): Router
     {
         // The API opens the database connection only when a request needs it.
-        $migrator = fn (): Migrator => new Migrator(
-            $this->pdo ??= Connection::open($config),
-            $this->root . '/migrations',
-        );
+        $pdo = fn (): PDO => $this->pdo ??= Connection::open($config);
+        $migrator = fn (): Migrator => new Migrator($pdo(), $this->root . '/migrations');
+        $users = new PdoUserStore($pdo);
+        $auth = new Authenticator($users, new PhpSession($config->storageDir . '/sessions', $request->secure));
 
         $health = new HealthController($migrator);
-        $migration = new MigrationController($migrator, $config->migrationSecret);
+        $migration = new MigrationController($migrator, $users, $config->migrationSecret);
+        $session = new SessionController($auth);
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
         $router->add('GET', '/migrate', fn (): Response => $migration->form());
         $router->add('POST', '/migrate', fn (Request $request): Response => $migration->run($request));
+        $router->add('POST', '/migrate/administrator', fn (Request $request): Response => $migration->createAdministrator($request));
+        $router->add('GET', '/session', fn (): Response => $session->show());
+        $router->add('POST', '/session', fn (Request $request): Response => $session->signIn($request));
+        $router->add('DELETE', '/session', fn (): Response => $session->signOut());
+        $router->add('PUT', '/session/password', fn (Request $request): Response => $session->changePassword($request));
 
         return $router;
     }

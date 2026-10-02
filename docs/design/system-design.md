@@ -282,8 +282,10 @@ For a certificate, the fields are `call_sign` and `date`.
 
 - All database queries use prepared statements.
 - The API uses PHP sessions. The session cookie has the `HttpOnly`, `Secure` and `SameSite=Lax` attributes.
-- Each request that changes data must have a token header. The API compares it with the token of the session.
+- Each request that changes data must have a token header (`X-CSRF-Token`). The API compares it with the token of the session.
 - The API makes a new session identifier at each sign-in.
+- The API keeps the session files in `storage/sessions/`. Thus the cleanup of the shared PHP folder of the host does not end a session early.
+- A password has 8 or more characters and 72 or fewer bytes, because `password_hash()` uses only the first 72 bytes.
 - The API checks the role and the owner for each protected request. The browser program only hides the buttons.
 - The API makes the names of stored files. It does not use a name that a user supplies.
 - The web server does not supply the file store, the PHP source files or the configuration file.
@@ -422,6 +424,8 @@ GitHub Actions connects the installation to Git:
 - The FTP user name and the FTP password are secrets of the GitHub repository. They are not in the source files.
 - The workflow uses FTPS if the host has it.
 - The migration page needs a secret from `config.php`.
+- While there are no accounts, the migration page also makes the first administrator (`POST /migrate/administrator`).
+  The host has no command line. Thus this is the only way to make the first account.
 - `tools/build.sh` does steps 3 and 4. The workflow and the developer use the same script.
 - `tools/deploy-ftp.sh` does step 5 with `lftp`. The workflow and the developer use the same script.
 - The workflow uploads files only when the `DEPLOY_ENABLED` variable of the repository is `true`.
