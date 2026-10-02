@@ -84,8 +84,8 @@ If the public folder has a different site, set `FTP_PUBLIC_DIR` to a subfolder b
 | `FTP_PASSWORD`     | Secret   | FTP password.                                                               |
 | `DEPLOY_ENABLED`   | Variable | `true` starts the installation after each push to `main`.                   |
 | `FTP_PROTOCOL`     | Variable | `ftps` (default) or `ftp`.                                                  |
-| `FTP_PUBLIC_DIR`   | Variable | Public folder on the host. Default: `public_html/`. It must end with `/`.   |
-| `FTP_PRIVATE_DIR`  | Variable | Private folder on the host. Default: `dxfondito-app/`. It must end with `/`. |
+| `FTP_PUBLIC_DIR`   | Variable | Public folder on the host. Default: `public_html/`.                         |
+| `FTP_PRIVATE_DIR`  | Variable | Private folder on the host. Default: `dxfondito-app/`.                       |
 | `PRIVATE_PATH`     | Variable | Path from the `api/` folder on the host to the private folder. Default: `../../dxfondito-app`. |
 
 If the public folder is a subfolder, such as `public_html/dps/`, set `PRIVATE_PATH` to `../../../dxfondito-app`.

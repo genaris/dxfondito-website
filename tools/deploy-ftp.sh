@@ -15,8 +15,11 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 : "${FTP_USERNAME:?Set FTP_USERNAME}"
 : "${FTP_PASSWORD:?Set FTP_PASSWORD}"
 protocol="${FTP_PROTOCOL:-ftps}"
+# Without the final "/". With it, lftp puts dist/public in a "public" subfolder of the target.
 public_dir="${FTP_PUBLIC_DIR:-public_html}"
+public_dir="${public_dir%/}"
 private_dir="${FTP_PRIVATE_DIR:-dxfondito-app}"
+private_dir="${private_dir%/}"
 
 case "$protocol" in
     ftps) ssl_force=true ;;
