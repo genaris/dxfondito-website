@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { certificateFileName, certificateUrl } from '../certificates.ts'
 import { frequencyText } from '../logs.ts'
 import { levelClass, levelName } from '../program.ts'
 import { qslCardUrl } from '../qsl.ts'
@@ -71,15 +72,32 @@ function SeasonSection({
           `Le ${season.pointsToNextLevel === 1 ? 'falta 1 punto' : `faltan ${season.pointsToNextLevel} puntos`} para el certificado ${levelName(season.points + season.pointsToNextLevel)}.`}
       </p>
       {season.certificates.length > 0 && (
-        <p>
-          Certificados:{' '}
-          {season.certificates.map((certificate) => (
-            <span key={certificate.points} className="badge" title={`Fecha: ${certificate.date}`}>
-              <span className={levelClass(certificate.points)} aria-hidden="true" /> {levelName(certificate.points)} ·{' '}
-              {certificate.date}
-            </span>
-          ))}
-        </p>
+        <div className="certificates">
+          <span>Certificados:</span>
+          {season.certificates.map((certificate) => {
+            const name = levelName(certificate.points)
+            const content = (
+              <>
+                <span className={levelClass(certificate.points)} aria-hidden="true" /> {name} · {certificate.date}
+              </>
+            )
+            return certificate.available ? (
+              <a
+                key={certificate.points}
+                className="badge certificate-link"
+                href={certificateUrl(baseCallSign, season.season, certificate.points)}
+                download={certificateFileName(baseCallSign, season.season, name)}
+                title={`Descargar el certificado ${name} (PDF)`}
+              >
+                {content} · Descargar
+              </a>
+            ) : (
+              <span key={certificate.points} className="badge" title="El certificado todavía no está disponible.">
+                {content} · <span className="hint">No disponible</span>
+              </span>
+            )
+          })}
+        </div>
       )}
       <div className="table-scroll">
         <table className="table">

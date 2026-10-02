@@ -23,6 +23,8 @@ interface AuditLog
     public const LOG_DELETE = 'log.delete';
     public const QSL_TEMPLATE_SAVE = 'qsl-template.save';
     public const QSL_TEMPLATE_DELETE = 'qsl-template.delete';
+    public const CERTIFICATE_TEMPLATE_SAVE = 'certificate-template.save';
+    public const CERTIFICATE_TEMPLATE_DELETE = 'certificate-template.delete';
 
     /**
      * @param int $userId The user who did the action.

@@ -143,6 +143,7 @@ The call sign of the user identifies the account.
 - **FR-PUB-1** The home page shows the ranking of the current season.
 - **FR-PUB-1a** A visitor can select a different season to see its ranking.
 - **FR-PUB-2** Each line of the ranking shows the position, the call sign, the points and the certificate levels.
+- **FR-PUB-2a** Each reached level in the ranking is a link to download that certificate, if the level has a template for the season (FR-CER-7).
 - **FR-PUB-3** Each line also shows the codes of the references where the participant has a contact, such as DPS-01 and EFE-03 (D-25).
 - **FR-PUB-4** The ranking shows the participants in the order of their points, from high to low.
 - **FR-PUB-5** Participants with equal points have the same position. The system shows them in alphabetical order.
@@ -157,6 +158,7 @@ The call sign of the user identifies the account.
 - **FR-PUB-10a** For each reference in that list, the page shows the date, the time, the frequency and the mode.
 - **FR-PUB-11** For each reference in that list, the page gives a link to download the QSL card.
 - **FR-PUB-12** For each season, the page gives a link to download each available certificate.
+- **FR-PUB-12a** A reached certificate without a template for the season shows that it is not available (FR-CER-7).
 - **FR-PUB-13** The activity list shows the activities of the selected season, with the most recent activity first.
 - **FR-PUB-13a** For each activity, the list shows the reference code, the reference name and the dates.
 - **FR-PUB-14** The page of an activity shows its data, its operators and the list of its participants.
@@ -272,6 +274,7 @@ All QSL cards have the same fields.
 - **FR-CER-1** An administrator uploads one certificate template for each level of each season.
 - **FR-CER-2** The system writes the call sign and the certificate date on the template.
 - **FR-CER-2a** The certificate has no serial number.
+- **FR-CER-2b** The call sign on the certificate is the base call sign of the participant (R-CALL-3). The date is in Spanish words, such as "4 de octubre de 2026".
 - **FR-CER-3** An administrator sets the position, the size and the colour of each field on the template.
 - **FR-CER-4** The system makes the certificate when a visitor downloads it.
 - **FR-CER-5** The system supplies the certificate as a PDF file.

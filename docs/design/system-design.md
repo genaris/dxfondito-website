@@ -37,7 +37,7 @@ The system has three parts.
 | Library              | Use                                                   |
 | -------------------- | ----------------------------------------------------- |
 | React                | Page components in the browser program.               |
-| FPDF                 | The API puts the certificate image into a PDF file.   |
+| FPDF                 | The API puts the certificate image into a PDF file. The Composer package `setasign/fpdf`. |
 | PHPUnit              | Tests of the API.                                     |
 | Vitest               | Tests of the browser program.                         |
 | pnpm                 | Package manager for the browser program.              |
@@ -176,6 +176,7 @@ Indexes: (`activity_id`, `base_call_sign`, `qso_at`) and (`base_call_sign`).
 | `created_at` | datetime     |                                              |
 
 The actions of the QSL card templates are `qsl-template.save` and `qsl-template.delete`.
+The actions of the certificate templates are `certificate-template.save` and `certificate-template.delete`. The detail has the season and the points of the level.
 The actions of the accounts are `user.create`, `user.update`, `user.password.reset` (an administrator sets an initial password) and `user.password.change` (the user changes the own password).
 The detail has the call sign of the account. For `user.update`, it has only the changed values, each with the old and the new value.
 The record never has a password.
@@ -346,6 +347,14 @@ The source of the method is `qsl_send/detect.py` of the qsl-send program. The tw
 - The API makes each document when a visitor downloads it. It keeps no copy.
 - For a QSL card, the API opens the template with GD, writes the fields with `imagettftext()`, and sends a JPEG image.
 - For a certificate, the API makes the image in the same way. Then FPDF puts the image on one PDF page.
+  The page has the proportions of the image and no margin. Its long side is 297 mm, the long side of an A4 sheet.
+  Thus an A4 template gives an A4 page. A landscape image gives a landscape page.
+  FPDF reads the image from a file. Thus the API writes the JPEG image to a temporary file and deletes it after the PDF file is complete.
+- The texts of the certificate: the base call sign (R-CALL-3), and the certificate date (R-CER-5) in Spanish words, such as `4 de octubre de 2026`.
+- The name of the PDF file is `Certificado_{call sign}_{season}_{points}.pdf`. The download link of the browser uses the level name, such as `Certificado_LU1ABC_2026_Bronce.pdf`.
+- The sample image of a certificate uses `LU1ABC` and `4 de octubre de 2026`.
+- The certificate templates use the same field editor as the QSL card templates, with the fields `call_sign` and `date`. The search of the field boxes (section 6.2) is only for QSL card templates.
+  The first layout of a new certificate template puts a large call sign in the centre, and the date below it.
 - The API accepts JPEG and PNG templates up to 10 MB and 4096 pixels on each side. Larger images need more memory than PHP has on a shared host.
 - The build puts `upload_max_filesize = 11M` and `post_max_size = 12M` in the `.user.ini` file of `api/`.
 - The API keeps the template images in `storage/templates/` with a random name. A new image deletes the old file.
@@ -380,10 +389,10 @@ A visitor can use the public requests.
 | Method and path                                        | Result                                         |
 | ------------------------------------------------------ | ---------------------------------------------- |
 | `GET /seasons`                                         | The list of seasons and the current season.    |
-| `GET /seasons/{season}/ranking`                        | The ranking of the season.                     |
+| `GET /seasons/{season}/ranking`                        | The ranking of the season, and the levels with a certificate template (`certificateLevels`). |
 | `GET /seasons/{season}/activities`                     | The activities of the season.                  |
 | `GET /activities/{id}`                                 | The activity, its operators, its participants. |
-| `GET /participants/{call}`                             | The seasons, points, activities, certificates. |
+| `GET /participants/{call}`                             | The seasons, points, activities, certificates. Each certificate has `available`: true if its level has a template for the season. |
 | `GET /participants/{call}/qsl/{season}/{referenceId}`  | The QSL card as a JPEG image.                  |
 | `GET /fonts/{name}`                                    | A TrueType font, for the field editor.         |
 | `GET /participants/{call}/certificates/{season}/{points}` | The certificate as a PDF file.              |
@@ -425,8 +434,10 @@ The save operation of a template uses `POST`, not `PUT`, because PHP reads the f
 | `GET`, `POST /users`                                   | The list, a new account.            |
 | `PUT /users/{id}`                                      | A change, which includes `active`.  |
 | `PUT /users/{id}/password`                             | A new initial password.             |
-| `GET /certificate-templates`                           | The templates of all seasons.       |
-| `PUT`, `DELETE /certificate-templates/{season}/{points}` | A new or changed template, a deletion. |
+| `GET /certificate-templates`                           | The certificate levels and the templates of all seasons. |
+| `GET /certificate-templates/{season}/{points}/image`   | The image of the template.          |
+| `POST`, `DELETE /certificate-templates/{season}/{points}` | A new or changed template (multipart: `fields`, and `file` for a new image), a deletion. |
+| `POST /certificate-preview`                            | A sample image for a certificate template and its fields (`file`, or `season` and `points`). |
 | `GET /audit`                                           | The record of actions.              |
 
 `GET /seasons` gives the seasons with activities and always the current season, the newest first.

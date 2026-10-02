@@ -21,7 +21,19 @@ export interface Field extends Box {
   font: Font
 }
 
-export type Fields = Record<FieldName, Field>
+/** The fields of a template, by name: the QSL card fields or the certificate fields. */
+export type Fields = Record<string, Field>
+
+/** The fields of a kind of template, for the template editor. */
+export interface TemplateKind {
+  names: readonly string[]
+  labels: Record<string, string>
+  /** The example data of the sample image of the API. */
+  sample: Record<string, string>
+  defaultFields: (width: number, height: number) => Fields
+  /** True if the editor searches the field boxes of the image (FR-QSL-12). */
+  detect: boolean
+}
 
 export interface QslTemplate {
   activityId: number
@@ -219,4 +231,13 @@ export function fitBox(box: Box, imageWidth: number, imageHeight: number): Box {
     width,
     height,
   }
+}
+
+/** The QSL card templates, for the template editor. */
+export const QSL_KIND: TemplateKind = {
+  names: FIELD_NAMES,
+  labels: FIELD_LABELS,
+  sample: SAMPLE,
+  defaultFields,
+  detect: true,
 }

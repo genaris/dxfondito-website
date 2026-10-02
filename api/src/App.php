@@ -15,6 +15,7 @@ use DxFondito\Auth\PdoUserStore;
 use DxFondito\Auth\PhpSession;
 use DxFondito\Controller\ActivityController;
 use DxFondito\Controller\AuditController;
+use DxFondito\Controller\CertificateController;
 use DxFondito\Controller\HealthController;
 use DxFondito\Controller\LogController;
 use DxFondito\Controller\MigrationController;
@@ -33,7 +34,9 @@ use DxFondito\Logs\LocalFileStore;
 use DxFondito\Logs\LogService;
 use DxFondito\Logs\PdoLogStore;
 use DxFondito\Ranking\PdoRankingStore;
+use DxFondito\Templates\CertificateService;
 use DxFondito\Templates\Fonts;
+use DxFondito\Templates\PdoCertificateTemplateStore;
 use DxFondito\Templates\PdoQslTemplateStore;
 use DxFondito\Templates\QslService;
 use DxFondito\Templates\TextRenderer;
@@ -81,8 +84,11 @@ final class App
         $logStore = new PdoLogStore($pdo);
         $rankingStore = new PdoRankingStore($pdo);
         $qslTemplates = new PdoQslTemplateStore($pdo);
+        $certificateTemplates = new PdoCertificateTemplateStore($pdo);
         $fonts = new Fonts($this->root . '/fonts');
-        $ranking = new RankingController($rankingStore, $qslTemplates);
+        $renderer = new TextRenderer($fonts);
+        $templateFiles = new LocalFileStore($config->storageDir . '/templates');
+        $ranking = new RankingController($rankingStore, $qslTemplates, $certificateTemplates);
         $references = new ReferenceController($auth, new ReferenceService($referenceStore, $audit));
         $activities = new ActivityController(
             $auth,
@@ -104,10 +110,17 @@ final class App
             $activityStore,
             $users,
             $rankingStore,
-            new LocalFileStore($config->storageDir . '/templates'),
-            new TextRenderer($fonts),
+            $templateFiles,
+            $renderer,
             $audit,
         ), $fonts);
+        $certificates = new CertificateController($auth, new CertificateService(
+            $certificateTemplates,
+            $rankingStore,
+            $templateFiles,
+            $renderer,
+            $audit,
+        ));
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
@@ -142,6 +155,12 @@ final class App
         $router->add('DELETE', '/activities/{id}/qsl-templates/{operatorId}', fn (Request $request, array $params): Response => $qsl->delete($request, $params));
         $router->add('POST', '/template-preview', fn (Request $request): Response => $qsl->preview($request));
         $router->add('GET', '/participants/{call}/qsl/{season}/{referenceId}', fn (Request $request, array $params): Response => $qsl->card($params));
+        $router->add('GET', '/participants/{call}/certificates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->certificate($params));
+        $router->add('GET', '/certificate-templates', fn (Request $request): Response => $certificates->list($request));
+        $router->add('GET', '/certificate-templates/{season}/{points}/image', fn (Request $request, array $params): Response => $certificates->image($request, $params));
+        $router->add('POST', '/certificate-templates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->save($request, $params));
+        $router->add('DELETE', '/certificate-templates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->delete($request, $params));
+        $router->add('POST', '/certificate-preview', fn (Request $request): Response => $certificates->preview($request));
         $router->add('GET', '/fonts/{name}', fn (Request $request, array $params): Response => $qsl->font($params));
         $router->add('GET', '/references', fn (Request $request): Response => $references->list($request));
         $router->add('POST', '/references', fn (Request $request): Response => $references->create($request));

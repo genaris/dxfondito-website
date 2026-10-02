@@ -7,9 +7,7 @@ import { changeError } from '../messages.ts'
 import {
   anchorX,
   baseline,
-  defaultFields,
   FIELD_LABELS,
-  FIELD_NAMES,
   fitBox,
   FONT_LABELS,
   FONTS,
@@ -22,21 +20,17 @@ import {
   MIN_HEIGHT,
   MIN_WIDTH,
   moveBox,
-  previewTemplate,
   resizeBox,
-  SAMPLE,
-  saveTemplate,
-  templateImageUrl,
   textSize,
 } from '../qsl.ts'
-import type { Align, Box, Field, FieldName, Fields, Font, Handle, QslTemplate } from '../qsl.ts'
+import type { Align, Box, Field, Fields, Font, Handle, TemplateKind } from '../qsl.ts'
 
 const ANCHORS: Record<Align, 'start' | 'middle' | 'end'> = { left: 'start', center: 'middle', right: 'end' }
 
 /**
  * The @font-face rules of the fonts of the API. The editor draws the text with the same fonts as the API.
  */
-export function QslFonts() {
+function TemplateFonts() {
   const css = FONTS.map(
     (font) => `@font-face { font-family: 'qsl-${font}'; src: url('${fontUrl(font)}') format('truetype'); }`,
   ).join('\n')
@@ -44,7 +38,7 @@ export function QslFonts() {
 }
 
 /** A move of a box, or a change of its size with a handle. */
-type Drag = { name: FieldName; handle: Handle | null; start: { x: number; y: number }; box: Box }
+type Drag = { name: string; handle: Handle | null; start: { x: number; y: number }; box: Box }
 
 const measureCanvas = typeof document === 'undefined' ? null : document.createElement('canvas').getContext('2d')
 
@@ -106,24 +100,34 @@ const CURSORS: Record<Handle, string> = {
   w: 'ew-resize',
 }
 
+/** A saved template: the address of its image, its fields and the size of its image. */
+export interface SavedTemplate {
+  imageUrl: string
+  fields: Fields
+  width: number
+  height: number
+}
+
 /**
- * The editor of a QSL card template: the image, and the position, size, colour, alignment and font of each
- * field (FR-QSL-4). The user can see the sample of the API before the save operation (FR-QSL-5).
+ * The editor of a template of a QSL card or a certificate: the image, and the position, size, colour, alignment
+ * and font of each field (FR-QSL-4, FR-CER-3). The user can see the sample of the API before the save operation
+ * (FR-QSL-5).
  */
-export function QslEditor({
-  activityId,
-  operatorId,
-  operatorCallSign,
+export function TemplateEditor({
+  kind,
+  title,
   template,
-  version,
+  save: saveFields,
+  preview: previewFields,
   onDone,
   onCancel,
 }: {
-  activityId: number
-  operatorId: number
-  operatorCallSign: string
-  template: QslTemplate | null
-  version: number
+  kind: TemplateKind
+  title: string
+  template: SavedTemplate | null
+  save: (fields: Fields, file: File | null) => Promise<unknown>
+  /** The sample image of the API, as an object URL. */
+  preview: (fields: Fields, file: File | null) => Promise<string>
   onDone: () => void
   onCancel: () => void
 }) {
@@ -131,7 +135,7 @@ export function QslEditor({
   const [fileUrl, setFileUrl] = useState<string | null>(null)
   const [size, setSize] = useState(template ? { width: template.width, height: template.height } : null)
   const [fields, setFields] = useState<Fields | null>(template?.fields ?? null)
-  const [selected, setSelected] = useState<FieldName>('call_sign')
+  const [selected, setSelected] = useState<string>(kind.names[0])
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -170,7 +174,7 @@ export function QslEditor({
     return () => observer.disconnect()
   }, [size, hasFields])
 
-  const imageUrl = fileUrl ?? (template ? templateImageUrl(activityId, operatorId, version) : null)
+  const imageUrl = fileUrl ?? template?.imageUrl ?? null
 
   // The object URLs use memory until the page revokes them.
   useEffect(() => () => {
@@ -208,15 +212,15 @@ export function QslEditor({
     }
     setSize({ width, height })
     pixelsRef.current = readPixels(image)
-    // A new template gets the boxes of the image, or a first layout (FR-QSL-12).
+    // A new QSL card template gets the boxes of the image, or a first layout (FR-QSL-12).
     // A new image of a template keeps the boxes inside the image. The button searches the boxes again.
     if (!fields) {
-      const first = defaultFields(width, height)
-      setFields(detect(first, null, width, height) ?? first)
+      const first = kind.defaultFields(width, height)
+      setFields((kind.detect ? detect(first, null, width, height) : null) ?? first)
       return
     }
-    const kept = {} as Fields
-    for (const name of FIELD_NAMES) kept[name] = { ...fields[name], ...fitBox(fields[name], width, height) }
+    const kept: Fields = {}
+    for (const name of kind.names) kept[name] = { ...fields[name], ...fitBox(fields[name], width, height) }
     setFields(kept)
   }
 
@@ -254,7 +258,7 @@ export function QslEditor({
     detectAgain(pixelColour(pixels, point.x, point.y))
   }
 
-  function change(name: FieldName, changes: Partial<Field>) {
+  function change(name: string, changes: Partial<Field>) {
     setPreview(null)
     setFields((current) => (current ? { ...current, [name]: { ...current[name], ...changes } } : current))
   }
@@ -267,7 +271,7 @@ export function QslEditor({
     return { x: point.x, y: point.y }
   }
 
-  function startDrag(event: PointerEvent<SVGElement>, name: FieldName, handle: Handle | null) {
+  function startDrag(event: PointerEvent<SVGElement>, name: string, handle: Handle | null) {
     if (!fields) return
     const point = pointInImage(event)
     if (!point) return
@@ -301,7 +305,7 @@ export function QslEditor({
     setBusy(true)
     setError(null)
     try {
-      setPreview(await previewTemplate(fields, file, activityId, operatorId))
+      setPreview(await previewFields(fields, file))
     } catch (failure) {
       setError(editorError(failure, 'ver la muestra'))
     } finally {
@@ -314,7 +318,7 @@ export function QslEditor({
     setBusy(true)
     setError(null)
     try {
-      await saveTemplate(activityId, operatorId, fields, file)
+      await saveFields(fields, file)
       onDone()
     } catch (failure) {
       setError(editorError(failure, 'guardar la plantilla'))
@@ -326,9 +330,9 @@ export function QslEditor({
 
   return (
     <div className="qsl-editor">
-      <QslFonts />
+      <TemplateFonts />
       <div className="title-row">
-        <h4>Plantilla QSL de {operatorCallSign}</h4>
+        <h4>{title}</h4>
         <label className="inline-field">
           {template ? 'Cambiar la imagen' : 'Imagen JPEG o PNG (hasta 10 MB)'}{' '}
           <input type="file" accept=".jpg,.jpeg,.png" onChange={(event) => selectFile(event.target.files?.[0] ?? null)} />
@@ -353,10 +357,10 @@ export function QslEditor({
                 onPointerUp={() => (dragRef.current = null)}
                 onPointerCancel={() => (dragRef.current = null)}
               >
-                {FIELD_NAMES.map((name) => {
+                {kind.names.map((name) => {
                   const item = fields[name]
                   const isSelected = name === selected
-                  const fontSize = textSize(item, measure(SAMPLE[name], item.font, fullSize(item)))
+                  const fontSize = textSize(item, measure(kind.sample[name], item.font, fullSize(item)))
                   return (
                     <g key={name} className={isSelected ? 'field selected' : 'field'}>
                       <rect
@@ -377,10 +381,10 @@ export function QslEditor({
                         textAnchor={ANCHORS[item.align]}
                         fontFamily={`qsl-${item.font}, sans-serif`}
                       >
-                        {SAMPLE[name]}
+                        {kind.sample[name]}
                       </text>
                       <text className="label" x={item.x} y={item.y - 4 * scale} fontSize={12 * scale}>
-                        {FIELD_LABELS[name]}
+                        {kind.labels[name]}
                       </text>
                       {isSelected &&
                         HANDLES.map((handle) => {
@@ -410,7 +414,7 @@ export function QslEditor({
           {fields && field && size && (
             <div className="field-panel">
               <div className="field-list" role="tablist" aria-label="Campos">
-                {FIELD_NAMES.map((name) => (
+                {kind.names.map((name) => (
                   <button
                     key={name}
                     type="button"
@@ -419,18 +423,20 @@ export function QslEditor({
                     className={name === selected ? 'chip active' : 'chip'}
                     onClick={() => setSelected(name)}
                   >
-                    {FIELD_LABELS[name]}
+                    {kind.labels[name]}
                   </button>
                 ))}
               </div>
-              <div className="detect-actions">
-                <button type="button" onClick={() => detectAgain(null)} disabled={busy}>
-                  Detectar recuadros
-                </button>
-                <button type="button" onClick={() => setPicking((value) => !value)} disabled={busy} aria-pressed={picking}>
-                  {picking ? 'Cancelar la elección' : 'Elegir el color'}
-                </button>
-              </div>
+              {kind.detect && (
+                <div className="detect-actions">
+                  <button type="button" onClick={() => detectAgain(null)} disabled={busy}>
+                    Detectar recuadros
+                  </button>
+                  <button type="button" onClick={() => setPicking((value) => !value)} disabled={busy} aria-pressed={picking}>
+                    {picking ? 'Cancelar la elección' : 'Elegir el color'}
+                  </button>
+                </div>
+              )}
               {picking && <p className="hint">Haga clic sobre uno de los recuadros de la imagen.</p>}
               {detectNotice && (
                 <p className="detect-notice" role="status">
@@ -480,13 +486,13 @@ export function QslEditor({
                     onChange={(event) => {
                       if (!event.target.value) return
                       setPreview(null)
-                      setFields(swapBoxes(fields, selected, event.target.value as FieldName))
+                      setFields(swapBoxes(fields, selected, event.target.value))
                     }}
                   >
                     <option value="">—</option>
-                    {otherFields(selected).map((name) => (
+                    {otherFields(kind.names, selected).map((name) => (
                       <option key={name} value={name}>
-                        {FIELD_LABELS[name]}
+                        {kind.labels[name]}
                       </option>
                     ))}
                   </select>
@@ -556,6 +562,6 @@ function editorError(failure: unknown, action: string): string {
   return changeError(failure, {
     action,
     conflict: `No se pudo ${action}.`,
-    notFound: 'La plantilla o la actividad ya no existe.',
+    notFound: 'La plantilla ya no existe.',
   })
 }

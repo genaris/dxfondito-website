@@ -13,6 +13,8 @@ export interface RankingRow {
 export interface Ranking {
   season: number
   levels: number[]
+  /** The levels with a certificate template in the season (FR-CER-7). */
+  certificateLevels: number[]
   rows: RankingRow[]
 }
 
@@ -38,7 +40,8 @@ export interface ParticipantSeason {
   /** Only for the current season (FR-PUB-8b). Null after the highest level. */
   pointsToNextLevel: number | null
   references: FirstContact[]
-  certificates: { points: number; date: string }[]
+  /** The reached certificates. `available` is false without a template of the level in the season (FR-CER-7). */
+  certificates: { points: number; date: string; available: boolean }[]
 }
 
 export interface Participant {

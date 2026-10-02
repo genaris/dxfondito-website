@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { readSeasons } from '../activities.ts'
 import type { Seasons } from '../activities.ts'
+import { certificateFileName, certificateUrl } from '../certificates.ts'
 import { levelClass, levelName } from '../program.ts'
 import { readRanking, searchRanking } from '../ranking.ts'
 import type { Ranking } from '../ranking.ts'
@@ -111,9 +112,19 @@ function RankingTable({
                 </td>
                 {ranking.levels.map((level) => (
                   <td key={level} className="level">
-                    {row.levels.includes(level) && (
-                      <span className={levelClass(level)} role="img" aria-label={`Certificado ${levelName(level)}`} />
-                    )}
+                    {row.levels.includes(level) &&
+                      (ranking.certificateLevels.includes(level) ? (
+                        <a
+                          className="medal-link"
+                          href={certificateUrl(row.callSign, ranking.season, level)}
+                          download={certificateFileName(row.callSign, ranking.season, levelName(level))}
+                          title={`Descargar el certificado ${levelName(level)} de ${row.callSign}`}
+                        >
+                          <span className={levelClass(level)} role="img" aria-label={`Certificado ${levelName(level)}`} />
+                        </a>
+                      ) : (
+                        <span className={levelClass(level)} role="img" aria-label={`Certificado ${levelName(level)}`} />
+                      ))}
                   </td>
                 ))}
                 <td className="references">

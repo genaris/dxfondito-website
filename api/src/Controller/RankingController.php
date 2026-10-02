@@ -13,6 +13,7 @@ use DxFondito\Http\Response;
 use DxFondito\Ranking\Calculator;
 use DxFondito\Ranking\ContactRow;
 use DxFondito\Ranking\RankingStore;
+use DxFondito\Templates\CertificateTemplateStore;
 use DxFondito\Templates\QslTemplateStore;
 
 /**
@@ -29,6 +30,7 @@ final class RankingController
     public function __construct(
         private readonly RankingStore $store,
         private readonly QslTemplateStore $templates,
+        private readonly CertificateTemplateStore $certificateTemplates,
         ?Closure $now = null,
     ) {
         $this->now = $now ?? static fn (): DateTimeImmutable => new DateTimeImmutable();
@@ -45,6 +47,8 @@ final class RankingController
         return Response::json([
             'season' => $season,
             'levels' => $levels,
+            // FR-CER-7: the levels with a template in the season. The ranking gives a link only for them.
+            'certificateLevels' => $this->certificateTemplates->levels($season),
             'rows' => Calculator::ranking($this->store->seasonReferences($season), $levels),
         ]);
     }
@@ -88,11 +92,28 @@ final class RankingController
                         + ['qsl' => isset($templates[$contact->activityId . ':' . $contact->operatorId])],
                     $contacts,
                 ),
-                'certificates' => Calculator::certificates($contacts, $levels),
+                'certificates' => array_map(
+                    fn (array $certificate): array => $certificate
+                        + ['available' => in_array($certificate['points'], $this->certificateLevels($season), true)],
+                    Calculator::certificates($contacts, $levels),
+                ),
             ];
         }
 
         return Response::json(['callSign' => $callSign, 'current' => $current, 'levels' => $levels, 'seasons' => $seasons]);
+    }
+
+    /** @var array<int, list<int>> */
+    private array $certificateLevelsBySeason = [];
+
+    /**
+     * FR-CER-7: the levels with a template in the season.
+     *
+     * @return list<int>
+     */
+    private function certificateLevels(int $season): array
+    {
+        return $this->certificateLevelsBySeason[$season] ??= $this->certificateTemplates->levels($season);
     }
 
     /**

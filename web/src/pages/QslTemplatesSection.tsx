@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { listAccounts } from '../accounts.ts'
 import type { Account } from '../accounts.ts'
 import { changeError } from '../messages.ts'
-import { deleteTemplate, readTemplates, templateImageUrl } from '../qsl.ts'
+import { deleteTemplate, previewTemplate, QSL_KIND, readTemplates, saveTemplate, templateImageUrl } from '../qsl.ts'
 import type { QslTemplate } from '../qsl.ts'
 import type { User } from '../useSession.ts'
-import { QslEditor } from './QslEditor.tsx'
+import { TemplateEditor } from './TemplateEditor.tsx'
 
 type ListState = { kind: 'loading' } | { kind: 'ready'; templates: QslTemplate[] } | { kind: 'error' }
 type Editing = { operatorId: number; callSign: string; template: QslTemplate | null }
@@ -93,12 +93,17 @@ export function QslTemplatesSection({ activityId, user }: { activityId: number; 
       )}
 
       {editing ? (
-        <QslEditor
-          activityId={activityId}
-          operatorId={editing.operatorId}
-          operatorCallSign={editing.callSign}
-          template={editing.template}
-          version={version}
+        <TemplateEditor
+          kind={QSL_KIND}
+          title={`Plantilla QSL de ${editing.callSign}`}
+          template={
+            editing.template && {
+              ...editing.template,
+              imageUrl: templateImageUrl(activityId, editing.operatorId, version),
+            }
+          }
+          save={(fields, file) => saveTemplate(activityId, editing.operatorId, fields, file)}
+          preview={(fields, file) => previewTemplate(fields, file, activityId, editing.operatorId)}
           onDone={() => saved(editing.callSign)}
           onCancel={() => setEditing(null)}
         />

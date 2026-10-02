@@ -4,6 +4,7 @@ import { ProgramHero } from './components/ProgramHero.tsx'
 import { SiteFooter } from './components/SiteFooter.tsx'
 import { ActivitiesAdminPage } from './pages/admin/ActivitiesAdminPage.tsx'
 import { AuditPage } from './pages/admin/AuditPage.tsx'
+import { CertificatesPage } from './pages/admin/CertificatesPage.tsx'
 import { ReferencesPage } from './pages/admin/ReferencesPage.tsx'
 import { UsersPage } from './pages/admin/UsersPage.tsx'
 import { ActivitiesPage } from './pages/ActivitiesPage.tsx'
@@ -23,6 +24,7 @@ import { useSession } from './useSession.ts'
 const ADMIN_LINKS = [
   { path: '/admin/referencias', text: 'Referencias' },
   { path: '/admin/actividades', text: 'Actividades' },
+  { path: '/admin/certificados', text: 'Certificados' },
   { path: '/admin/usuarios', text: 'Cuentas' },
   { path: '/admin/registro', text: 'Registro' },
 ]
@@ -176,6 +178,12 @@ function Page({ path }: { path: string }) {
       return (
         <AdministratorOnly>
           <UsersPage />
+        </AdministratorOnly>
+      )
+    case '/admin/certificados':
+      return (
+        <AdministratorOnly>
+          <CertificatesPage />
         </AdministratorOnly>
       )
     case '/admin/registro':

@@ -1,4 +1,4 @@
-import { FIELD_NAMES, fitBox } from './qsl.ts'
+import { fitBox } from './qsl.ts'
 import type { Box, FieldName, Fields } from './qsl.ts'
 
 // The search of the field boxes of a QSL card template (FR-QSL-12). The source of the method is
@@ -100,14 +100,14 @@ export function fieldsFromBoxes(boxes: Box[], fields: Fields, width: number, hei
 }
 
 /** Exchanges the boxes of two fields. The fields keep their colour, alignment and font. */
-export function swapBoxes(fields: Fields, a: FieldName, b: FieldName): Fields {
+export function swapBoxes(fields: Fields, a: string, b: string): Fields {
   const box = ({ x, y, width, height }: Box): Box => ({ x, y, width, height })
   return { ...fields, [a]: { ...fields[a], ...box(fields[b]) }, [b]: { ...fields[b], ...box(fields[a]) } }
 }
 
 /** The fields other than this one, for the exchange of boxes. */
-export function otherFields(name: FieldName): FieldName[] {
-  return FIELD_NAMES.filter((other) => other !== name)
+export function otherFields(names: readonly string[], name: string): string[] {
+  return names.filter((other) => other !== name)
 }
 
 function key(r: number, g: number, b: number): number {

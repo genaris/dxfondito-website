@@ -14,6 +14,7 @@ use DxFondito\Http\HttpException;
 final class FieldLayout
 {
     public const QSL_FIELDS = ['call_sign', 'name', 'date', 'time', 'frequency', 'mode', 'rst'];
+    public const CERTIFICATE_FIELDS = ['call_sign', 'date'];
     public const ALIGNMENTS = ['left', 'center', 'right'];
     public const MIN_WIDTH = 10;
     public const MIN_HEIGHT = 6;

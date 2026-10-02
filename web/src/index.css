@@ -995,3 +995,53 @@ button.chip.active {
 .canvas svg.picking .field {
   pointer-events: none;
 }
+
+/* Certificates */
+
+.certificates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+}
+
+.certificates .badge {
+  margin: 0;
+}
+
+a.certificate-link {
+  color: var(--text);
+  text-decoration: none;
+  border-color: var(--blue);
+}
+
+a.certificate-link:hover,
+a.certificate-link:focus-visible {
+  background: var(--surface-alt);
+}
+
+a.medal-link {
+  display: inline-block;
+  border-radius: 50%;
+  line-height: 0;
+}
+
+a.medal-link .medal {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s;
+}
+
+a.medal-link:hover .medal,
+a.medal-link:focus-visible .medal {
+  outline-color: var(--blue);
+}
+
+.template-empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 297 / 210;
+  color: var(--muted);
+  background: var(--surface-alt);
+}
