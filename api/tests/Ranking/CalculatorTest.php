@@ -134,16 +134,21 @@ final class CalculatorTest extends TestCase
         self::assertNull(Calculator::pointsToNextLevel(15, self::LEVELS));
     }
 
-    public function testTheParticipantsOfAnActivityHaveTheOperatorOfTheEarliestContact(): void
+    public function testTheActivityListHasAllContactsInTheOrderOfTime(): void
     {
-        $participants = Calculator::activityParticipants([
+        // A second contact with the same operator, and a contact with a different operator, have their own lines.
+        $contacts = Calculator::activityContacts([
             $this->contact('PY1A', 'DPS-01', qsoAt: '2026-05-10 13:00:00', operator: 'LU2OP'),
             $this->contact('PY1A', 'DPS-01', qsoAt: '2026-05-10 12:00:00', operator: 'LU1OP'),
-            $this->contact('CX1A', 'DPS-01', operator: 'LU2OP'),
+            $this->contact('CX1A', 'DPS-01', qsoAt: '2026-05-10 12:30:00', operator: 'LU2OP'),
+            $this->contact('PY1A', 'DPS-01', qsoAt: '2026-05-10 14:00:00', operator: 'LU1OP', callSign: 'PY1A/P'),
         ]);
 
-        self::assertSame(['CX1A', 'PY1A'], array_map(static fn (ContactRow $row): string => $row->baseCallSign, $participants));
-        self::assertSame('LU1OP', $participants[1]->operatorCallSign);
+        self::assertSame(
+            ['12:00 PY1A LU1OP', '12:30 CX1A LU2OP', '13:00 PY1A LU2OP', '14:00 PY1A/P LU1OP'],
+            array_map(static fn (ContactRow $row): string => substr($row->qsoAt, 11, 5) . ' ' . $row->callSign . ' ' . $row->operatorCallSign, $contacts),
+        );
+        self::assertSame(2, Calculator::participantCount($contacts));
     }
 
     /**

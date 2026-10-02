@@ -82,8 +82,8 @@ export function QslTemplatesSection({ activityId, user }: { activityId: number; 
     <section>
       <h3>Plantillas QSL</h3>
       <p className="hint">
-        Cada operador tiene su propia QSL para esta actividad. El participante recibe la QSL del operador de su
-        primer contacto.
+        Cada operador tiene su propia QSL para esta actividad. El participante recibe una QSL por cada contacto, con
+        la plantilla del operador con el que habló. Los contactos repetidos con la misma referencia no suman puntos.
       </p>
       {notice && <p role="status">{notice}</p>}
       {error && (

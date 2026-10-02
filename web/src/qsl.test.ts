@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { anchorX, baseline, defaultFields, FIELD_NAMES, fitBox, moveBox, resizeBox, textSize } from './qsl.ts'
+import { anchorX, baseline, defaultFields, FIELD_NAMES, fitBox, moveBox, qslCardUrl, qslFileName, resizeBox, textSize } from './qsl.ts'
 
 describe('the text in the box (the same values as TextBoxTest.php)', () => {
   it('fills the height of the box', () => {
@@ -84,5 +84,12 @@ describe('fitBox', () => {
   it('moves and cuts a box for a smaller image', () => {
     expect(fitBox({ x: 900, y: 50, width: 400, height: 40 }, 600, 300)).toEqual({ x: 200, y: 50, width: 400, height: 40 })
     expect(fitBox({ x: 0, y: 0, width: 900, height: 40 }, 600, 300)).toEqual({ x: 0, y: 0, width: 600, height: 40 })
+  })
+})
+
+describe('QSL card of a contact', () => {
+  it('gives the address and the name of the file', () => {
+    expect(qslCardUrl('LU1ABC', 188)).toBe('api/index.php?r=/participants/LU1ABC/qsl/188')
+    expect(qslFileName('LU1ABC', 'DPS-05', '2026-10-04T14:30:00Z')).toBe('QSL_LU1ABC_DPS-05_20261004_1430.jpg')
   })
 })

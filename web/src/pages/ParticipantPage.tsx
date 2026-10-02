@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { certificateFileName, certificateUrl } from '../certificates.ts'
 import { frequencyText } from '../logs.ts'
 import { levelClass, levelName } from '../program.ts'
-import { qslCardUrl } from '../qsl.ts'
+import { qslCardUrl, qslFileName } from '../qsl.ts'
 import { readParticipant } from '../ranking.ts'
 import type { Participant, ParticipantSeason } from '../ranking.ts'
 import { href } from '../router.ts'
@@ -10,7 +10,7 @@ import { href } from '../router.ts'
 type State = { kind: 'loading' } | { kind: 'ready'; participant: Participant } | { kind: 'error' }
 
 /**
- * The page of a participant: each season with the points, the references and the certificates
+ * The page of a participant: each season with the points, all contacts with their QSL cards, and the certificates
  * (FR-PUB-8 to FR-PUB-12). The current season comes first.
  */
 export function ParticipantPage({ callSign }: { callSign: string }) {
@@ -67,7 +67,8 @@ function SeasonSection({
         {isCurrent && ' (actual)'}
       </h3>
       <p>
-        <strong>{season.points}</strong> {season.points === 1 ? 'punto' : 'puntos'}.{' '}
+        <strong>{season.points}</strong> {season.points === 1 ? 'punto' : 'puntos'} ·{' '}
+        {season.contacts.length} {season.contacts.length === 1 ? 'QSO' : 'QSOs'}.{' '}
         {season.pointsToNextLevel !== null &&
           `Le ${season.pointsToNextLevel === 1 ? 'falta 1 punto' : `faltan ${season.pointsToNextLevel} puntos`} para el certificado ${levelName(season.points + season.pointsToNextLevel)}.`}
       </p>
@@ -112,12 +113,18 @@ function SeasonSection({
             </tr>
           </thead>
           <tbody>
-            {season.references.map((contact) => (
-              <tr key={contact.referenceId}>
+            {season.contacts.map((contact) => (
+              <tr key={contact.id}>
                 <td>
                   <a href={href(`/actividad/${contact.activityId}`)}>{contact.reference}</a> {contact.referenceName}
                   {contact.callSign !== baseCallSign && (
                     <span className="hint"> · como {contact.callSign}</span>
+                  )}
+                  {!contact.point && (
+                    <span className="hint" title="La referencia ya sumó su punto con un contacto anterior de la temporada.">
+                      {' '}
+                      · no suma punto
+                    </span>
                   )}
                 </td>
                 <td className="nowrap">
@@ -130,8 +137,8 @@ function SeasonSection({
                   {contact.qsl ? (
                     <a
                       className="qsl-link"
-                      href={qslCardUrl(baseCallSign, season.season, contact.referenceId)}
-                      download={`QSL_${baseCallSign}_${contact.reference}_${season.season}.jpg`}
+                      href={qslCardUrl(baseCallSign, contact.id)}
+                      download={qslFileName(baseCallSign, contact.reference, contact.qsoAt)}
                     >
                       Descargar
                     </a>

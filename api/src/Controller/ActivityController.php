@@ -18,6 +18,7 @@ use DxFondito\Logs\LogStore;
 use DxFondito\Ranking\Calculator;
 use DxFondito\Ranking\ContactRow;
 use DxFondito\Ranking\RankingStore;
+use DxFondito\Templates\QslTemplateStore;
 
 /**
  * The public season and activity requests (section 8.1), and the activity requests of an administrator (section 8.4).
@@ -38,6 +39,7 @@ final class ActivityController
         private readonly ActivityService $service,
         private readonly LogStore $logs,
         private readonly RankingStore $ranking,
+        private readonly QslTemplateStore $qslTemplates,
         ?Closure $now = null,
     ) {
         $this->now = $now ?? static fn (): DateTimeImmutable => new DateTimeImmutable();
@@ -70,26 +72,36 @@ final class ActivityController
 
     /**
      * FR-PUB-14, FR-PUB-15 and FR-ACT-2a: the activity, the operators with a log in it,
-     * and the participants with the operator of their earliest contact in the activity.
+     * the number of participants, and all contacts of the activity in the order of time.
      *
      * @param array<string, string> $params
      */
     public function show(array $params): Response
     {
         $activity = $this->service->find(PathId::from($params, self::NOT_FOUND));
+        $contacts = Calculator::activityContacts($this->ranking->byActivity($activity->id));
+        $templates = array_flip($this->qslTemplates->keys([$activity->id]));
 
         return Response::json($activity->publicData() + [
             'operators' => array_map(
                 static fn (array $operator): string => $operator['callSign'],
                 $this->logs->operators($activity->id),
             ),
-            'participants' => array_map(
+            'participantCount' => Calculator::participantCount($contacts),
+            'contacts' => array_map(
                 static fn (ContactRow $contact): array => [
-                    'callSign' => $contact->baseCallSign,
+                    'id' => $contact->id,
+                    'callSign' => $contact->callSign,
+                    'baseCallSign' => $contact->baseCallSign,
                     'operator' => $contact->operatorCallSign,
                     'qsoAt' => str_replace(' ', 'T', $contact->qsoAt) . 'Z',
+                    'frequency' => $contact->frequency,
+                    'band' => $contact->band,
+                    'mode' => $contact->mode,
+                    // FR-QSL-9, FR-QSL-11: the template of the operator of the contact, for this activity.
+                    'qsl' => isset($templates[$contact->activityId . ':' . $contact->operatorId]),
                 ],
-                Calculator::activityParticipants($this->ranking->byActivity($activity->id)),
+                $contacts,
             ),
         ]);
     }

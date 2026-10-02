@@ -64,11 +64,28 @@ export function readActivities(season: number): Promise<Activity[]> {
   return apiGet<Activity[]>(`/seasons/${season}/activities`)
 }
 
-/** An activity with the call signs of its operators (FR-ACT-2a). */
+/** A contact of an activity (FR-PUB-15). */
+export interface ActivityContact {
+  id: number
+  /** The call sign as the log gives it, such as LU1ABC/P. */
+  callSign: string
+  baseCallSign: string
+  operator: string
+  qsoAt: string
+  frequency: string | null
+  band: string | null
+  mode: string
+  /** True if the operator of the contact has a QSL card template for this activity (FR-QSL-11). */
+  qsl: boolean
+}
+
+/** An activity with the call signs of its operators (FR-ACT-2a) and all its contacts (FR-PUB-14, FR-PUB-15). */
 export interface ActivityDetail extends Activity {
   operators: string[]
-  /** Each participant with the operator of the earliest contact in the activity (FR-PUB-15). */
-  participants: { callSign: string; operator: string; qsoAt: string }[]
+  /** The different base call signs of the contacts (FR-PUB-14a). */
+  participantCount: number
+  /** All contacts, in the order of time. A participant can have more than one contact. */
+  contacts: ActivityContact[]
 }
 
 export function readActivity(id: number): Promise<ActivityDetail> {

@@ -16,7 +16,8 @@ require $root . '/vendor/autoload.php';
 date_default_timezone_set('UTC');
 
 try {
-    $migrator = new Migrator(Connection::open(Config::load($root)), $root . '/migrations');
+    $config = Config::load($root);
+    $migrator = new Migrator(Connection::open($config), $root . '/migrations', $config->storageDir);
     $done = $migrator->migrate();
 } catch (Throwable $e) {
     fwrite(STDERR, $e->getMessage() . PHP_EOL);

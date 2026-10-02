@@ -8,8 +8,11 @@ use PDO;
 use PDOException;
 
 /**
- * Applies the numbered SQL files of the migrations folder in the order of their names.
+ * Applies the numbered files of the migrations folder in the order of their names.
  * The schema_migrations table keeps the names of the applied files.
+ *
+ * A `.sql` file has SQL statements. A `.php` file returns a function that changes data, such as a step
+ * that reads the stored files: function (PDO $pdo, string $storageDir): void.
  */
 final class Migrator
 {
@@ -18,6 +21,7 @@ final class Migrator
     public function __construct(
         private readonly PDO $pdo,
         private readonly string $dir,
+        private readonly string $storageDir = '',
     ) {
     }
 
@@ -96,8 +100,8 @@ final class Migrator
     private function available(): array
     {
         $names = array_map(
-            static fn (string $file): string => basename($file, '.sql'),
-            glob($this->dir . '/*.sql') ?: [],
+            static fn (string $file): string => pathinfo($file, PATHINFO_FILENAME),
+            [...glob($this->dir . '/*.sql') ?: [], ...glob($this->dir . '/*.php') ?: []],
         );
         sort($names, SORT_STRING);
 
@@ -106,6 +110,18 @@ final class Migrator
 
     private function apply(string $name): void
     {
+        $script = $this->dir . '/' . $name . '.php';
+        if (is_file($script)) {
+            try {
+                (require $script)($this->pdo, $this->storageDir);
+            } catch (\Throwable $e) {
+                throw new MigrationException(sprintf('Migration %s failed: %s', $name, $e->getMessage()), previous: $e);
+            }
+            $this->record($name);
+
+            return;
+        }
+
         $statements = self::splitStatements((string) file_get_contents($this->dir . '/' . $name . '.sql'));
 
         // MySQL cannot undo a CREATE TABLE or an ALTER TABLE statement.
@@ -121,6 +137,11 @@ final class Migrator
             }
         }
 
+        $this->record($name);
+    }
+
+    private function record(string $name): void
+    {
         $insert = $this->pdo->prepare('INSERT INTO ' . self::TABLE . ' (name, applied_at) VALUES (?, UTC_TIMESTAMP())');
         $insert->execute([$name]);
     }

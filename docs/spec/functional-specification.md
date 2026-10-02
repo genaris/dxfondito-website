@@ -62,7 +62,7 @@ The related question in section 9 is open until the group gives an answer.
 | Log              | One ADIF file that an operator uploads for one activity.                                       |
 | Point            | The unit that the system counts for each participant in each season.                           |
 | Certificate      | A document that a participant gets at 5, 10 and 15 points in one season.                       |
-| QSL card         | A document that confirms the first contact of a participant with a reference in a season.      |
+| QSL card         | A document that confirms one contact of a participant with an operator.                       |
 | Ranking          | The list of the participants of one season in the order of their points.                       |
 | Visitor          | A person who uses the public pages. A visitor does not sign in.                                |
 | Operator         | A user with an account who operates a station in activities and uploads logs.                  |
@@ -121,10 +121,11 @@ The call sign of the user identifies the account.
 
 - **R-OPR-1** Each log belongs to one operator.
 - **R-OPR-2** The operator of a contact is the operator of its log.
-- **R-OPR-3** For each participant and each reference in a season, the system finds the first contact.
-- **R-OPR-4** The operator of the first contact is the operator that the participant contacted for that reference.
-- **R-OPR-5** Later contacts with the same reference in the same season do not change this operator.
-- **R-OPR-5a** This includes contacts with other operators and contacts in a second activity of the reference.
+- **R-OPR-3** For each participant and each reference in a season, the system finds the first contact. This contact gives the point.
+- **R-OPR-4** The activity of the first contact gives the date of a certificate (R-CER-5).
+- **R-OPR-5** Later contacts with the same reference in the same season give no point. Each of them still gives a QSL card (FR-QSL-7).
+- **R-OPR-5a** This includes contacts with the same operator, contacts with other operators and contacts in a second activity of the reference.
+  For example, a participant that contacts LU2AOG and LU3EBQ in the same activity gets two QSL cards and one point.
 - **R-OPR-6** The system calculates the first contact from the contacts that are in the database at that moment.
 
 ### 5.5 Certificates
@@ -152,17 +153,21 @@ The call sign of the user identifies the account.
 - **FR-PUB-8** The page of a participant shows each season separately, with the current season first.
 - **FR-PUB-8a** For each season, the page shows the points of the participant.
 - **FR-PUB-8b** For the current season, the page also shows the number of points necessary for the next level.
-- **FR-PUB-9** For each season, the page lists each reference where the participant has a contact.
-- **FR-PUB-9a** Each line of that list shows the data of the first contact.
-- **FR-PUB-10** For each reference in that list, the page shows the operator that the participant contacted.
-- **FR-PUB-10a** For each reference in that list, the page shows the date, the time, the frequency and the mode.
-- **FR-PUB-11** For each reference in that list, the page gives a link to download the QSL card.
+- **FR-PUB-8c** For each season, the page also shows the number of contacts (QSOs).
+- **FR-PUB-9** For each season, the page lists all contacts of the participant, in the order of time.
+- **FR-PUB-9a** Each line of that list shows the reference of the contact. A contact that gives no point (R-OPR-5) shows that.
+- **FR-PUB-10** Each line shows the operator that the participant contacted.
+- **FR-PUB-10a** Each line shows the date, the time, the frequency and the mode.
+- **FR-PUB-11** Each line gives a link to download the QSL card of that contact (FR-QSL-7).
 - **FR-PUB-12** For each season, the page gives a link to download each available certificate.
 - **FR-PUB-12a** A reached certificate without a template for the season shows that it is not available (FR-CER-7).
 - **FR-PUB-13** The activity list shows the activities of the selected season, with the most recent activity first.
 - **FR-PUB-13a** For each activity, the list shows the reference code, the reference name and the dates.
-- **FR-PUB-14** The page of an activity shows its data, its operators and the list of its participants.
-- **FR-PUB-15** For each participant in that list, the page shows the operator of the earliest contact in that activity.
+- **FR-PUB-14** The page of an activity shows its data, its operators and the list of all its contacts.
+- **FR-PUB-14a** The page shows the number of participants (different base call signs) and the number of contacts (QSOs).
+- **FR-PUB-15** The list has all contacts, in the order of time. A participant with more than one contact, with the same operator or with different operators, has a line for each contact.
+- **FR-PUB-15a** Each line shows the date and the time, the call sign as the log gives it, the operator, the frequency, the mode, and a link to download the QSL card of the contact.
+- **FR-PUB-15b** For a signed-in user, the logs and the QSL card templates of the activity come before the list of contacts. The list can be long.
 
 ### 6.2 Sign-in and accounts
 
@@ -194,6 +199,7 @@ The call sign of the user identifies the account.
 - **FR-ACT-1** An administrator creates an activity with a reference, a start date and an end date.
 - **FR-ACT-2** The activity data also includes an optional description.
 - **FR-ACT-2a** The operators of an activity are the operators who have a log in that activity.
+  The activity page shows each operator with the station call sign of the log (FR-LOG-7b), such as LU2AOG/A for a DPS activity and LU2AOG for an EFE activity.
 - **FR-ACT-3** The dates of an activity are in UTC.
 - **FR-ACT-3a** The system calculates the season from the start date and shows it.
 - **FR-ACT-4** An administrator can create more than one activity for the same reference in the same season.
@@ -212,6 +218,9 @@ The call sign of the user identifies the account.
 - **FR-LOG-6** The system reads these mandatory fields from each record: `CALL`, `QSO_DATE`, `TIME_ON`, `MODE`.
 - **FR-LOG-7** Each record must also have a `FREQ` field or a `BAND` field.
 - **FR-LOG-7a** The system shows a frequency in MHz with three decimals or more, such as `7.130 MHz`. A log often gives `7.13` for this frequency. More decimals stay if they are not zero, such as `7.1305 MHz`.
+- **FR-LOG-7b** The system keeps the `STATION_CALLSIGN` field of each record: the call sign of the operator with its suffix, such as LU2AOG/A.
+  An operator can use a different suffix in each activity: LU2AOG at home, LU2AOG/A in a park, LU2AOG/D in the province of Buenos Aires.
+  The pages show this call sign as the operator of the contact. A record without this field shows the call sign of the account of the operator.
 - **FR-LOG-8** The system reads these optional fields from each record: `NAME`, `RST_SENT`, `RST_RCVD`.
 - **FR-LOG-9** A record is not valid when a mandatory field is absent or has an incorrect value.
 - **FR-LOG-10** Before the system saves a log, it shows a summary to the user.
@@ -244,10 +253,10 @@ All QSL cards have the same fields.
 - **FR-QSL-4** The user who uploads a template sets the position, the size and the colour of each field.
 - **FR-QSL-5** The system shows a sample QSL card before the user saves the template.
 - **FR-QSL-6** The system makes the QSL card when a visitor downloads it.
-- **FR-QSL-7** A participant gets one QSL card for each reference in a season.
-- **FR-QSL-7a** A second activity of the reference in the same season gives no second QSL card.
-- **FR-QSL-8** The QSL card uses the data of the first contact.
-- **FR-QSL-9** The QSL card uses the template of the operator of the first contact, for the activity of that contact.
+- **FR-QSL-7** A participant gets one QSL card for each contact (D-27).
+- **FR-QSL-7a** This includes the contacts that give no point: a second contact with the same operator, a contact with a different operator, and a contact in a second activity of the reference (R-OPR-5).
+- **FR-QSL-8** The QSL card uses the data of its contact.
+- **FR-QSL-9** The QSL card uses the template of the operator of the contact, for the activity of that contact.
 - **FR-QSL-10** The system supplies the QSL card as a JPEG image.
 - **FR-QSL-11** If that operator has no template for the activity, the page shows that the QSL card is not available.
 - **FR-QSL-12** When a user uploads the image of a new template, the system tries to find the field boxes of the image.
@@ -335,9 +344,10 @@ The group made these decisions on 2026-10-01.
 | D-21     | A reference is permanent. The group uses the same reference code again in each season (R-SEA-6). This closes Q15. |
 | D-22     | The certificates start again each season. Each season has its own templates. This closes Q16. |
 | D-23     | A reference can have a second activity in a season. It gives no second point (R-PTS-2a). This closes Q17. |
-| D-24     | A participant gets one QSL card for each reference in a season, for the first contact (FR-QSL-7). This closes Q18. |
+| D-24     | A participant gets one QSL card for each reference in a season, for the first contact (FR-QSL-7). This closes Q18. Replaced by D-27. |
 | D-25     | Each line of the ranking shows the list of the references of the participant, not the number for each series. A column for each certificate level shows the reached levels (FR-PUB-2, FR-PUB-3). The model is the ranking of the events of Log de Argentina. Decision of 2026-10-02. |
 | D-26     | The template editor finds the field boxes of the image (FR-QSL-12). The search is in the browser, before the save operation, and uses only the colours of the image. The fields go in the boxes in the usual order of a QSL card. Decision of 2026-10-02. |
+| D-27     | Each contact gives a QSL card, with the template of its operator for its activity. Only the first contact with a reference in a season gives a point (FR-QSL-7, R-OPR-5). This replaces D-9 for the QSL cards, and D-24. Decision of 2026-10-02. |
 
 ## 9. Open questions
 

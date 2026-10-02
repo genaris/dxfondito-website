@@ -18,7 +18,9 @@ export interface Ranking {
   rows: RankingRow[]
 }
 
-export interface FirstContact {
+/** A contact of a participant. Each contact has its QSL card (D-27). */
+export interface ParticipantContact {
+  id: number
   referenceId: number
   reference: string
   referenceName: string
@@ -30,7 +32,9 @@ export interface FirstContact {
   band: string | null
   mode: string
   operator: string
-  /** True if the operator of the first contact has a QSL card template for its activity (FR-QSL-11). */
+  /** True for the first contact with the reference in the season: the contact that gave the point (R-PTS-1). */
+  point: boolean
+  /** True if the operator of the contact has a QSL card template for its activity (FR-QSL-9, FR-QSL-11). */
   qsl: boolean
 }
 
@@ -39,7 +43,8 @@ export interface ParticipantSeason {
   points: number
   /** Only for the current season (FR-PUB-8b). Null after the highest level. */
   pointsToNextLevel: number | null
-  references: FirstContact[]
+  /** All contacts of the season, in the order of time. */
+  contacts: ParticipantContact[]
   /** The reached certificates. `available` is false without a template of the level in the season (FR-CER-7). */
   certificates: { points: number; date: string; available: boolean }[]
 }

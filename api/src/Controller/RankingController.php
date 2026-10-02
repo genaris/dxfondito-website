@@ -68,34 +68,44 @@ final class RankingController
 
         $levels = $this->store->levels();
         $current = (int) ($this->now)()->format('Y');
-        $bySeason = [];
-        $firstContacts = Calculator::firstContacts($this->store->byParticipant($callSign));
+        $all = $this->store->byParticipant($callSign);
+        // The first contact with each reference in each season gives the point (R-PTS-1, R-OPR-3).
+        $firstContacts = Calculator::firstContacts($all);
+        $pointIds = array_flip(array_map(static fn (ContactRow $contact): int => $contact->id, $firstContacts));
+        $firstBySeason = [];
         foreach ($firstContacts as $contact) {
+            $firstBySeason[$contact->season][] = $contact;
+        }
+        $bySeason = [];
+        foreach (Calculator::activityContacts($all) as $contact) {
             $bySeason[$contact->season][] = $contact;
         }
-        // FR-QSL-11: a QSL card needs the template of the operator of the first contact, for its activity.
+        // FR-QSL-9, FR-QSL-11: the QSL card of a contact needs the template of its operator, for its activity.
         $templates = array_flip($this->templates->keys(array_values(array_unique(
-            array_map(static fn (ContactRow $contact): int => $contact->activityId, $firstContacts),
+            array_map(static fn (ContactRow $contact): int => $contact->activityId, $all),
         ))));
         uksort($bySeason, static fn (int $a, int $b): int => [$a !== $current, -$a] <=> [$b !== $current, -$b]);
 
         $seasons = [];
         foreach ($bySeason as $season => $contacts) {
-            usort($contacts, static fn (ContactRow $a, ContactRow $b): int => [$a->qsoAt, $a->id] <=> [$b->qsoAt, $b->id]);
-            $points = count($contacts);
+            $first = $firstBySeason[$season];
+            $points = count($first);
             $seasons[] = [
                 'season' => $season,
                 'points' => $points,
                 'pointsToNextLevel' => $season === $current ? Calculator::pointsToNextLevel($points, $levels) : null,
-                'references' => array_map(
-                    static fn (ContactRow $contact): array => self::firstContactData($contact)
-                        + ['qsl' => isset($templates[$contact->activityId . ':' . $contact->operatorId])],
+                // All contacts, in the order of time. Each contact has its QSL card (D-27).
+                'contacts' => array_map(
+                    static fn (ContactRow $contact): array => self::contactData($contact) + [
+                        'point' => isset($pointIds[$contact->id]),
+                        'qsl' => isset($templates[$contact->activityId . ':' . $contact->operatorId]),
+                    ],
                     $contacts,
                 ),
                 'certificates' => array_map(
                     fn (array $certificate): array => $certificate
                         + ['available' => in_array($certificate['points'], $this->certificateLevels($season), true)],
-                    Calculator::certificates($contacts, $levels),
+                    Calculator::certificates($first, $levels),
                 ),
             ];
         }
@@ -119,9 +129,10 @@ final class RankingController
     /**
      * @return array<string, mixed>
      */
-    private static function firstContactData(ContactRow $contact): array
+    private static function contactData(ContactRow $contact): array
     {
         return [
+            'id' => $contact->id,
             'referenceId' => $contact->referenceId,
             'reference' => $contact->referenceCode,
             'referenceName' => $contact->referenceName,

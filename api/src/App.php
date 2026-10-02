@@ -69,7 +69,7 @@ final class App
     {
         // The API opens the database connection only when a request needs it.
         $pdo = fn (): PDO => $this->pdo ??= Connection::open($config);
-        $migrator = fn (): Migrator => new Migrator($pdo(), $this->root . '/migrations');
+        $migrator = fn (): Migrator => new Migrator($pdo(), $this->root . '/migrations', $config->storageDir);
         $users = new PdoUserStore($pdo);
         $audit = new PdoAuditLog($pdo);
         $auth = new Authenticator($users, new PhpSession($config->storageDir . '/sessions', $request->secure), $audit);
@@ -96,6 +96,7 @@ final class App
             new ActivityService($activityStore, $referenceStore, $audit),
             $logStore,
             $rankingStore,
+            $qslTemplates,
         );
         $logs = new LogController($auth, new LogService(
             $logStore,
@@ -154,7 +155,7 @@ final class App
         $router->add('POST', '/activities/{id}/qsl-templates/{operatorId}', fn (Request $request, array $params): Response => $qsl->save($request, $params));
         $router->add('DELETE', '/activities/{id}/qsl-templates/{operatorId}', fn (Request $request, array $params): Response => $qsl->delete($request, $params));
         $router->add('POST', '/template-preview', fn (Request $request): Response => $qsl->preview($request));
-        $router->add('GET', '/participants/{call}/qsl/{season}/{referenceId}', fn (Request $request, array $params): Response => $qsl->card($params));
+        $router->add('GET', '/participants/{call}/qsl/{contactId}', fn (Request $request, array $params): Response => $qsl->card($params));
         $router->add('GET', '/participants/{call}/certificates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->certificate($params));
         $router->add('GET', '/certificate-templates', fn (Request $request): Response => $certificates->list($request));
         $router->add('GET', '/certificate-templates/{season}/{points}/image', fn (Request $request, array $params): Response => $certificates->image($request, $params));

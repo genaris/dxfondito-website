@@ -12,11 +12,10 @@ use DxFondito\Auth\UserStore;
 use DxFondito\Http\HttpException;
 use DxFondito\Http\UploadedFile;
 use DxFondito\Logs\FileStore;
-use DxFondito\Ranking\Calculator;
 use DxFondito\Ranking\RankingStore;
 
 /**
- * The QSL card templates and the QSL cards (FR-QSL-1 to FR-QSL-11).
+ * The QSL card templates and the QSL cards (FR-QSL-1 to FR-QSL-11). Each contact has its QSL card (D-27).
  */
 final class QslService
 {
@@ -127,31 +126,37 @@ final class QslService
     }
 
     /**
-     * The QSL card of a participant for a reference in a season (FR-QSL-6 to FR-QSL-11).
+     * The QSL card of one contact of a participant (FR-QSL-6 to FR-QSL-11).
      *
      * @return array{content: string, name: string}
-     * @throws HttpException 404 without a contact, or without a template of the operator (FR-QSL-11).
+     * @throws HttpException 404 if the contact is not of the participant, or without a template of the operator (FR-QSL-11).
      */
-    public function card(string $baseCallSign, int $season, int $referenceId): array
+    public function card(string $baseCallSign, int $contactId): array
     {
-        $first = null;
-        foreach (Calculator::firstContacts($this->ranking->byParticipant($baseCallSign)) as $contact) {
-            if ($contact->season === $season && $contact->referenceId === $referenceId) {
-                $first = $contact;
+        $contact = null;
+        foreach ($this->ranking->byParticipant($baseCallSign) as $row) {
+            if ($row->id === $contactId) {
+                $contact = $row;
             }
         }
-        if ($first === null) {
-            throw new HttpException(404, 'The participant has no contact with the reference in the season');
+        if ($contact === null) {
+            throw new HttpException(404, 'The participant has no such contact');
         }
 
-        // FR-QSL-9: the template of the operator of the first contact, for the activity of that contact.
-        $template = $this->templates->find($first->activityId, $first->operatorId)
+        // FR-QSL-9: the template of the operator of the contact, for the activity of the contact.
+        $template = $this->templates->find($contact->activityId, $contact->operatorId)
             ?? throw new HttpException(404, 'The QSL card is not available');
         $content = $this->files->read($template->storedName) ?? throw new HttpException(404, 'The QSL card is not available');
 
         return [
-            'content' => $this->renderer->render($content, $template->fields, QslCard::values($first)),
-            'name' => sprintf('QSL_%s_%s_%d.jpg', $baseCallSign, $first->referenceCode, $season),
+            'content' => $this->renderer->render($content, $template->fields, QslCard::values($contact)),
+            'name' => sprintf(
+                'QSL_%s_%s_%s_%s.jpg',
+                $baseCallSign,
+                $contact->referenceCode,
+                str_replace('-', '', substr($contact->qsoAt, 0, 10)),
+                str_replace(':', '', substr($contact->qsoAt, 11, 5)),
+            ),
         ];
     }
 

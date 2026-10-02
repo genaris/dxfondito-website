@@ -123,11 +123,7 @@ final class QslController
         if (!CallSign::isValid($callSign)) {
             throw new HttpException(404, 'The participant does not exist');
         }
-        $card = $this->qsl->card(
-            $callSign,
-            PathId::season($params),
-            PathId::from($params, 'The reference does not exist', 'referenceId'),
-        );
+        $card = $this->qsl->card($callSign, PathId::from($params, 'The contact does not exist', 'contactId'));
 
         return Response::file($card['content'], 'image/jpeg', $card['name']);
     }

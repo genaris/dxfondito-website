@@ -127,6 +127,7 @@ A reference can have more than one activity in a season (R-SEA-7).
 | `activity_id`    | integer      | A copy from the log, for fast queries.                 |
 | `call_sign`      | text         | As the log gives it, in uppercase letters.             |
 | `base_call_sign` | text         | See section 4.1.                                       |
+| `station_call_sign` | text, null | From `STATION_CALLSIGN`, such as LU2AOG/A (FR-LOG-7b). |
 | `name`           | text, null   | From `NAME`.                                           |
 | `qso_at`         | datetime     | From `QSO_DATE` and `TIME_ON`.                         |
 | `frequency`      | decimal, null | From `FREQ`, in MHz.                                  |
@@ -184,6 +185,14 @@ The record never has a password.
 
 **`schema_migrations`**: the list of the database changes that the host has.
 
+A migration is a `.sql` file, or a `.php` file that returns a function `function (PDO $pdo, string $storageDir): void`.
+A PHP migration changes data that SQL cannot change, for example from the stored files.
+Migration `0003_station_call_sign_backfill.php` reads the stored ADIF files and fills `station_call_sign` for the contacts of the logs before migration 0002.
+It finds each contact by its call sign and its time. It changes only contacts without a station call sign. Thus it can run again.
+
+The operator of a contact on the pages is `COALESCE(station_call_sign, users.call_sign)`: the station call sign of the log, or the call sign of the account.
+The list of operators of an activity uses the same value. Thus an operator with two suffixes in one activity has two items.
+
 ### 3.2 No stored points
 
 The database has no table for points, positions or certificates.
@@ -238,7 +247,8 @@ and calculates the first contacts in PHP (`Ranking\Calculator`).
 For one participant, one reference and one season, the first contact is the contact with the lowest `qso_at`.
 The query includes all activities of the reference in that season.
 If two contacts have the same `qso_at`, the API uses the contact with the lowest `id`.
-The log of this contact gives the operator (R-OPR-4) and the QSL card template (FR-QSL-9).
+This contact gives the point. Its activity gives the date of a certificate (R-OPR-4).
+Each contact, the first one or not, gives a QSL card with the template of its own operator for its own activity (FR-QSL-9, D-27).
 The query uses a `MIN(qso_at)` subquery, because MySQL 5.7 has no window functions.
 
 ### 4.4 Certificates
@@ -351,6 +361,7 @@ The source of the method is `qsl_send/detect.py` of the qsl-send program. The tw
   Thus an A4 template gives an A4 page. A landscape image gives a landscape page.
   FPDF reads the image from a file. Thus the API writes the JPEG image to a temporary file and deletes it after the PDF file is complete.
 - The texts of the certificate: the base call sign (R-CALL-3), and the certificate date (R-CER-5) in Spanish words, such as `4 de octubre de 2026`.
+- The name of a QSL card file is `QSL_{base call sign}_{reference}_{YYYYMMDD}_{HHMM}.jpg`, with the date and the time of the contact. Thus each contact has a different file name.
 - The name of the PDF file is `Certificado_{call sign}_{season}_{points}.pdf`. The download link of the browser uses the level name, such as `Certificado_LU1ABC_2026_Bronce.pdf`.
 - The sample image of a certificate uses `LU1ABC` and `4 de octubre de 2026`.
 - The certificate templates use the same field editor as the QSL card templates, with the fields `call_sign` and `date`. The search of the field boxes (section 6.2) is only for QSL card templates.
@@ -392,9 +403,9 @@ A visitor can use the public requests.
 | `GET /seasons`                                         | The list of seasons and the current season.    |
 | `GET /seasons/{season}/ranking`                        | The ranking of the season, and the levels with a certificate template (`certificateLevels`). |
 | `GET /seasons/{season}/activities`                     | The activities of the season.                  |
-| `GET /activities/{id}`                                 | The activity, its operators, its participants. |
-| `GET /participants/{call}`                             | The seasons, points, activities, certificates. Each certificate has `available`: true if its level has a template for the season. |
-| `GET /participants/{call}/qsl/{season}/{referenceId}`  | The QSL card as a JPEG image.                  |
+| `GET /activities/{id}`                                 | The activity, its operators, `participantCount`, and all its `contacts` in the order of time, each with `qsl`. |
+| `GET /participants/{call}`                             | The seasons, points, activities, certificates. Each certificate has `available`: true if its level has a template for the season. Each season has all `contacts`, each with `point` (true for the first contact with the reference) and `qsl`. |
+| `GET /participants/{call}/qsl/{contactId}`             | The QSL card of one contact, as a JPEG image (D-27). The contact must be of that participant. |
 | `GET /fonts/{name}`                                    | A TrueType font, for the field editor.         |
 | `GET /participants/{call}/certificates/{season}/{points}` | The certificate as a PDF file.              |
 
@@ -455,7 +466,7 @@ A new initial password also opens a locked account.
 | `/temporada/{season}`        | Ranking of a different season                    | Visitor       |
 | `/actividades`               | Activity list of the current season              | Visitor       |
 | `/actividades/{season}`      | Activity list of a different season              | Visitor       |
-| `/actividad/{id}`            | Activity, participants, logs, QSL card templates | Visitor, operator |
+| `/actividad/{id}`            | Activity, logs, QSL card templates, contacts     | Visitor, operator |
 | `/participante/{call}`       | Participant, QSL cards, certificates             | Visitor       |
 | `/log/{id}`                  | Contacts of a log                                | Operator, administrator |
 | `/estado`                    | Status of the API and the database               | Visitor       |

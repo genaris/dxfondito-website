@@ -120,22 +120,27 @@ final class Calculator
     }
 
     /**
-     * The participants of one activity, each with the earliest contact in that activity (FR-PUB-14, FR-PUB-15).
+     * All contacts of one activity, in the order of time (FR-PUB-15). A participant with more than one contact,
+     * with the same operator or with different operators, has a line for each contact.
      *
      * @param iterable<ContactRow> $contacts The contacts of the activity.
-     * @return list<ContactRow> In the order of the base call signs.
+     * @return list<ContactRow>
      */
-    public static function activityParticipants(iterable $contacts): array
+    public static function activityContacts(iterable $contacts): array
     {
-        $first = [];
-        foreach ($contacts as $contact) {
-            $key = $contact->baseCallSign;
-            if (!isset($first[$key]) || $contact->isBefore($first[$key])) {
-                $first[$key] = $contact;
-            }
-        }
-        ksort($first, SORT_STRING);
+        $list = [...$contacts];
+        usort($list, static fn (ContactRow $a, ContactRow $b): int => [$a->qsoAt, $a->id] <=> [$b->qsoAt, $b->id]);
 
-        return array_values($first);
+        return $list;
+    }
+
+    /**
+     * The number of participants: the different base call signs (FR-PUB-14a).
+     *
+     * @param list<ContactRow> $contacts
+     */
+    public static function participantCount(array $contacts): int
+    {
+        return count(array_unique(array_map(static fn (ContactRow $contact): string => $contact->baseCallSign, $contacts)));
     }
 }

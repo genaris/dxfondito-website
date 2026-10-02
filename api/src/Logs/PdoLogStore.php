@@ -53,6 +53,7 @@ final class PdoLogStore implements LogStore
                         $activityId,
                         $contact->callSign,
                         $contact->baseCallSign,
+                        $contact->stationCallSign,
                         $contact->name,
                         $contact->qsoAt,
                         $contact->frequency,
@@ -62,9 +63,9 @@ final class PdoLogStore implements LogStore
                         $contact->rstRcvd,
                     );
                 }
-                $rows = implode(', ', array_fill(0, count($batch), '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'));
+                $rows = implode(', ', array_fill(0, count($batch), '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'));
                 $pdo->prepare(
-                    'INSERT INTO contacts (log_id, activity_id, call_sign, base_call_sign, name, qso_at, frequency, band, mode, rst_sent, rst_rcvd)
+                    'INSERT INTO contacts (log_id, activity_id, call_sign, base_call_sign, station_call_sign, name, qso_at, frequency, band, mode, rst_sent, rst_rcvd)
                      VALUES ' . $rows
                 )->execute($values);
             }
@@ -98,7 +99,7 @@ final class PdoLogStore implements LogStore
     public function contacts(int $logId): array
     {
         $statement = ($this->pdo)()->prepare(
-            'SELECT call_sign, base_call_sign, name, qso_at, frequency, band, mode, rst_sent, rst_rcvd
+            'SELECT call_sign, base_call_sign, station_call_sign, name, qso_at, frequency, band, mode, rst_sent, rst_rcvd
              FROM contacts WHERE log_id = ? ORDER BY qso_at, id'
         );
         $statement->execute([$logId]);
@@ -116,7 +117,7 @@ final class PdoLogStore implements LogStore
                 mode: $row['mode'],
                 rstSent: $row['rst_sent'],
                 rstRcvd: $row['rst_rcvd'],
-                stationCallSign: null,
+                stationCallSign: $row['station_call_sign'],
             ),
             $statement->fetchAll(),
         );
@@ -130,8 +131,10 @@ final class PdoLogStore implements LogStore
     public function operators(int $activityId): array
     {
         $statement = ($this->pdo)()->prepare(
-            'SELECT DISTINCT u.id, u.call_sign FROM logs l JOIN users u ON u.id = l.operator_id
-             WHERE l.activity_id = ? ORDER BY u.call_sign'
+            // The station call sign of the log, such as LU2AOG/A, or the call sign of the account without it.
+            'SELECT DISTINCT u.id, COALESCE(c.station_call_sign, u.call_sign) AS call_sign
+             FROM logs l JOIN users u ON u.id = l.operator_id JOIN contacts c ON c.log_id = l.id
+             WHERE l.activity_id = ? ORDER BY call_sign'
         );
         $statement->execute([$activityId]);
 

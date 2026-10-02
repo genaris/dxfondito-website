@@ -13,7 +13,8 @@ final class PdoRankingStore implements RankingStore
 {
     private const SELECT = 'SELECT c.id, c.base_call_sign, c.call_sign, c.name, c.qso_at, c.frequency, c.band, c.mode, c.rst_sent,
             a.id AS activity_id, a.start_date, a.season, r.id AS reference_id, r.number, r.name AS reference_name,
-            s.code AS series_code, u.id AS operator_id, u.call_sign AS operator_call_sign
+            s.code AS series_code, u.id AS operator_id,
+            COALESCE(c.station_call_sign, u.call_sign) AS operator_call_sign
         FROM contacts c
         JOIN activities a ON a.id = c.activity_id
         JOIN refs r ON r.id = a.reference_id

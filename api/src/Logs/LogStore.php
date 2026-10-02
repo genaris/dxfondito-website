@@ -40,7 +40,8 @@ interface LogStore
     public function delete(int $id): void;
 
     /**
-     * The operators with a log in the activity (FR-ACT-2a).
+     * The operators with a log in the activity (FR-ACT-2a), with the station call signs of their contacts,
+     * such as LU2AOG/A (FR-LOG-7b). An operator with two station call signs has two items.
      *
      * @return list<array{id: int, callSign: string}>
      */

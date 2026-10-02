@@ -111,8 +111,14 @@ export async function previewTemplate(fields: Fields, file: File | null, activit
   return URL.createObjectURL(await apiUploadBlob('/template-preview', form))
 }
 
-export function qslCardUrl(callSign: string, season: number, referenceId: number): string {
-  return apiUrl(`/participants/${callSign}/qsl/${season}/${referenceId}`)
+/** The QSL card of one contact of a participant (D-27). */
+export function qslCardUrl(baseCallSign: string, contactId: number): string {
+  return apiUrl(`/participants/${baseCallSign}/qsl/${contactId}`)
+}
+
+/** The name of the downloaded file, such as QSL_LU1ABC_DPS-01_20261004_1430.jpg. */
+export function qslFileName(baseCallSign: string, referenceCode: string, qsoAt: string): string {
+  return `QSL_${baseCallSign}_${referenceCode}_${qsoAt.slice(0, 10).replaceAll('-', '')}_${qsoAt.slice(11, 16).replace(':', '')}.jpg`
 }
 
 export function fontUrl(font: Font): string {

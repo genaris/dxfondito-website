@@ -135,32 +135,40 @@ final class QslServiceTest extends TestCase
         self::assertSame([], $this->templates->templates);
     }
 
-    public function testTheCardUsesTheTemplateOfTheOperatorOfTheFirstContact(): void
+    public function testEachContactHasItsCardWithTheTemplateOfItsOperator(): void
     {
+        // D-27: two contacts with the same reference give two QSL cards, but one point.
+        $this->service->save($this->admin, $this->activityId, $this->operator->id, $this->image(), $this->fields());
         $this->service->save($this->admin, $this->activityId, $this->otherOperator->id, $this->image(), $this->fields());
-        $this->ranking->contacts = [
-            $this->contact('2026-05-10 15:00:00', $this->operator),
-            $this->contact('2026-05-10 12:00:00', $this->otherOperator),
-        ];
+        $first = $this->contact('2026-05-10 12:00:00', $this->otherOperator);
+        $second = $this->contact('2026-05-10 15:30:00', $this->operator);
+        $this->ranking->contacts = [$first, $second];
 
-        $card = $this->service->card('LU9ZZ', 2026, $this->referenceId);
+        $card = $this->service->card('LU9ZZ', $second->id);
 
-        self::assertSame('QSL_LU9ZZ_DPS-01_2026.jpg', $card['name']);
+        self::assertSame('QSL_LU9ZZ_DPS-01_20260510_1530.jpg', $card['name']);
         self::assertSame(IMAGETYPE_JPEG, getimagesizefromstring($card['content'])[2]);
+        self::assertSame('QSL_LU9ZZ_DPS-01_20260510_1200.jpg', $this->service->card('LU9ZZ', $first->id)['name']);
     }
 
     public function testTheCardIsNotAvailableWithoutTheTemplateOfThatOperator(): void
     {
         // The template of a different operator does not apply (FR-QSL-9, FR-QSL-11).
         $this->service->save($this->operator, $this->activityId, $this->operator->id, $this->image(), $this->fields());
-        $this->ranking->contacts = [$this->contact('2026-05-10 12:00:00', $this->otherOperator)];
+        $contact = $this->contact('2026-05-10 12:00:00', $this->otherOperator);
+        $this->ranking->contacts = [$contact];
 
-        $this->assertStatus(404, fn () => $this->service->card('LU9ZZ', 2026, $this->referenceId));
+        $this->assertStatus(404, fn () => $this->service->card('LU9ZZ', $contact->id));
     }
 
-    public function testNoCardWithoutAContact(): void
+    public function testNoCardForTheContactOfADifferentParticipant(): void
     {
-        $this->assertStatus(404, fn () => $this->service->card('LU9ZZ', 2026, $this->referenceId));
+        $this->service->save($this->operator, $this->activityId, $this->operator->id, $this->image(), $this->fields());
+        $contact = $this->contact('2026-05-10 12:00:00', $this->operator);
+        $this->ranking->contacts = [$contact];
+
+        $this->assertStatus(404, fn () => $this->service->card('LU8YY', $contact->id));
+        $this->assertStatus(404, fn () => $this->service->card('LU9ZZ', $contact->id + 1000));
     }
 
     public function testTheOperatorDeletesTheOwnTemplate(): void
