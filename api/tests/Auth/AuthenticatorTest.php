@@ -27,7 +27,7 @@ final class AuthenticatorTest extends TestCase
         $this->now = new DateTimeImmutable('2026-10-01 12:00:00');
         // A low cost keeps the tests fast.
         $hash = password_hash(self::PASSWORD, PASSWORD_BCRYPT, ['cost' => 4]);
-        $this->userId = $this->users->create('LU1ABC', 'Ana', User::OPERATOR, $hash, false);
+        $this->userId = $this->users->create('LU1ABC', 'Ana', null, User::OPERATOR, $hash, false);
     }
 
     public function testSignsInWithTheCallSignAndThePassword(): void

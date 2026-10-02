@@ -48,4 +48,18 @@ final class User
             'mustChangePassword' => $this->mustChangePassword,
         ];
     }
+
+    /**
+     * The data that an administrator gets in the account list.
+     *
+     * @return array<string, mixed>
+     */
+    public function administrationData(DateTimeImmutable $now): array
+    {
+        return $this->publicData() + [
+            'email' => $this->email,
+            'active' => $this->active,
+            'locked' => $this->lockedUntil !== null && $this->lockedUntil > $now,
+        ];
+    }
 }

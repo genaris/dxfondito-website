@@ -85,7 +85,7 @@ final class MigrationController
         $password = $request->string('password');
 
         $errors = [];
-        if (preg_match('/^[A-Z0-9\/]{3,20}$/', $callSign) !== 1) {
+        if (!CallSign::isValid($callSign)) {
             $errors[] = 'El indicativo debe tener entre 3 y 20 letras, números o barras.';
         }
         if ($name === '' || mb_strlen($name) > 100) {
@@ -101,7 +101,7 @@ final class MigrationController
         }
 
         // The developer chose this password. Thus it is not an initial password.
-        $this->users->create($callSign, $name, User::ADMINISTRATOR, PasswordRules::hash($password), false);
+        $this->users->create($callSign, $name, null, User::ADMINISTRATOR, PasswordRules::hash($password), false);
 
         return Response::html($this->page(
             '<p>Se creó la cuenta de administrador ' . self::escape($callSign) . '.</p>'

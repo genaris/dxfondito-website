@@ -15,12 +15,21 @@ interface UserStore
 
     public function findByCallSign(string $callSign): ?User;
 
+    /**
+     * @return list<User> All accounts, in the order of their call signs.
+     */
+    public function all(): array;
+
     public function count(): int;
+
+    public function countActiveAdministrators(): int;
 
     /**
      * @return int The identifier of the new account.
      */
-    public function create(string $callSign, string $name, string $role, string $passwordHash, bool $mustChangePassword): int;
+    public function create(string $callSign, string $name, ?string $email, string $role, string $passwordHash, bool $mustChangePassword): int;
+
+    public function update(int $id, string $name, ?string $email, string $role, bool $active): void;
 
     public function setPassword(int $id, string $passwordHash, bool $mustChangePassword): void;
 

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import { UsersPage } from './pages/admin/UsersPage.tsx'
 import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
 import { HomePage } from './pages/HomePage.tsx'
 import { SignInPage } from './pages/SignInPage.tsx'
@@ -18,6 +20,9 @@ function App() {
           <nav className="session">
             {user ? (
               <>
+                {user.role === 'administrator' && !user.mustChangePassword && (
+                  <a href={href('/admin/usuarios')}>Cuentas</a>
+                )}
                 <span>{user.callSign}</span>
                 {!user.mustChangePassword && <a href={href('/contrasena')}>Contraseña</a>}
                 <button type="button" className="link" onClick={() => void signOut()}>
@@ -48,9 +53,19 @@ function Page({ path }: { path: string }) {
       return user ? <p>Ya ingresó como {user.callSign}.</p> : <SignInPage />
     case '/contrasena':
       return user ? <ChangePasswordPage required={false} /> : <SignInPage />
+    case '/admin/usuarios':
+      return <AdministratorOnly><UsersPage /></AdministratorOnly>
     default:
       return <p>La página no existe.</p>
   }
+}
+
+function AdministratorOnly({ children }: { children: ReactNode }) {
+  const { user } = useSession()
+  if (!user) return <SignInPage />
+  // The API also checks the role. This check only hides the page.
+  if (user.role !== 'administrator') return <p>Solo un administrador puede ver esta página.</p>
+  return children
 }
 
 export default App

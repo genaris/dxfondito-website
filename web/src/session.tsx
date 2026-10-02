@@ -30,6 +30,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       signOut: async () => {
         apply(await apiSend<SessionState>('DELETE', '/session'))
       },
+      refresh: async () => {
+        apply(await apiGet<SessionState>('/session'))
+      },
       changePassword: async (currentPassword, newPassword) => {
         try {
           apply(await apiSend<SessionState>('PUT', '/session/password', { currentPassword, newPassword }))

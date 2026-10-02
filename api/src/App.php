@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace DxFondito;
 
+use DxFondito\Auth\AccountService;
 use DxFondito\Auth\Authenticator;
 use DxFondito\Auth\PdoUserStore;
 use DxFondito\Auth\PhpSession;
 use DxFondito\Controller\HealthController;
 use DxFondito\Controller\MigrationController;
 use DxFondito\Controller\SessionController;
+use DxFondito\Controller\UserController;
 use DxFondito\Database\Connection;
 use DxFondito\Database\Migrator;
 use DxFondito\Http\HttpException;
@@ -52,6 +54,7 @@ final class App
         $health = new HealthController($migrator);
         $migration = new MigrationController($migrator, $users, $config->migrationSecret);
         $session = new SessionController($auth);
+        $accounts = new UserController($auth, new AccountService($users));
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
@@ -62,6 +65,10 @@ final class App
         $router->add('POST', '/session', fn (Request $request): Response => $session->signIn($request));
         $router->add('DELETE', '/session', fn (): Response => $session->signOut());
         $router->add('PUT', '/session/password', fn (Request $request): Response => $session->changePassword($request));
+        $router->add('GET', '/users', fn (Request $request): Response => $accounts->list($request));
+        $router->add('POST', '/users', fn (Request $request): Response => $accounts->create($request));
+        $router->add('PUT', '/users/{id}', fn (Request $request, array $params): Response => $accounts->update($request, $params));
+        $router->add('PUT', '/users/{id}/password', fn (Request $request, array $params): Response => $accounts->setPassword($request, $params));
 
         return $router;
     }

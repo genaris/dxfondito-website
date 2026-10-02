@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError } from './api.ts'
-import { newPasswordProblem, signInError } from './messages.ts'
+import { initialPasswordProblem, newPasswordProblem, signInError } from './messages.ts'
 
 describe('newPasswordProblem', () => {
   it('accepts a correct new password', () => {
@@ -36,5 +36,15 @@ describe('signInError', () => {
 
   it('does not tell which value is incorrect', () => {
     expect(signInError(new ApiError(401, 'Incorrect call sign or password'))).toMatch(/indicativo o la contraseña/)
+  })
+})
+
+describe('initialPasswordProblem', () => {
+  it('accepts a password of 8 characters', () => {
+    expect(initialPasswordProblem('12345678')).toBeNull()
+  })
+
+  it('refuses a short password', () => {
+    expect(initialPasswordProblem('1234567')).toMatch(/8 o más/)
   })
 })

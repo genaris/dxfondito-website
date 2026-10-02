@@ -29,17 +29,35 @@ final class MemoryUserStore implements UserStore
         return null;
     }
 
+    public function all(): array
+    {
+        $users = array_values($this->users);
+        usort($users, static fn (User $a, User $b): int => strcmp($a->callSign, $b->callSign));
+
+        return $users;
+    }
+
     public function count(): int
     {
         return count($this->users);
     }
 
-    public function create(string $callSign, string $name, string $role, string $passwordHash, bool $mustChangePassword): int
+    public function countActiveAdministrators(): int
+    {
+        return count(array_filter($this->users, static fn (User $user): bool => $user->isAdministrator() && $user->active));
+    }
+
+    public function create(string $callSign, string $name, ?string $email, string $role, string $passwordHash, bool $mustChangePassword): int
     {
         $id = count($this->users) + 1;
-        $this->users[$id] = new User($id, $callSign, $name, null, $role, $passwordHash, $mustChangePassword, true, 0, null);
+        $this->users[$id] = new User($id, $callSign, $name, $email, $role, $passwordHash, $mustChangePassword, true, 0, null);
 
         return $id;
+    }
+
+    public function update(int $id, string $name, ?string $email, string $role, bool $active): void
+    {
+        $this->replace($id, ['name' => $name, 'email' => $email, 'role' => $role, 'active' => $active]);
     }
 
     public function setPassword(int $id, string $passwordHash, bool $mustChangePassword): void

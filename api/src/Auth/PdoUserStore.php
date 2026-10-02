@@ -30,19 +30,40 @@ final class PdoUserStore implements UserStore
         return $this->findOne('SELECT ' . self::COLUMNS . ' FROM users WHERE call_sign = ?', [$callSign]);
     }
 
+    public function all(): array
+    {
+        $rows = ($this->pdo)()->query('SELECT ' . self::COLUMNS . ' FROM users ORDER BY call_sign')->fetchAll();
+
+        return array_map(self::fromRow(...), $rows);
+    }
+
     public function count(): int
     {
         return (int) ($this->pdo)()->query('SELECT COUNT(*) FROM users')->fetchColumn();
     }
 
-    public function create(string $callSign, string $name, string $role, string $passwordHash, bool $mustChangePassword): int
+    public function countActiveAdministrators(): int
+    {
+        return (int) ($this->pdo)()
+            ->query("SELECT COUNT(*) FROM users WHERE role = 'administrator' AND active = 1")
+            ->fetchColumn();
+    }
+
+    public function create(string $callSign, string $name, ?string $email, string $role, string $passwordHash, bool $mustChangePassword): int
     {
         $pdo = ($this->pdo)();
         $pdo->prepare(
-            'INSERT INTO users (call_sign, name, role, password_hash, must_change_password) VALUES (?, ?, ?, ?, ?)'
-        )->execute([$callSign, $name, $role, $passwordHash, (int) $mustChangePassword]);
+            'INSERT INTO users (call_sign, name, email, role, password_hash, must_change_password) VALUES (?, ?, ?, ?, ?, ?)'
+        )->execute([$callSign, $name, $email, $role, $passwordHash, (int) $mustChangePassword]);
 
         return (int) $pdo->lastInsertId();
+    }
+
+    public function update(int $id, string $name, ?string $email, string $role, bool $active): void
+    {
+        ($this->pdo)()->prepare(
+            'UPDATE users SET name = ?, email = ?, role = ?, active = ? WHERE id = ?'
+        )->execute([$name, $email, $role, (int) $active, $id]);
     }
 
     public function setPassword(int $id, string $passwordHash, bool $mustChangePassword): void

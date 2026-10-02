@@ -78,3 +78,65 @@ button.link {
   text-decoration: underline;
   cursor: pointer;
 }
+
+.form select,
+.form textarea {
+  font: inherit;
+  padding: 0.5rem;
+}
+
+.form .checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form h3,
+.form h4 {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.edit-account {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 0.5rem 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

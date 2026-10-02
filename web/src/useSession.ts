@@ -19,6 +19,8 @@ export interface SessionValue {
   user: User | null
   signIn: (callSign: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  /** Reads the session again, for example after a change to the account of the user. */
+  refresh: () => Promise<void>
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>
 }
 

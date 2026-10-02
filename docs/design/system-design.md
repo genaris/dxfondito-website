@@ -349,6 +349,9 @@ A visitor can use the public requests.
 | `PUT`, `DELETE /certificate-templates/{season}/{points}` | A new or changed template, a deletion. |
 | `GET /audit`                                           | The record of actions.              |
 
+There is no request to delete an account. An administrator deactivates it (FR-USR-5, FR-USR-7).
+A new initial password also opens a locked account.
+
 ## 9. Pages of the browser program
 
 | Path                         | Page                                             | User          |
