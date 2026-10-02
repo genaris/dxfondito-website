@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DxFondito\Auth;
 
 use DxFondito\Audit\AuditLog;
+use DxFondito\Audit\Changes;
 use DxFondito\CallSign;
 use DxFondito\Http\HttpException;
 
@@ -78,7 +79,7 @@ final class AccountService
             throw new HttpException(409, 'The system must keep one or more active administrators');
         }
 
-        $changes = self::changes(
+        $changes = Changes::between(
             ['name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'active' => $user->active],
             ['name' => $name, 'email' => $email, 'role' => $role, 'active' => $active],
         );
@@ -107,25 +108,6 @@ final class AccountService
         $this->audit->record($actor->id, AuditLog::USER_PASSWORD_RESET, $user->id, ['callSign' => $user->callSign]);
 
         return $this->find($id);
-    }
-
-    /**
-     * The values that changed, each with the old and the new value.
-     *
-     * @param array<string, mixed> $old
-     * @param array<string, mixed> $new
-     * @return array<string, array{0: mixed, 1: mixed}>
-     */
-    private static function changes(array $old, array $new): array
-    {
-        $changes = [];
-        foreach ($new as $key => $value) {
-            if ($old[$key] !== $value) {
-                $changes[$key] = [$old[$key], $value];
-            }
-        }
-
-        return $changes;
     }
 
     private function find(int $id): User

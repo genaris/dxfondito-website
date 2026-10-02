@@ -66,3 +66,18 @@ export function initialPasswordProblem(password: string): string | null {
   if (new TextEncoder().encode(password).length > 72) return 'La contraseña es demasiado larga.'
   return null
 }
+
+/**
+ * The message for a failed change of a reference or an activity.
+ * A 409 answer has a different meaning for each action. Thus the caller gives its text.
+ */
+export function changeError(error: unknown, texts: { action: string; conflict: string; notFound: string }): string {
+  if (error instanceof ApiError) {
+    if (error.status === 409) return texts.conflict
+    if (error.status === 404) return texts.notFound
+    if (error.status === 401) return 'La sesión terminó. Ingrese de nuevo.'
+    if (error.status === 403) return 'Solo un administrador puede hacer esto.'
+    if (error.status === 422) return 'Un valor no es válido. Revise los datos.'
+  }
+  return `No se pudo ${texts.action}. Pruebe de nuevo más tarde.`
+}

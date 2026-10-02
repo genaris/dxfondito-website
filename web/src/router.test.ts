@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { href, pathFromHash } from './router.ts'
+import { href, matchPath, pathFromHash } from './router.ts'
 
 describe('pathFromHash', () => {
   it('gives the path after the # character', () => {
@@ -19,5 +19,25 @@ describe('pathFromHash', () => {
 describe('href', () => {
   it('gives a hash address', () => {
     expect(href('/ingresar')).toBe('#/ingresar')
+  })
+})
+
+describe('matchPath', () => {
+  it('gives the parameters', () => {
+    expect(matchPath('/actividad/:id', '/actividad/12')).toEqual({ id: '12' })
+  })
+
+  it('gives an empty object for a path without parameters', () => {
+    expect(matchPath('/actividades', '/actividades')).toEqual({})
+  })
+
+  it('gives null for a different path', () => {
+    expect(matchPath('/actividad/:id', '/actividades')).toBeNull()
+    expect(matchPath('/actividad/:id', '/actividad/12/logs')).toBeNull()
+    expect(matchPath('/actividad/:id', '/actividad/')).toBeNull()
+  })
+
+  it('decodes the values', () => {
+    expect(matchPath('/participante/:call', '/participante/LU1ABC%2FP')).toEqual({ call: 'LU1ABC/P' })
   })
 })

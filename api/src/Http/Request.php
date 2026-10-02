@@ -50,6 +50,19 @@ final class Request
     }
 
     /**
+     * An integer value of the body, or null.
+     */
+    public function int(string $key): ?int
+    {
+        $value = $this->body[$key] ?? null;
+        if (is_int($value)) {
+            return $value;
+        }
+
+        return is_string($value) && preg_match('/^-?[0-9]{1,9}$/', $value) === 1 ? (int) $value : null;
+    }
+
+    /**
      * A string value of the body, or an empty string.
      */
     public function string(string $key): string

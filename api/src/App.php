@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace DxFondito;
 
+use DxFondito\Activities\ActivityService;
+use DxFondito\Activities\PdoActivityStore;
+use DxFondito\Activities\PdoReferenceStore;
+use DxFondito\Activities\ReferenceService;
 use DxFondito\Audit\PdoAuditLog;
 use DxFondito\Auth\AccountService;
 use DxFondito\Auth\Authenticator;
 use DxFondito\Auth\PdoUserStore;
 use DxFondito\Auth\PhpSession;
+use DxFondito\Controller\ActivityController;
 use DxFondito\Controller\AuditController;
 use DxFondito\Controller\HealthController;
 use DxFondito\Controller\MigrationController;
+use DxFondito\Controller\ReferenceController;
 use DxFondito\Controller\SessionController;
 use DxFondito\Controller\UserController;
 use DxFondito\Database\Connection;
@@ -59,6 +65,14 @@ final class App
         $session = new SessionController($auth);
         $accounts = new UserController($auth, new AccountService($users, $audit));
         $auditRecord = new AuditController($auth, $audit);
+        $referenceStore = new PdoReferenceStore($pdo);
+        $activityStore = new PdoActivityStore($pdo);
+        $references = new ReferenceController($auth, new ReferenceService($referenceStore, $audit));
+        $activities = new ActivityController(
+            $auth,
+            $activityStore,
+            new ActivityService($activityStore, $referenceStore, $audit),
+        );
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
@@ -72,8 +86,18 @@ final class App
         $router->add('GET', '/users', fn (Request $request): Response => $accounts->list($request));
         $router->add('POST', '/users', fn (Request $request): Response => $accounts->create($request));
         $router->add('PUT', '/users/{id}', fn (Request $request, array $params): Response => $accounts->update($request, $params));
-        $router->add('GET', '/audit', fn (Request $request): Response => $auditRecord->list($request));
         $router->add('PUT', '/users/{id}/password', fn (Request $request, array $params): Response => $accounts->setPassword($request, $params));
+        $router->add('GET', '/audit', fn (Request $request): Response => $auditRecord->list($request));
+        $router->add('GET', '/seasons', fn (): Response => $activities->seasons());
+        $router->add('GET', '/seasons/{season}/activities', fn (Request $request, array $params): Response => $activities->bySeason($params));
+        $router->add('GET', '/activities/{id}', fn (Request $request, array $params): Response => $activities->show($params));
+        $router->add('POST', '/activities', fn (Request $request): Response => $activities->create($request));
+        $router->add('PUT', '/activities/{id}', fn (Request $request, array $params): Response => $activities->update($request, $params));
+        $router->add('DELETE', '/activities/{id}', fn (Request $request, array $params): Response => $activities->delete($request, $params));
+        $router->add('GET', '/references', fn (Request $request): Response => $references->list($request));
+        $router->add('POST', '/references', fn (Request $request): Response => $references->create($request));
+        $router->add('PUT', '/references/{id}', fn (Request $request, array $params): Response => $references->update($request, $params));
+        $router->add('DELETE', '/references/{id}', fn (Request $request, array $params): Response => $references->delete($request, $params));
 
         return $router;
     }

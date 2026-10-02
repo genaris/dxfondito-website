@@ -99,6 +99,12 @@ All dates and times are in UTC.
 `reference_id` and `start_date` are unique together.
 A reference can have more than one activity in a season (R-SEA-7).
 
+- The number of a reference is 1 to 999.
+- The proposed number for a new reference (FR-REF-3) is the highest number of the series and one.
+  Thus the code of a deleted reference does not come back.
+- The end date of an activity is on or after its start date.
+- The descriptions have 2000 or fewer characters.
+
 **`logs`**: one uploaded ADIF file.
 
 | Column          | Type         | Notes                                           |
@@ -354,6 +360,9 @@ A visitor can use the public requests.
 | `PUT`, `DELETE /certificate-templates/{season}/{points}` | A new or changed template, a deletion. |
 | `GET /audit`                                           | The record of actions.              |
 
+`GET /seasons` gives the seasons with activities and always the current season, the newest first.
+`GET /references` also gives the series, each with its proposed number for a new reference.
+
 There is no request to delete an account. An administrator deactivates it (FR-USR-5, FR-USR-7).
 A new initial password also opens a locked account.
 
@@ -363,7 +372,8 @@ A new initial password also opens a locked account.
 | ---------------------------- | ------------------------------------------------ | ------------- |
 | `/`                          | Ranking of the current season                    | Visitor       |
 | `/temporada/{season}`        | Ranking of a different season                    | Visitor       |
-| `/actividades`               | Activity list                                    | Visitor       |
+| `/actividades`               | Activity list of the current season              | Visitor       |
+| `/actividades/{season}`      | Activity list of a different season              | Visitor       |
 | `/actividad/{id}`            | Activity, participants, logs, QSL card templates | Visitor, operator |
 | `/participante/{call}`       | Participant, QSL cards, certificates             | Visitor       |
 | `/ingresar`                  | Sign-in                                          | Visitor       |

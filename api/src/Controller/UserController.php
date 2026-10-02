@@ -9,6 +9,7 @@ use DxFondito\Auth\AccountService;
 use DxFondito\Auth\Authenticator;
 use DxFondito\Auth\User;
 use DxFondito\Http\HttpException;
+use DxFondito\Http\PathId;
 use DxFondito\Http\Request;
 use DxFondito\Http\Response;
 
@@ -61,7 +62,7 @@ final class UserController
         }
         $user = $this->accounts->update(
             $actor,
-            self::id($params),
+            PathId::from($params, 'The account does not exist'),
             $request->string('name'),
             $request->string('email'),
             $request->string('role'),
@@ -77,7 +78,7 @@ final class UserController
     public function setPassword(Request $request, array $params): Response
     {
         $actor = $this->auth->requireAdministrator($request);
-        $user = $this->accounts->setInitialPassword($actor, self::id($params), $request->string('password'));
+        $user = $this->accounts->setInitialPassword($actor, PathId::from($params, 'The account does not exist'), $request->string('password'));
 
         return $this->one($user);
     }
@@ -85,18 +86,5 @@ final class UserController
     private function one(User $user, int $status = 200): Response
     {
         return Response::json($user->administrationData(new DateTimeImmutable()), $status);
-    }
-
-    /**
-     * @param array<string, string> $params
-     */
-    private static function id(array $params): int
-    {
-        $id = $params['id'] ?? '';
-        if (preg_match('/^[1-9][0-9]{0,9}$/', $id) !== 1) {
-            throw new HttpException(404, 'The account does not exist');
-        }
-
-        return (int) $id;
     }
 }

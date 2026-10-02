@@ -13,6 +13,12 @@ interface AuditLog
     public const USER_UPDATE = 'user.update';
     public const USER_PASSWORD_RESET = 'user.password.reset';
     public const USER_PASSWORD_CHANGE = 'user.password.change';
+    public const REFERENCE_CREATE = 'reference.create';
+    public const REFERENCE_UPDATE = 'reference.update';
+    public const REFERENCE_DELETE = 'reference.delete';
+    public const ACTIVITY_CREATE = 'activity.create';
+    public const ACTIVITY_UPDATE = 'activity.update';
+    public const ACTIVITY_DELETE = 'activity.delete';
 
     /**
      * @param int $userId The user who did the action.

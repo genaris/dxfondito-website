@@ -51,3 +51,19 @@ describe('detailLines', () => {
     expect(detailLines(entry('log.upload', null))).toEqual([])
   })
 })
+
+describe('detailLines of references and activities', () => {
+  it('explains a new activity', () => {
+    const lines = detailLines(
+      entry('activity.create', { label: 'DPS-01 (2026-05-10)', name: 'Hospital', endDate: '2026-05-11', description: null }),
+    )
+    expect(lines).toEqual(['Actividad DPS-01 (2026-05-10)', 'Nombre: Hospital', 'Fin: 2026-05-11', 'Descripción: (vacío)'])
+  })
+
+  it('explains a change of a reference', () => {
+    const lines = detailLines(
+      entry('reference.update', { code: 'DPS-01', changes: { code: ['DPS-01', 'DPS-02'] } }),
+    )
+    expect(lines).toEqual(['Referencia DPS-01', 'Código: DPS-01 → DPS-02'])
+  })
+})

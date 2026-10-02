@@ -27,6 +27,12 @@ const ACTION_NAMES: Record<string, string> = {
   'user.update': 'Cambió una cuenta',
   'user.password.reset': 'Puso una contraseña inicial',
   'user.password.change': 'Cambió su contraseña',
+  'reference.create': 'Creó una referencia',
+  'reference.update': 'Cambió una referencia',
+  'reference.delete': 'Borró una referencia',
+  'activity.create': 'Creó una actividad',
+  'activity.update': 'Cambió una actividad',
+  'activity.delete': 'Borró una actividad',
 }
 
 const FIELD_NAMES: Record<string, string> = {
@@ -34,6 +40,11 @@ const FIELD_NAMES: Record<string, string> = {
   email: 'Email',
   role: 'Rol',
   active: 'Estado',
+  code: 'Código',
+  description: 'Descripción',
+  reference: 'Referencia',
+  startDate: 'Inicio',
+  endDate: 'Fin',
 }
 
 export function actionName(action: string): string {
@@ -64,12 +75,20 @@ export function detailLines(entry: AuditEntry): string[] {
   if (typeof detail.callSign === 'string' && entry.action !== 'user.password.change') {
     lines.push(`Cuenta ${detail.callSign}`)
   }
-  if (entry.action === 'user.create') {
-    for (const field of ['name', 'email', 'role']) {
-      if (field in detail) lines.push(`${FIELD_NAMES[field]}: ${formatValue(field, detail[field])}`)
-    }
-    if (detail.firstAdministrator === true) lines.push('Primer administrador, desde la página de migraciones')
+  if (typeof detail.code === 'string') lines.push(`Referencia ${detail.code}`)
+  if (typeof detail.label === 'string') lines.push(`Actividad ${detail.label}`)
+
+  const createdFields: Record<string, string[]> = {
+    'user.create': ['name', 'email', 'role'],
+    'reference.create': ['name', 'description'],
+    'reference.delete': ['name'],
+    'activity.create': ['name', 'endDate', 'description'],
+    'activity.delete': ['name'],
   }
+  for (const field of createdFields[entry.action] ?? []) {
+    if (field in detail) lines.push(`${FIELD_NAMES[field]}: ${formatValue(field, detail[field])}`)
+  }
+  if (detail.firstAdministrator === true) lines.push('Primer administrador, desde la página de migraciones')
   const changes = detail.changes
   if (changes && typeof changes === 'object') {
     for (const [field, pair] of Object.entries(changes as Record<string, unknown>)) {
