@@ -3,15 +3,19 @@ import { activitySchedule, readActivities, readSeasons } from '../activities.ts'
 import type { ActivitySummary, Seasons } from '../activities.ts'
 import { href, navigate } from '../router.ts'
 import { SeasonSelect } from '../SeasonSelect.tsx'
+import { useSession } from '../useSession.ts'
 
 type State = { kind: 'loading' } | { kind: 'ready'; activities: ActivitySummary[] } | { kind: 'error' }
 
 /**
- * The activities of a season with at least one contact, the most recent first (FR-PUB-13, FR-PUB-13a, FR-PUB-13b).
- * The next activities are on the home page and in the calendar of the program.
+ * The activities of a season, the most recent first (FR-PUB-13, FR-PUB-13a, FR-PUB-13b).
+ * A visitor sees the activities with at least one contact: the next activities are on the home page and in the
+ * calendar of the program. A signed-in user sees all activities, because an operator uploads the logs of an
+ * activity without contacts.
  * Without a season in the path, the page shows the current season.
  */
 export function ActivitiesPage({ season }: { season: number | null }) {
+  const { user } = useSession()
   const [seasons, setSeasons] = useState<Seasons | null>(null)
   const [state, setState] = useState<State>({ kind: 'loading' })
   const selected = season ?? seasons?.current ?? null
@@ -28,7 +32,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
     let active = true
     readActivities(selected)
       .then((activities) => {
-        if (active) setState({ kind: 'ready', activities: activities.filter((activity) => activity.contactCount > 0) })
+        if (active) setState({ kind: 'ready', activities })
       })
       .catch(() => {
         if (active) setState({ kind: 'error' })
@@ -37,6 +41,14 @@ export function ActivitiesPage({ season }: { season: number | null }) {
       active = false
     }
   }, [selected])
+
+  // The filter is at render time: a sign-in or a sign-out changes the list without a new request.
+  const shown =
+    state.kind !== 'ready'
+      ? []
+      : user
+        ? state.activities
+        : state.activities.filter((activity) => activity.contactCount > 0)
 
   const options = seasons && selected !== null && !seasons.seasons.includes(selected)
     ? [selected, ...seasons.seasons]
@@ -52,13 +64,14 @@ export function ActivitiesPage({ season }: { season: number | null }) {
       </div>
       {state.kind === 'loading' && <p>Cargando…</p>}
       {state.kind === 'error' && <p className="error">No se pudo leer la lista de actividades.</p>}
-      {state.kind === 'ready' && state.activities.length === 0 && (
+      {state.kind === 'ready' && shown.length === 0 && (
         <p>
-          La temporada {selected} todavía no tiene actividades con contactos. Las próximas fechas están en{' '}
+          La temporada {selected} todavía no tiene {user ? 'actividades' : 'actividades con contactos'}. Las próximas
+          fechas están en{' '}
           <a href={href('/programa')}>El programa</a>.
         </p>
       )}
-      {state.kind === 'ready' && state.activities.length > 0 && (
+      {state.kind === 'ready' && shown.length > 0 && (
         <div className="table-scroll">
           <table className="table">
             <thead>
@@ -70,7 +83,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
               </tr>
             </thead>
             <tbody>
-              {state.activities.map((activity) => (
+              {shown.map((activity) => (
                 <tr key={activity.id}>
                   <td className="nowrap">
                     <a href={href(`/actividad/${activity.id}`)}>{activity.reference.code}</a>

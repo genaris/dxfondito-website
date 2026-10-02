@@ -163,7 +163,8 @@ The call sign of the user identifies the account.
 - **FR-PUB-12a** A reached certificate without a template for the season shows that it is not available (FR-CER-7).
 - **FR-PUB-13** The activity list shows the activities of the selected season, with the most recent activity first.
 - **FR-PUB-13a** For each activity, the list shows the reference code, the reference name, the dates and the hours, and the number of contacts.
-- **FR-PUB-13b** The list shows only the activities with at least one contact. The next activities are on the home page and in the calendar of the program page.
+- **FR-PUB-13b** For a visitor, the list shows only the activities with at least one contact. The next activities are on the home page and in the calendar of the program page.
+  For a signed-in user, the list shows all activities of the season, with 0 contacts for an activity without logs. Thus an operator finds the activity to upload a log.
   The administration of the activities shows all activities.
 - **FR-PUB-14** The page of an activity shows its data, its operators and the list of all its contacts.
 - **FR-PUB-14a** The page shows the number of participants (different base call signs) and the number of contacts (QSOs).
