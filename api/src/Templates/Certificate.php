@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace DxFondito\Templates;
 
+use DxFondito\Mail\SpanishDate;
+
 /**
  * The texts of the fields of a certificate (FR-CER-2): the call sign and the certificate date.
  */
 final class Certificate
 {
-    private const MONTHS = [
-        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-    ];
+    /** The names of the certificate levels (R-CER-1). The browser has the same names (web/src/program.ts). */
+    private const LEVEL_NAMES = [5 => 'Bronce', 10 => 'Plata', 15 => 'Oro'];
 
     /**
      * @param string $date YYYY-MM-DD, the date of the certificate (R-CER-5).
@@ -38,8 +38,14 @@ final class Certificate
      */
     public static function longDate(string $date): string
     {
-        [$year, $month, $day] = array_map('intval', explode('-', $date));
+        return SpanishDate::long($date);
+    }
 
-        return sprintf('%d de %s de %d', $day, self::MONTHS[$month - 1], $year);
+    /**
+     * The name of a level, such as "Bronce", or "20 puntos" for a level without a name.
+     */
+    public static function levelName(int $points): string
+    {
+        return self::LEVEL_NAMES[$points] ?? $points . ' puntos';
     }
 }

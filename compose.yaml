@@ -11,6 +11,8 @@ services:
       DB_USER: dxfondito
       DB_PASSWORD: dxfondito
       MIGRATION_SECRET: local-secret
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
     volumes:
       - ./api:/app/api
     ports:
@@ -38,6 +40,13 @@ services:
       interval: 3s
       timeout: 3s
       retries: 30
+
+  # A local mail server for the QSL mailer. It catches all messages and sends nothing out.
+  # The messages are at http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:8025:8025"
 
 volumes:
   db-data:

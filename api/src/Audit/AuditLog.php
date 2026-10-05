@@ -26,6 +26,15 @@ interface AuditLog
     public const CERTIFICATE_TEMPLATE_SAVE = 'certificate-template.save';
     public const CERTIFICATE_TEMPLATE_DELETE = 'certificate-template.delete';
     public const REGISTRY_UPDATE = 'registry.update';
+    public const ADDRESS_BOOK_SAVE = 'address-book.save';
+    public const ADDRESS_BOOK_DELETE = 'address-book.delete';
+    public const EMAIL_INVALID = 'email.invalid';
+    public const EMAIL_VALID = 'email.valid';
+    public const MAIL_TEMPLATE_SAVE = 'mail-template.save';
+    public const MAIL_TEMPLATE_DELETE = 'mail-template.delete';
+    public const MAIL_SEND = 'mail.send';
+    public const MAIL_MARK = 'mail.mark';
+    public const MAIL_UNMARK = 'mail.unmark';
 
     /**
      * @param int $userId The user who did the action.

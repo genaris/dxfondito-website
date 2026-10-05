@@ -28,4 +28,11 @@ interface RankingStore
      * @return list<ContactRow>
      */
     public function byActivity(int $activityId): array;
+
+    /**
+     * All contacts of the activities of a season, for the certificates of all participants (FR-MAIL-12).
+     *
+     * @return list<ContactRow>
+     */
+    public function bySeason(int $season): array;
 }

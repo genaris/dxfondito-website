@@ -22,7 +22,8 @@ echo "\n";
 
 echo "Extensions\n";
 // curl downloads the lists of licensees of ENACOM and URSEC. zlib reads the ODS file of URSEC.
-$extensions = array('pdo_mysql', 'mysqli', 'gd', 'mbstring', 'fileinfo', 'json', 'session', 'zlib', 'curl');
+// openssl connects to the SMTP server of the QSL mailer (port 465 with SSL).
+$extensions = array('pdo_mysql', 'mysqli', 'gd', 'mbstring', 'fileinfo', 'json', 'session', 'zlib', 'curl', 'openssl');
 foreach ($extensions as $extension) {
     echo "  " . $extension . ": " . yes_no(extension_loaded($extension)) . "\n";
 }

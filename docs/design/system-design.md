@@ -400,6 +400,62 @@ The name on a QSL card comes from the official lists of licensees (FR-QSL-3a). T
 - The table `licensees` has `call_sign` (key), `country` and `name`. The table `licensee_updates` has the date and the number of licensees of the last update of each country. Migration 0005.
 - The action of the record is `registry.update`, with the country and the number of licensees.
 
+### 6.5 QSL mailer
+
+The code is in `api/src/Mail/`. The pages are `/admin/envios`, `/admin/envios/actividad/{id}`, `/admin/envios/certificados/{season}`, `/admin/libreta` and `/admin/mensajes`.
+
+**Sending**
+
+- PHPMailer sends through the SMTP server of the host, with authentication: DonWeb recommends port 465 with SSL, and refuses `mail()` without authentication.
+  The `mail` section of `config.php` has the server, the mailbox and its password. Without a host, the mailer is off and the pages say it.
+- The sender is a mailbox of the group in dxfondito.com.ar, without `Reply-To`.
+- Each message has the plain text and an HTML version: paragraphs, line breaks and links (`MessageTemplate::html`).
+- DonWeb accepts 100 messages each hour for each mailbox, and 200 for the domain. `hourly_limit` is 90.
+  `SendingLimit` counts the messages of the last hour in `mail_deliveries`. At the limit, the API stops and gives the time when the next message can go.
+- The host has no background processes, and PHP stops a request after about 30 seconds. Thus the browser sends batches of 5 participants (`sendInBatches`), shows the progress, and waits at the limit.
+  If the page closes, the record keeps what went. The next sending continues with the pending participants.
+- The test message goes to the address of the account of the administrator. It is not in the record and does not count for the limit.
+- In the local environment, Mailpit catches all messages: `http://localhost:8025`.
+
+**Addresses**
+
+- `contacts.email` keeps the `EMAIL` field of each record: the first valid address, in lowercase letters. Migration 0007 fills it from the stored ADIF files, as migration 0003 for the station call sign.
+- The addresses of a call sign come from a query of `contacts`, grouped by address, the most recent contact first. Thus a deleted log removes its addresses, and a new log adds its address without a change of the others.
+- `Recipient::resolve`: the address of `address_book`, else the address of the most recent contact; never an address of `invalid_emails`.
+  `changedFrom` shows the address of the last sent message if it is different now.
+
+**QSL messages**
+
+- A participant of an activity gets one message with the QSL cards of its contacts whose operator has a template (FR-QSL-9).
+- The record keeps the contacts of each message as `operatorId|qsoAt` keys. These keys stay valid when an operator uploads the same log again.
+- The state of a participant: `pending` (no message), `sent` (all QSL cards went), or `new` (QSL cards that no message had). "Enviar pendientes" sends to `pending` and `new`; a `new` message has only the new QSL cards.
+- A manual mark covers all contacts of the participant at that time.
+
+**Certificate messages**
+
+- The API calculates the certificates of a season from `RankingStore::bySeason` and `Calculator::certificates`, as for the participant page.
+- The state of a certificate: `pending`, `sent`, `changed` (the date of the last message is different now), `revoked` (the participant does not have it now), or `unavailable` (no template of the level).
+- A certificate with an earlier message goes only with `again`: the page shows the warning first (FR-MAIL-13).
+- `GET /mail/summary` gives the pending and changed certificates of all seasons, for the warning under the administration menu.
+
+**Texts**
+
+- `mail_templates` keeps the texts by kind (`qsl`, `certificate`) and scope (`default`, `activity:<id>`, `season:<year>`).
+  Without a saved text, the scope uses the general text, and the general text uses the default text of `MessageTemplate::DEFAULTS`.
+- The variables are in `MessageTemplate::VARIABLES`. `{saludo}` is the first given name, or the call sign without a name. `{qsos}` has one line for each QSL card.
+- The name in the messages is the name of the official lists, as on the public QSL card (D-28). A later version can use the name of the address book for the messages only.
+
+**Tables** (migration 0006)
+
+| Table | Content |
+| --- | --- |
+| `address_book` | `call_sign` (key), `name`, `email`, `no_mail`, `notes`, `updated_at`, `updated_by` |
+| `invalid_emails` | `email` (key), `marked_at`, `marked_by` |
+| `mail_templates` | `kind` and `scope` (key), `subject`, `body`, `updated_at`, `updated_by` |
+| `mail_deliveries` | One row for each message or manual mark: `kind`, `base_call_sign`, `activity_id` (QSL), `season`, `points` and `certificate_date` (certificate), `method` (`email` or `manual`), `status` (`sent` or `failed`), `recipient`, `subject`, `items` (JSON keys of the contacts), `error`, `created_at`, `user_id` |
+
+The actions of the record are `address-book.save`, `address-book.delete`, `email.invalid`, `email.valid`, `mail-template.save`, `mail-template.delete`, `mail.send` (one entry for each batch), `mail.mark` and `mail.unmark`.
+
 ## 7. Security
 
 - All database queries use prepared statements.
@@ -476,6 +532,17 @@ The save operation of a template uses `POST`, not `PUT`, because PHP reads the f
 | `POST`, `DELETE /certificate-templates/{season}/{points}` | A new or changed template (multipart: `fields`, and `file` for a new image), a deletion. |
 | `POST /certificate-preview`                            | A sample image for a certificate template and its fields (`file`, or `season` and `points`). |
 | `GET /registries`                                      | The last update of each list of licensees. |
+| `GET /address-book`, `GET`, `PUT`, `DELETE /address-book/{call}` | The address book (section 6.5). |
+| `PUT /invalid-emails`                                  | Marks an address as bounced or correct (`email`, `invalid`). |
+| `GET`, `PUT`, `DELETE /mail-templates/{qsl|certificate}` | The general texts of the messages. |
+| `GET /mail/summary`                                    | The certificates that wait for a message. |
+| `GET /seasons/{season}/mail`                           | The activities of a season with the state of their QSL messages. |
+| `GET /activities/{id}/mail`                            | The text and the participants of an activity. |
+| `PUT`, `DELETE /activities/{id}/mail-template`         | The own text of an activity. |
+| `POST /activities/{id}/mail/{preview|test|send|mark|unmark}` | The QSL messages (`callSigns`, `resend`). |
+| `GET /seasons/{season}/certificate-mail`               | The text and the certificates of a season. |
+| `PUT`, `DELETE /seasons/{season}/certificate-mail-template` | The own text of a season. |
+| `POST /seasons/{season}/certificate-mail/{preview|test|send|mark|unmark}` | The certificate messages (`certificates`, `again`). |
 | `POST /registries/{country}`                           | Downloads the list of `ar` or `uy` (section 6.4). |
 | `GET /audit`                                           | The record of actions.              |
 
@@ -507,6 +574,11 @@ A new initial password also opens a locked account.
 | `/admin/usuarios`            | Accounts                                         | Administrator |
 | `/admin/certificados`        | Certificate templates                            | Administrator |
 | `/admin/licencias`           | Lists of licensees of Argentina and Uruguay      | Administrator |
+| `/admin/envios`              | QSL mailer: activities and certificates          | Administrator |
+| `/admin/envios/actividad/{id}` | QSL messages of an activity                    | Administrator |
+| `/admin/envios/certificados/{season}` | Certificate messages of a season        | Administrator |
+| `/admin/libreta`             | Address book                                     | Administrator |
+| `/admin/mensajes`            | General texts of the messages                    | Administrator |
 | `/admin/registro`            | Record of actions                                | Administrator |
 
 The paths of the pages are in Spanish, as the user interface (C-6). Users see them and share them.

@@ -306,6 +306,37 @@ All QSL cards have the same fields.
 - **FR-CER-6** The system refuses the download of a certificate that the participant does not have.
 - **FR-CER-7** If a level has no template for the season, the page shows that the certificate is not available.
 
+### 6.8 QSL mailer
+
+The system sends the QSL cards and the certificates by e-mail, on request of an administrator.
+Until 2026, the group sent them by hand. Thus an administrator can also mark them as sent.
+
+- **FR-MAIL-1** Only an administrator sends messages and marks them. An administrator knows when all logs of an activity are in the system.
+- **FR-MAIL-2** The system keeps the `EMAIL` field of each record of a log. The logs are the only automatic source of addresses: the system has no connection with QRZ.com.
+- **FR-MAIL-3** An administrator keeps an address book for each base call sign: an own address, a mark "no messages", and notes.
+  The book also has a name, for a later version. The QSL cards use only the name of the official lists (FR-QSL-3a, D-28).
+- **FR-MAIL-4** The address of a call sign is the address of the book. Without it, the address of the most recent contact of the call sign in the logs.
+  A log with a different address does not delete the old address. If the address is different from the address of the last message, the system shows it.
+- **FR-MAIL-5** An administrator marks an address that bounced. The system does not use it, and uses the next address of FR-MAIL-4.
+- **FR-MAIL-6** A participant gets one message for each activity, with the QSL cards of all its contacts in the activity (FR-QSL-7).
+  A contact whose operator has no template for the activity has no QSL card (FR-QSL-11).
+- **FR-MAIL-7** The system records each message: the call sign, the address, the subject, the QSL cards or the certificate, the time, the administrator, and the result.
+  A message goes once: the record prevents a second message by mistake.
+- **FR-MAIL-8** A QSL card of a log that came after the message goes in a new message, with only the new QSL cards. An administrator can also send all QSL cards again.
+- **FR-MAIL-9** The system sends at most 90 messages each hour: the host accepts 100 for each mailbox. At the limit, the sending waits and continues by itself.
+  The host has no background processes. Thus the page of the administrator stays open during the sending.
+- **FR-MAIL-10** The subject and the body of the messages are plain text with variables in Spanish, such as `{saludo}` and `{referencia}`.
+  There is a general text for the QSL cards and a general text for the certificates. Each activity, and each season of certificates, can have its own text.
+  The system refuses an unknown variable.
+- **FR-MAIL-11** Before the sending, the administrator sees each message with a real participant, and can send a test message to the own address.
+  The sender is a mailbox of the group in dxfondito.com.ar. The answers go to that mailbox.
+- **FR-MAIL-12** A participant gets one message for each certificate, with the PDF file.
+- **FR-MAIL-13** A certificate goes again only after a warning: the system shows the date of the earlier message and the date of the certificate then and now. The administrator decides.
+  The system shows the certificates that changed after their message (a log that came later, or a deleted log), and the certificates that the participant does not have now.
+  After the sign-in, an administrator sees how many certificates wait for a message.
+- **FR-MAIL-14** An administrator marks QSL cards or certificates as sent, without a message: for a participant, for a selection, or for all participants of an activity.
+  A mark of a certificate keeps the date of the certificate. An administrator can delete a mark. A sent message cannot be deleted.
+
 ### 6.7 Record of actions
 
 - **FR-AUD-1** The system records each upload and each deletion of a log.
@@ -362,8 +393,9 @@ The group made these decisions on 2026-10-01.
 | D-24     | A participant gets one QSL card for each reference in a season, for the first contact (FR-QSL-7). This closes Q18. Replaced by D-27. |
 | D-25     | Each line of the ranking shows the list of the references of the participant, not the number for each series. A column for each certificate level shows the reached levels (FR-PUB-2, FR-PUB-3). The model is the ranking of the events of Log de Argentina. Decision of 2026-10-02. |
 | D-26     | The template editor finds the field boxes of the image (FR-QSL-12). The search is in the browser, before the save operation, and uses only the colours of the image. The fields go in the boxes in the usual order of a QSL card. Decision of 2026-10-02. |
-| D-27     | Each contact gives a QSL card, with the template of its operator for its activity. Only the first contact with a reference in a season gives a point (FR-QSL-7, R-OPR-5). This replaces D-9 for the QSL cards, and D-24. Decision of 2026-10-02. |
 | D-28     | The name on the public QSL card comes from the official lists of licensees of Argentina and Uruguay, not from the log (FR-QSL-3a). These lists are public sources. A participant of a different country gets no name. Decision of 2026-10-02. |
+| D-29     | The QSL mailer sends on request of an administrator, through the SMTP server of the host, from one mailbox of the group. One message for each participant and activity. The logs give the addresses, and an address book corrects them. Decision of 2026-10-05. |
+| D-27     | Each contact gives a QSL card, with the template of its operator for its activity. Only the first contact with a reference in a season gives a point (FR-QSL-7, R-OPR-5). This replaces D-9 for the QSL cards, and D-24. Decision of 2026-10-02. |
 
 ## 9. Open questions
 

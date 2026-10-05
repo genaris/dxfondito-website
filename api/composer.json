@@ -10,6 +10,7 @@
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-pdo_mysql": "*",
+        "phpmailer/phpmailer": "^6.9",
         "setasign/fpdf": "^1.8"
     },
     "autoload": {

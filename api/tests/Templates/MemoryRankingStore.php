@@ -27,6 +27,11 @@ final class MemoryRankingStore implements RankingStore
         return array_values(array_filter($this->contacts, static fn (ContactRow $row): bool => $row->baseCallSign === $baseCallSign));
     }
 
+    public function bySeason(int $season): array
+    {
+        return array_values(array_filter($this->contacts, static fn (ContactRow $row): bool => $row->season === $season));
+    }
+
     public function byActivity(int $activityId): array
     {
         return array_values(array_filter($this->contacts, static fn (ContactRow $row): bool => $row->activityId === $activityId));
