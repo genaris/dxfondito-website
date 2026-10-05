@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { readSeasons } from '../activities.ts'
 import type { Seasons } from '../activities.ts'
 import { certificateFileName, certificateUrl } from '../certificates.ts'
+import { Pagination } from '../components/Pagination.tsx'
+import { pageItems } from '../pagination.ts'
 import { levelClass, levelName } from '../program.ts'
 import { readRanking, searchRanking } from '../ranking.ts'
 import type { Ranking } from '../ranking.ts'
 import { href, navigate } from '../router.ts'
 import { SeasonSelect } from '../SeasonSelect.tsx'
+import { usePagination } from '../usePagination.ts'
 
 type State = { kind: 'loading' } | { kind: 'ready'; ranking: Ranking } | { kind: 'error' }
 
@@ -79,13 +82,22 @@ function RankingTable({
   onSearch: (text: string) => void
 }) {
   const rows = searchRanking(ranking.rows, search)
+  const { page, size, top, goTo, changeSize, reset } = usePagination()
   return (
     <>
       <label className="inline-field search">
         Buscar indicativo{' '}
-        <input type="search" value={search} onChange={(event) => onSearch(event.target.value)} placeholder="LU1ABC" />
+        <input
+          type="search"
+          value={search}
+          onChange={(event) => {
+            onSearch(event.target.value)
+            reset()
+          }}
+          placeholder="LU1ABC"
+        />
       </label>
-      <div className="table-scroll">
+      <div className="table-scroll" ref={top}>
         <table className="table ranking">
           <thead>
             <tr>
@@ -101,7 +113,7 @@ function RankingTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {pageItems(rows, page, size).map((row) => (
               <tr key={row.callSign} className={row.position <= 3 ? `podium podium-${row.position}` : undefined}>
                 <td className="number position">{row.position}</td>
                 <td>
@@ -139,6 +151,14 @@ function RankingTable({
           </tbody>
         </table>
       </div>
+      <Pagination
+        label="Páginas del ranking"
+        total={rows.length}
+        page={page}
+        size={size}
+        onPage={goTo}
+        onSize={changeSize}
+      />
       {rows.length === 0 && <p>Ningún indicativo del ranking contiene «{search.trim()}».</p>}
     </>
   )

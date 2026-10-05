@@ -147,8 +147,10 @@ The call sign of the user identifies the account.
 - **FR-PUB-2a** Each reached level in the ranking is a link to download that certificate, if the level has a template for the season (FR-CER-7).
 - **FR-PUB-3** Each line also shows the codes of the references where the participant has a contact, such as DPS-01 and EFE-03 (D-25).
 - **FR-PUB-4** The ranking shows the participants in the order of their points, from high to low.
+- **FR-PUB-4a** The ranking shows 25, 50 or 100 lines on each page. A visitor selects the number. The positions are those of the full ranking.
 - **FR-PUB-5** Participants with equal points have the same position. The system shows them in alphabetical order.
 - **FR-PUB-6** A visitor can search the ranking for a call sign.
+  The search applies to the full ranking, not only to the page. The result starts on its first page.
 - **FR-PUB-7** Each call sign in the ranking opens the page of that participant.
 - **FR-PUB-8** The page of a participant shows each season separately, with the current season first.
 - **FR-PUB-8a** For each season, the page shows the points of the participant.
@@ -166,6 +168,7 @@ The call sign of the user identifies the account.
 - **FR-PUB-13b** For a visitor, the list shows only the activities with at least one contact. The next activities are on the home page and in the calendar of the program page.
   For a signed-in user, the list shows all activities of the season, with 0 contacts for an activity without logs. Thus an operator finds the activity to upload a log.
   The administration of the activities shows all activities.
+- **FR-PUB-13c** The activity list shows 25, 50 or 100 activities on each page, as the ranking (FR-PUB-4a).
 - **FR-PUB-14** The page of an activity shows its data, its operators and the list of all its contacts.
 - **FR-PUB-14a** The page shows the number of participants (different base call signs) and the number of contacts (QSOs).
 - **FR-PUB-15** The list has all contacts, in the order of time. A participant with more than one contact, with the same operator or with different operators, has a line for each contact.
