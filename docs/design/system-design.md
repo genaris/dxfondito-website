@@ -482,6 +482,8 @@ The save operation of a template uses `POST`, not `PUT`, because PHP reads the f
 `GET /seasons` gives the seasons with activities and always the current season, the newest first.
 `GET /references` also gives the series, each with its proposed number for a new reference.
 
+`GET /users` also gives the number of contacts in the logs of each account (FR-USR-9).
+
 There is no request to delete an account. An administrator deactivates it (FR-USR-5, FR-USR-7).
 A new initial password also opens a locked account.
 

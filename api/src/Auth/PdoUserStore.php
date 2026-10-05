@@ -42,6 +42,15 @@ final class PdoUserStore implements UserStore
         return (int) ($this->pdo)()->query('SELECT COUNT(*) FROM users')->fetchColumn();
     }
 
+    public function contactCounts(): array
+    {
+        $rows = ($this->pdo)()
+            ->query('SELECT operator_id, SUM(contact_count) FROM logs GROUP BY operator_id')
+            ->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        return array_map('intval', $rows);
+    }
+
     public function countActiveAdministrators(): int
     {
         return (int) ($this->pdo)()

@@ -28,9 +28,11 @@ final class UserController
     {
         $this->auth->requireAdministrator($request);
         $now = new DateTimeImmutable();
+        $counts = $this->accounts->contactCounts();
 
+        // FR-USR-9: only the list has the number of contacts. The other requests give one account.
         return Response::json(array_map(
-            static fn (User $user): array => $user->administrationData($now),
+            static fn (User $user): array => $user->administrationData($now) + ['contactCount' => $counts[$user->id] ?? 0],
             $this->accounts->all(),
         ));
     }

@@ -22,6 +22,13 @@ interface UserStore
 
     public function count(): int;
 
+    /**
+     * The number of contacts in the logs of each operator (FR-USR-9).
+     *
+     * @return array<int, int> The number of contacts by account id. An account without logs has no item.
+     */
+    public function contactCounts(): array;
+
     public function countActiveAdministrators(): int;
 
     /**

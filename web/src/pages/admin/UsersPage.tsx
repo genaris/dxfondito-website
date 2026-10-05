@@ -8,7 +8,7 @@ import {
   setInitialPassword,
   updateAccount,
 } from '../../accounts.ts'
-import type { Account, Role } from '../../accounts.ts'
+import type { Account, ListedAccount, Role } from '../../accounts.ts'
 import {
   accountCreateError,
   accountUpdateError,
@@ -18,10 +18,10 @@ import {
 } from '../../messages.ts'
 import { useSession } from '../../useSession.ts'
 
-type ListState = { kind: 'loading' } | { kind: 'ready'; accounts: Account[] } | { kind: 'error' }
+type ListState = { kind: 'loading' } | { kind: 'ready'; accounts: ListedAccount[] } | { kind: 'error' }
 
 /**
- * The account administration (FR-USR-1 to FR-USR-8). The system does not delete accounts.
+ * The account administration (FR-USR-1 to FR-USR-9). The system does not delete accounts.
  */
 export function UsersPage() {
   const { user, refresh } = useSession()
@@ -77,6 +77,7 @@ export function UsersPage() {
                 <th>Nombre</th>
                 <th>Rol</th>
                 <th>Estado</th>
+                <th className="number">QSOs</th>
                 <th>
                   <span className="visually-hidden">Acciones</span>
                 </th>
@@ -86,7 +87,7 @@ export function UsersPage() {
               {list.accounts.map((account) =>
                 editing === account.id ? (
                   <tr key={account.id}>
-                    <td colSpan={5}>
+                    <td colSpan={6}>
                       <EditAccount
                         account={account}
                         onDone={(changed, message) => saved(changed, message)}
@@ -100,6 +101,7 @@ export function UsersPage() {
                     <td>{account.name}</td>
                     <td>{ROLE_NAMES[account.role]}</td>
                     <td>{accountState(account)}</td>
+                    <td className="number">{account.contactCount.toLocaleString('es-AR')}</td>
                     <td>
                       <button type="button" className="link" onClick={() => open(account.id)}>
                         Editar

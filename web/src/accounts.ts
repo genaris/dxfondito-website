@@ -9,6 +9,13 @@ export interface Account extends User {
   locked: boolean
 }
 
+/**
+ * An account in the account list, with the number of contacts in its logs (FR-USR-9).
+ */
+export interface ListedAccount extends Account {
+  contactCount: number
+}
+
 export interface AccountChanges {
   name: string
   email: string
@@ -21,8 +28,8 @@ export const ROLE_NAMES: Record<Role, string> = {
   administrator: 'Administrador',
 }
 
-export function listAccounts(): Promise<Account[]> {
-  return apiGet<Account[]>('/users')
+export function listAccounts(): Promise<ListedAccount[]> {
+  return apiGet<ListedAccount[]>('/users')
 }
 
 export function createAccount(data: {

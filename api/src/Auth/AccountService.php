@@ -31,6 +31,14 @@ final class AccountService
     }
 
     /**
+     * @return array<int, int> The number of contacts by account id (FR-USR-9).
+     */
+    public function contactCounts(): array
+    {
+        return $this->users->contactCounts();
+    }
+
+    /**
      * FR-USR-1 and FR-USR-2. The user must change the initial password at the first sign-in.
      *
      * @throws HttpException 422 for an incorrect value, 409 if the call sign has an account.

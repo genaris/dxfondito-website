@@ -188,6 +188,7 @@ The call sign of the user identifies the account.
 - **FR-USR-6** A user with a deactivated account cannot sign in. The logs of that account stay in the system.
 - **FR-USR-7** The system does not delete an account that has logs.
 - **FR-USR-8** The system always keeps one or more active administrators.
+- **FR-USR-9** The account list shows the number of contacts in the logs of each account.
 
 ### 6.3 References and activities
 

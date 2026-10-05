@@ -42,6 +42,14 @@ final class MemoryUserStore implements UserStore
         return count($this->users);
     }
 
+    /** @var array<int, int> */
+    public array $contactCounts = [];
+
+    public function contactCounts(): array
+    {
+        return $this->contactCounts;
+    }
+
     public function countActiveAdministrators(): int
     {
         return count(array_filter($this->users, static fn (User $user): bool => $user->isAdministrator() && $user->active));
