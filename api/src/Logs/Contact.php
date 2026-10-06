@@ -25,6 +25,7 @@ final class Contact
         public readonly ?string $rstSent,
         public readonly ?string $rstRcvd,
         public readonly ?string $stationCallSign,
+        public readonly ?string $email = null,
     ) {
     }
 

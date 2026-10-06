@@ -17,6 +17,7 @@ use DxFondito\Controller\ActivityController;
 use DxFondito\Controller\AuditController;
 use DxFondito\Controller\CertificateController;
 use DxFondito\Controller\HealthController;
+use DxFondito\Controller\MailController;
 use DxFondito\Controller\LogController;
 use DxFondito\Controller\MigrationController;
 use DxFondito\Controller\QslController;
@@ -34,6 +35,14 @@ use DxFondito\Http\Router;
 use DxFondito\Logs\LocalFileStore;
 use DxFondito\Logs\LogService;
 use DxFondito\Logs\PdoLogStore;
+use DxFondito\Mail\AddressBookService;
+use DxFondito\Mail\CertificateMailService;
+use DxFondito\Mail\MailSender;
+use DxFondito\Mail\PdoMailStore;
+use DxFondito\Mail\QslMailService;
+use DxFondito\Mail\SendingLimit;
+use DxFondito\Mail\SmtpMailer;
+use DxFondito\Mail\Templates;
 use DxFondito\Ranking\PdoRankingStore;
 use DxFondito\Registry\CurlHttpClient;
 use DxFondito\Registry\PdoLicenseeStore;
@@ -111,7 +120,7 @@ final class App
             $audit,
         ));
 
-        $qsl = new QslController($auth, new QslService(
+        $qslService = new QslService(
             $qslTemplates,
             $activityStore,
             $users,
@@ -120,20 +129,38 @@ final class App
             $renderer,
             $audit,
             $licensees,
-        ), $fonts);
+        );
+        $qsl = new QslController($auth, $qslService, $fonts);
         $registries = new RegistryController($auth, new RegistryService(
             $licensees,
             new CurlHttpClient(),
             $audit,
             $this->root . '/certs/sectigo-r36-chain.pem',
         ));
-        $certificates = new CertificateController($auth, new CertificateService(
+        $certificateService = new CertificateService(
             $certificateTemplates,
             $rankingStore,
             $templateFiles,
             $renderer,
             $audit,
-        ));
+        );
+        $certificates = new CertificateController($auth, $certificateService);
+        $mailStore = new PdoMailStore($pdo);
+        $sender = new MailSender(
+            $mailStore,
+            $config->mail === null ? null : new SmtpMailer($config->mail),
+            $config->mail === null ? null : new SendingLimit($mailStore, $config->mail->hourlyLimit),
+        );
+        $mailTemplates = new Templates($mailStore, $audit);
+        $siteUrl = $config->mail->siteUrl ?? '';
+        $mail = new MailController(
+            $auth,
+            $activityStore,
+            new AddressBookService($mailStore, $licensees, $audit),
+            $mailTemplates,
+            new QslMailService($activityStore, $rankingStore, $qslTemplates, $qslService, $mailStore, $licensees, $mailTemplates, $sender, $audit, $siteUrl),
+            new CertificateMailService($rankingStore, $certificateTemplates, $certificateService, $mailStore, $licensees, $mailTemplates, $sender, $audit, $siteUrl),
+        );
 
         $router = new Router();
         $router->add('GET', '/health', fn (): Response => $health->show());
@@ -174,6 +201,32 @@ final class App
         $router->add('POST', '/certificate-templates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->save($request, $params));
         $router->add('DELETE', '/certificate-templates/{season}/{points}', fn (Request $request, array $params): Response => $certificates->delete($request, $params));
         $router->add('POST', '/certificate-preview', fn (Request $request): Response => $certificates->preview($request));
+        $router->add('GET', '/address-book', fn (Request $request): Response => $mail->addressBook($request));
+        $router->add('GET', '/address-book/{call}', fn (Request $request, array $params): Response => $mail->contact($request, $params));
+        $router->add('PUT', '/address-book/{call}', fn (Request $request, array $params): Response => $mail->saveContact($request, $params));
+        $router->add('DELETE', '/address-book/{call}', fn (Request $request, array $params): Response => $mail->deleteContact($request, $params));
+        $router->add('PUT', '/invalid-emails', fn (Request $request): Response => $mail->setInvalid($request));
+        $router->add('GET', '/mail-templates/{kind}', fn (Request $request, array $params): Response => $mail->template($request, $params));
+        $router->add('PUT', '/mail-templates/{kind}', fn (Request $request, array $params): Response => $mail->saveTemplate($request, $params));
+        $router->add('DELETE', '/mail-templates/{kind}', fn (Request $request, array $params): Response => $mail->resetTemplate($request, $params));
+        $router->add('GET', '/mail/summary', fn (Request $request): Response => $mail->summary($request));
+        $router->add('GET', '/seasons/{season}/mail', fn (Request $request, array $params): Response => $mail->season($request, $params));
+        $router->add('GET', '/activities/{id}/mail', fn (Request $request, array $params): Response => $mail->activity($request, $params));
+        $router->add('PUT', '/activities/{id}/mail-template', fn (Request $request, array $params): Response => $mail->saveActivityTemplate($request, $params));
+        $router->add('DELETE', '/activities/{id}/mail-template', fn (Request $request, array $params): Response => $mail->resetActivityTemplate($request, $params));
+        $router->add('POST', '/activities/{id}/mail/preview', fn (Request $request, array $params): Response => $mail->previewQsl($request, $params));
+        $router->add('POST', '/activities/{id}/mail/test', fn (Request $request, array $params): Response => $mail->testQsl($request, $params));
+        $router->add('POST', '/activities/{id}/mail/send', fn (Request $request, array $params): Response => $mail->sendQsl($request, $params));
+        $router->add('POST', '/activities/{id}/mail/mark', fn (Request $request, array $params): Response => $mail->markQsl($request, $params));
+        $router->add('POST', '/activities/{id}/mail/unmark', fn (Request $request, array $params): Response => $mail->unmarkQsl($request, $params));
+        $router->add('GET', '/seasons/{season}/certificate-mail', fn (Request $request, array $params): Response => $mail->certificates($request, $params));
+        $router->add('PUT', '/seasons/{season}/certificate-mail-template', fn (Request $request, array $params): Response => $mail->saveCertificateTemplate($request, $params));
+        $router->add('DELETE', '/seasons/{season}/certificate-mail-template', fn (Request $request, array $params): Response => $mail->resetCertificateTemplate($request, $params));
+        $router->add('POST', '/seasons/{season}/certificate-mail/preview', fn (Request $request, array $params): Response => $mail->previewCertificate($request, $params));
+        $router->add('POST', '/seasons/{season}/certificate-mail/test', fn (Request $request, array $params): Response => $mail->testCertificate($request, $params));
+        $router->add('POST', '/seasons/{season}/certificate-mail/send', fn (Request $request, array $params): Response => $mail->sendCertificates($request, $params));
+        $router->add('POST', '/seasons/{season}/certificate-mail/mark', fn (Request $request, array $params): Response => $mail->markCertificates($request, $params));
+        $router->add('POST', '/seasons/{season}/certificate-mail/unmark', fn (Request $request, array $params): Response => $mail->unmarkCertificates($request, $params));
         $router->add('GET', '/registries', fn (Request $request): Response => $registries->list($request));
         $router->add('POST', '/registries/{country}', fn (Request $request, array $params): Response => $registries->update($request, $params));
         $router->add('GET', '/fonts/{name}', fn (Request $request, array $params): Response => $qsl->font($params));

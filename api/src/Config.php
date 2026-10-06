@@ -16,6 +16,7 @@ final class Config
         public readonly string $dbPassword,
         public readonly string $migrationSecret,
         public readonly string $storageDir,
+        public readonly ?MailConfig $mail = null,
     ) {
     }
 
@@ -52,6 +53,7 @@ final class Config
             dbPassword: $db['password'],
             migrationSecret: (string) ($values['migration_secret'] ?? ''),
             storageDir: $values['storage_dir'],
+            mail: is_array($values['mail'] ?? null) ? MailConfig::fromArray($values['mail']) : null,
         );
     }
 }

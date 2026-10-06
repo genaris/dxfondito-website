@@ -46,6 +46,19 @@ final class RecordReaderTest extends TestCase
         self::assertSame('2026-05-10 14:32:05', $this->contact(['TIME_ON' => '143205'])->qsoAt);
     }
 
+    public function testReadsTheEmailAddress(): void
+    {
+        self::assertSame('juana@example.com', $this->contact(['EMAIL' => ' Juana@Example.COM '])->email);
+        self::assertSame('a@example.com', $this->contact(['EMAIL' => 'not-an-address; a@example.com, b@example.com'])->email);
+        self::assertNull($this->contact(['EMAIL' => 'sin correo'])->email);
+        self::assertNull($this->contact(['EMAIL' => null])->email);
+    }
+
+    public function testTheEmailIsNotPublic(): void
+    {
+        self::assertArrayNotHasKey('email', $this->contact(['EMAIL' => 'juana@example.com'])->publicData());
+    }
+
     public function testTheFrequencyKeepsThreeDecimals(): void
     {
         // A log often gives 7.13 for 7.130 MHz. The QSL card shows 7.130 MHz.

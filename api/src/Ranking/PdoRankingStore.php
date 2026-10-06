@@ -69,6 +69,11 @@ final class PdoRankingStore implements RankingStore
         return $this->rows(self::SELECT . ' WHERE c.activity_id = ?', [$activityId]);
     }
 
+    public function bySeason(int $season): array
+    {
+        return $this->rows(self::SELECT . ' WHERE a.season = ?', [$season]);
+    }
+
     /**
      * @param list<mixed> $params
      * @return list<ContactRow>

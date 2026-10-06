@@ -1,11 +1,17 @@
 import type { ReactNode } from 'react'
 import escudo from './assets/escudo-fondito.jpg'
+import { MailNotice } from './components/MailNotice.tsx'
 import { ProgramHero } from './components/ProgramHero.tsx'
 import { SiteFooter } from './components/SiteFooter.tsx'
 import { ActivitiesAdminPage } from './pages/admin/ActivitiesAdminPage.tsx'
+import { ActivityMailPage } from './pages/admin/ActivityMailPage.tsx'
+import { AddressBookPage } from './pages/admin/AddressBookPage.tsx'
 import { AuditPage } from './pages/admin/AuditPage.tsx'
+import { CertificateMailPage } from './pages/admin/CertificateMailPage.tsx'
 import { CertificatesPage } from './pages/admin/CertificatesPage.tsx'
 import { LicensesPage } from './pages/admin/LicensesPage.tsx'
+import { MailPage } from './pages/admin/MailPage.tsx'
+import { MessagesPage } from './pages/admin/MessagesPage.tsx'
 import { ReferencesPage } from './pages/admin/ReferencesPage.tsx'
 import { UsersPage } from './pages/admin/UsersPage.tsx'
 import { ActivitiesPage } from './pages/ActivitiesPage.tsx'
@@ -28,6 +34,7 @@ const ADMIN_LINKS = [
   { path: '/admin/certificados', text: 'Certificados' },
   { path: '/admin/usuarios', text: 'Cuentas' },
   { path: '/admin/licencias', text: 'Licencias' },
+  { path: '/admin/envios', text: 'Envíos' },
   { path: '/admin/registro', text: 'Registro' },
 ]
 
@@ -86,6 +93,7 @@ function App() {
             ))}
           </nav>
         )}
+        {showAdmin && <MailNotice path={path} />}
       </header>
       {path === '/' && ready && !user?.mustChangePassword && <ProgramHero />}
       <main>{ready ? <Page path={path} /> : <p>Cargando…</p>}</main>
@@ -145,6 +153,26 @@ function Page({ path }: { path: string }) {
     const callSign = baseCallSign(participantPage.call)
     return /^[A-Z0-9]{3,20}$/.test(callSign) ? <ParticipantPage key={callSign} callSign={callSign} /> : <NotFound />
   }
+  const activityMailPage = matchPath('/admin/envios/actividad/:id', path)
+  if (activityMailPage) {
+    return /^\d+$/.test(activityMailPage.id) ? (
+      <AdministratorOnly>
+        <ActivityMailPage key={activityMailPage.id} id={Number(activityMailPage.id)} />
+      </AdministratorOnly>
+    ) : (
+      <NotFound />
+    )
+  }
+  const certificateMailPage = matchPath('/admin/envios/certificados/:season', path)
+  if (certificateMailPage) {
+    return /^\d{4}$/.test(certificateMailPage.season) ? (
+      <AdministratorOnly>
+        <CertificateMailPage key={certificateMailPage.season} season={Number(certificateMailPage.season)} />
+      </AdministratorOnly>
+    ) : (
+      <NotFound />
+    )
+  }
   const logPage = matchPath('/log/:id', path)
   if (logPage) {
     if (!user) return <SignInPage />
@@ -192,6 +220,24 @@ function Page({ path }: { path: string }) {
       return (
         <AdministratorOnly>
           <LicensesPage />
+        </AdministratorOnly>
+      )
+    case '/admin/envios':
+      return (
+        <AdministratorOnly>
+          <MailPage />
+        </AdministratorOnly>
+      )
+    case '/admin/libreta':
+      return (
+        <AdministratorOnly>
+          <AddressBookPage />
+        </AdministratorOnly>
+      )
+    case '/admin/mensajes':
+      return (
+        <AdministratorOnly>
+          <MessagesPage />
         </AdministratorOnly>
       )
     case '/admin/registro':

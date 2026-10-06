@@ -40,6 +40,15 @@ const ACTION_NAMES: Record<string, string> = {
   'certificate-template.save': 'Guardó una plantilla de certificado',
   'certificate-template.delete': 'Borró una plantilla de certificado',
   'registry.update': 'Actualizó un listado de licencias',
+  'address-book.save': 'Cambió la libreta de contactos',
+  'address-book.delete': 'Borró una entrada de la libreta',
+  'email.invalid': 'Marcó que un e-mail rebotó',
+  'email.valid': 'Quitó la marca de rebote de un e-mail',
+  'mail-template.save': 'Guardó un mensaje de correo',
+  'mail-template.delete': 'Volvió al mensaje general',
+  'mail.send': 'Envió correos',
+  'mail.mark': 'Marcó envíos a mano',
+  'mail.unmark': 'Quitó marcas de envío',
 }
 
 const FIELD_NAMES: Record<string, string> = {
@@ -61,6 +70,11 @@ const FIELD_NAMES: Record<string, string> = {
   points: 'Puntos',
   country: 'País',
   licensees: 'Licencias',
+  callSign: 'Indicativo',
+  kind: 'Tipo',
+  scope: 'Alcance',
+  sent: 'Enviados',
+  failed: 'Fallidos',
 }
 
 export function actionName(action: string): string {
@@ -107,6 +121,13 @@ export function detailLines(entry: AuditEntry): string[] {
     'certificate-template.save': ['season', 'points'],
     'certificate-template.delete': ['season', 'points'],
     'registry.update': ['country', 'licensees'],
+    'address-book.save': ['callSign'],
+    'address-book.delete': ['callSign'],
+    'email.invalid': ['email'],
+    'email.valid': ['email'],
+    'mail-template.save': ['kind', 'scope'],
+    'mail-template.delete': ['kind', 'scope'],
+    'mail.send': ['kind', 'season', 'sent', 'failed'],
   }
   for (const field of createdFields[entry.action] ?? []) {
     if (field in detail) lines.push(`${FIELD_NAMES[field]}: ${formatValue(field, detail[field])}`)

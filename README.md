@@ -38,6 +38,7 @@ docker compose exec api php bin/migrate.php       # Apply the pending migrations
 ```
 
 The browser program sends each `api/` request to the PHP container.
+The local mail server (Mailpit) catches all messages of the QSL mailer: <http://localhost:8025>.
 
 ## Tests
 
@@ -69,6 +70,8 @@ The workflow uploads files only when the `DEPLOY_ENABLED` variable is `true`.
 3. Set the `DEPLOY_ENABLED` variable to `true` and push a commit to `main`.
 4. Through FTP, copy `dxfondito-app/config.example.php` to `dxfondito-app/config.php` on the host.
 5. In `config.php`, replace the database values and set a long random value for `migration_secret`.
+   For the QSL mailer, set the `mail` section: `host` `<user>.ferozo.com`, `port` 465, `encryption` `ssl`,
+   the mailbox of the group and its password, and `site_url`. Without a `host`, the mailer is off.
 6. Open `https://<domain>/api/index.php?r=/migrate` and enter the migration secret.
 7. While there are no accounts, the page then shows a form for the first administrator.
    Enter the migration secret again, the call sign, the name and the password of the administrator.

@@ -55,6 +55,7 @@ final class PdoLogStore implements LogStore
                         $contact->baseCallSign,
                         $contact->stationCallSign,
                         $contact->name,
+                        $contact->email,
                         $contact->qsoAt,
                         $contact->frequency,
                         $contact->band,
@@ -63,9 +64,9 @@ final class PdoLogStore implements LogStore
                         $contact->rstRcvd,
                     );
                 }
-                $rows = implode(', ', array_fill(0, count($batch), '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'));
+                $rows = implode(', ', array_fill(0, count($batch), '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'));
                 $pdo->prepare(
-                    'INSERT INTO contacts (log_id, activity_id, call_sign, base_call_sign, station_call_sign, name, qso_at, frequency, band, mode, rst_sent, rst_rcvd)
+                    'INSERT INTO contacts (log_id, activity_id, call_sign, base_call_sign, station_call_sign, name, email, qso_at, frequency, band, mode, rst_sent, rst_rcvd)
                      VALUES ' . $rows
                 )->execute($values);
             }

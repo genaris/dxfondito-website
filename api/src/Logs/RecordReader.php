@@ -102,7 +102,24 @@ final class RecordReader
             rstSent: self::optional($value('RST_SENT'), self::MAX_RST),
             rstRcvd: self::optional($value('RST_RCVD'), self::MAX_RST),
             stationCallSign: $station === '' ? null : $station,
+            email: self::email($value('EMAIL')),
         );
+    }
+
+    /**
+     * The e-mail address of the participant (FR-MAIL-2), in lowercase letters, or null.
+     * A field with more than one address, such as "a@example.com; b@example.com", gives the first valid address.
+     * A value that is not an address is not a problem of the record: the contact stays without an address.
+     */
+    public static function email(string $value): ?string
+    {
+        foreach (preg_split('/[\s,;]+/', strtolower(trim($value))) ?: [] as $candidate) {
+            if (strlen($candidate) <= 254 && filter_var($candidate, FILTER_VALIDATE_EMAIL) !== false) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     private static function isDate(string $date): bool
