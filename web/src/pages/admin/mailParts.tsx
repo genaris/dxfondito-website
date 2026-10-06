@@ -20,6 +20,12 @@ export function SendProgress({ progress }: { progress: SendProgressState }) {
           esta página.
         </span>
       )}
+      {progress.reconnecting !== null && (
+        <span className="hint">
+          {' '}
+          · Se perdió la conexión con el sitio. Reintentando (intento {progress.reconnecting})…
+        </span>
+      )}
       {progress.running && (
         <button type="button" className="secondary" onClick={progress.stop}>
           Detener

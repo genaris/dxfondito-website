@@ -1,4 +1,4 @@
-import { apiGet, apiSend } from './api.ts'
+import { ApiError, apiGet, apiSend } from './api.ts'
 import type { Activity } from './activities.ts'
 
 export type MailKind = 'qsl' | 'certificate'
@@ -254,6 +254,9 @@ export function insertAt(text: string, start: number, end: number, insert: strin
 /** The number of items of one request. The API sends 10 at most. A small batch shows the progress often. */
 export const BATCH = 5
 
+/** The requests without an answer, one after another, before the sending stops. */
+export const RECONNECT_ATTEMPTS = 10
+
 /**
  * Sends the items in batches, and waits at the limit of the hour (FR-MAIL-9). The callbacks show the progress.
  * The stop function ends the loop after the current batch.
@@ -264,6 +267,8 @@ export async function sendInBatches<T>(
   callbacks: {
     onResult: (result: SendResult['results'][number]) => void
     onWait: (retryAt: string) => void
+    /** A request lost the connection, and the batch goes again after a wait. Null when the connection came back. */
+    onReconnect?: (attempt: number | null) => void
     stopped: () => boolean
     wait?: (milliseconds: number) => Promise<void>
     now?: () => number
@@ -272,9 +277,23 @@ export async function sendInBatches<T>(
   const wait = callbacks.wait ?? ((milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds)))
   const now = callbacks.now ?? (() => Date.now())
   let rest = [...items]
+  let failures = 0
   while (rest.length > 0 && !callbacks.stopped()) {
     const batch = rest.slice(0, BATCH)
-    const result = await send(batch)
+    let result: SendResult
+    try {
+      result = await send(batch)
+    } catch (error) {
+      // An answer of the API is a real error. Without an answer, the connection broke (for example, the computer
+      // slept): the batch goes again after a wait. The API skips the items that went before the break.
+      if (error instanceof ApiError || failures >= RECONNECT_ATTEMPTS) throw error
+      failures++
+      callbacks.onReconnect?.(failures)
+      await wait(Math.min(60000, 5000 * failures))
+      continue
+    }
+    if (failures > 0) callbacks.onReconnect?.(null)
+    failures = 0
     result.results.forEach(callbacks.onResult)
     // An answer without results and without a wait cannot advance: the loop stops.
     if (result.results.length === 0 && result.retryAt === null) break

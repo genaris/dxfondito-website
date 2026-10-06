@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BATCH, insertAt, sendInBatches, unknownVariables, withoutEmail } from './mail.ts'
+import { ApiError } from './api.ts'
+import { BATCH, RECONNECT_ATTEMPTS, insertAt, sendInBatches, unknownVariables, withoutEmail } from './mail.ts'
 import type { SendResult } from './mail.ts'
 
 describe('unknownVariables', () => {
@@ -84,6 +85,50 @@ describe('sendInBatches', () => {
       },
       { onResult: () => undefined, onWait: () => undefined, stopped: () => false },
     )
+    expect(calls).toBe(1)
+  })
+
+  it('sends the batch again after a broken connection', async () => {
+    let calls = 0
+    const reconnects: (number | null)[] = []
+    const results: string[] = []
+    await sendInBatches(
+      ['LU1', 'LU2'],
+      async (batch) => {
+        calls++
+        if (calls === 1) throw new TypeError('Failed to fetch')
+        return { results: batch.map(sent), retryAt: null }
+      },
+      {
+        onResult: (result) => results.push(result.callSign!),
+        onWait: () => undefined,
+        onReconnect: (attempt) => reconnects.push(attempt),
+        stopped: () => false,
+        wait: async () => undefined,
+      },
+    )
+    expect(reconnects).toEqual([1, null])
+    expect(results).toEqual(['LU1', 'LU2'])
+  })
+
+  it('stops after many broken connections or at an error of the API', async () => {
+    let calls = 0
+    const callbacks = { onResult: () => undefined, onWait: () => undefined, stopped: () => false, wait: async () => undefined }
+    await expect(
+      sendInBatches(['LU1'], async () => {
+        calls++
+        throw new TypeError('Failed to fetch')
+      }, callbacks),
+    ).rejects.toThrow(TypeError)
+    expect(calls).toBe(RECONNECT_ATTEMPTS + 1)
+
+    calls = 0
+    await expect(
+      sendInBatches(['LU1'], async () => {
+        calls++
+        throw new ApiError(500, 'Error')
+      }, callbacks),
+    ).rejects.toThrow(ApiError)
     expect(calls).toBe(1)
   })
 })
