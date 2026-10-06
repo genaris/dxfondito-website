@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { activitySchedule, readActivities, readSeasons } from '../activities.ts'
 import type { ActivitySummary, Seasons } from '../activities.ts'
+import { Pagination } from '../components/Pagination.tsx'
+import { pageItems } from '../pagination.ts'
 import { href, navigate } from '../router.ts'
 import { SeasonSelect } from '../SeasonSelect.tsx'
+import { usePagination } from '../usePagination.ts'
 import { useSession } from '../useSession.ts'
 
 type State = { kind: 'loading' } | { kind: 'ready'; activities: ActivitySummary[] } | { kind: 'error' }
@@ -18,6 +21,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
   const { user } = useSession()
   const [seasons, setSeasons] = useState<Seasons | null>(null)
   const [state, setState] = useState<State>({ kind: 'loading' })
+  const { page, size, top, goTo, changeSize } = usePagination()
   const selected = season ?? seasons?.current ?? null
 
   useEffect(() => {
@@ -72,30 +76,40 @@ export function ActivitiesPage({ season }: { season: number | null }) {
         </p>
       )}
       {state.kind === 'ready' && shown.length > 0 && (
-        <div className="table-scroll">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Referencia</th>
-                <th>Nombre</th>
-                <th>Fecha y horario</th>
-                <th className="number">QSOs</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((activity) => (
-                <tr key={activity.id}>
-                  <td className="nowrap">
-                    <a href={href(`/actividad/${activity.id}`)}>{activity.reference.code}</a>
-                  </td>
-                  <td>{activity.reference.name}</td>
-                  <td>{activitySchedule(activity)}</td>
-                  <td className="number">{activity.contactCount}</td>
+        <>
+          <div className="table-scroll" ref={top}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Referencia</th>
+                  <th>Nombre</th>
+                  <th>Fecha y horario</th>
+                  <th className="number">QSOs</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {pageItems(shown, page, size).map((activity) => (
+                  <tr key={activity.id}>
+                    <td className="nowrap">
+                      <a href={href(`/actividad/${activity.id}`)}>{activity.reference.code}</a>
+                    </td>
+                    <td>{activity.reference.name}</td>
+                    <td>{activitySchedule(activity)}</td>
+                    <td className="number">{activity.contactCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination
+            label="Páginas de las actividades"
+            total={shown.length}
+            page={page}
+            size={size}
+            onPage={goTo}
+            onSize={changeSize}
+          />
+        </>
       )}
     </>
   )

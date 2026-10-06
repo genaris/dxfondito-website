@@ -240,6 +240,12 @@ WHERE a.season = :season;
 The API gives the same position to participants with equal points.
 The next position skips the shared positions: 1, 1, 3.
 
+The browser divides the ranking and the activity list into pages (FR-PUB-4a, FR-PUB-13c), not the API:
+- The positions and the points need all lines of the season. Thus a page in the query reads the same lines.
+- The search applies to the full ranking (FR-PUB-6) without a new request.
+- The home page, the program and the administration need all activities of a season.
+- A season has some hundred participants at most. The full answer is small.
+
 The participant page and the certificates need the first contacts (section 4.3).
 For them, the API reads the contacts with their activity, reference and log operator,
 and calculates the first contacts in PHP (`Ranking\Calculator`).
