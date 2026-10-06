@@ -436,6 +436,7 @@ The code is in `api/src/Mail/`. The pages are `/admin/envios`, `/admin/envios/ac
 - The record keeps the contacts of each message as `operatorId|qsoAt` keys. These keys stay valid when an operator uploads the same log again.
 - The state of a participant: `pending` (no message), `sent` (all QSL cards went), or `new` (QSL cards that no message had). "Enviar pendientes" sends to `pending` and `new`; a `new` message has only the new QSL cards.
 - A manual mark covers all contacts of the participant at that time.
+- The tables of the QSL messages and of the certificates have a filter: all rows, the pending rows (not `sent`), or the rows without a usable address (no address, or the mark "no messages"). Thus after a sending, the participants without an address are easy to see.
 
 **Certificate messages**
 

@@ -308,3 +308,8 @@ export function skipReason(reason: string | undefined): string {
       return 'omitido'
   }
 }
+
+/** True for a call sign without a usable address: no address, or the mark "no messages". */
+export function withoutEmail(recipient: Recipient): boolean {
+  return recipient.email === null || recipient.noMail
+}

@@ -12,11 +12,13 @@ import {
   skipReason,
   testCertificate,
   unmarkCertificates,
+  withoutEmail,
 } from '../../mail.ts'
 import type { CertificateItem, CertificateKey, CertificateMail } from '../../mail.ts'
 import { levelClass } from '../../program.ts'
 import { href } from '../../router.ts'
-import { DeliveryStatus, EmailCell, SendProgress } from './mailParts.tsx'
+import { DeliveryStatus, EmailCell, RowFilterSelect, SendProgress } from './mailParts.tsx'
+import type { RowFilter } from './mailParts.tsx'
 import { useSendProgress } from './useSendProgress.ts'
 
 type State = { kind: 'loading' } | { kind: 'ready'; data: CertificateMail } | { kind: 'error' }
@@ -37,6 +39,7 @@ export function CertificateMailPage({ season }: { season: number }) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [editing, setEditing] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [filter, setFilter] = useState<RowFilter>('all')
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const progress = useSendProgress()
@@ -62,6 +65,12 @@ export function CertificateMailPage({ season }: { season: number }) {
     item.date !== null && item.available && item.recipient.email !== null && !item.recipient.noMail
   const pending = items.filter((item) => item.status === 'pending' && sendable(item))
   const chosen = items.filter((item) => selected.has(keyOf(item)))
+  const matches: Record<RowFilter, (item: CertificateItem) => boolean> = {
+    all: () => true,
+    pending: (item) => item.status !== 'sent',
+    'no-email': (item) => item.date !== null && withoutEmail(item.recipient),
+  }
+  const shown = items.filter(matches[filter])
 
   function toggle(key: string) {
     setSelected((current) => {
@@ -160,6 +169,20 @@ export function CertificateMailPage({ season }: { season: number }) {
       <section>
         <div className="title-row">
           <h3>Certificados</h3>
+          {items.length > 0 && (
+            <RowFilterSelect
+              value={filter}
+              onChange={(value) => {
+                setFilter(value)
+                setSelected(new Set())
+              }}
+              counts={{
+                all: items.length,
+                pending: items.filter(matches.pending).length,
+                'no-email': items.filter(matches['no-email']).length,
+              }}
+            />
+          )}
           {data.usage && (
             <span className="hint">
               Correos en la última hora: {data.usage.used} de {data.usage.limit}
@@ -203,8 +226,8 @@ export function CertificateMailPage({ season }: { season: number }) {
                     <input
                       type="checkbox"
                       aria-label="Seleccionar todos"
-                      checked={selected.size === items.length}
-                      onChange={(event) => setSelected(event.target.checked ? new Set(items.map(keyOf)) : new Set())}
+                      checked={shown.length > 0 && shown.every((item) => selected.has(keyOf(item)))}
+                      onChange={(event) => setSelected(event.target.checked ? new Set(shown.map(keyOf)) : new Set())}
                     />
                   </th>
                   <th>Indicativo</th>
@@ -215,7 +238,7 @@ export function CertificateMailPage({ season }: { season: number }) {
                 </tr>
               </thead>
               <tbody>
-                {items.map((item) =>
+                {shown.map((item) =>
                   editing === keyOf(item) ? (
                     <tr key={keyOf(item)}>
                       <td colSpan={6}>

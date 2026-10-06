@@ -82,3 +82,27 @@ export function EmailCell({ recipient, onEdit }: { recipient: Recipient; onEdit:
     </>
   )
 }
+
+export type RowFilter = 'all' | 'pending' | 'no-email'
+
+/** The filter of a table of messages: all rows, the rows without a message, or the rows without an address. */
+export function RowFilterSelect({
+  value,
+  onChange,
+  counts,
+}: {
+  value: RowFilter
+  onChange: (value: RowFilter) => void
+  counts: Record<RowFilter, number>
+}) {
+  return (
+    <label className="inline-field">
+      Mostrar{' '}
+      <select value={value} onChange={(event) => onChange(event.target.value as RowFilter)}>
+        <option value="all">Todos ({counts.all})</option>
+        <option value="pending">Pendientes ({counts.pending})</option>
+        <option value="no-email">Sin e-mail ({counts['no-email']})</option>
+      </select>
+    </label>
+  )
+}

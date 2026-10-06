@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BATCH, insertAt, sendInBatches, unknownVariables } from './mail.ts'
+import { BATCH, insertAt, sendInBatches, unknownVariables, withoutEmail } from './mail.ts'
 import type { SendResult } from './mail.ts'
 
 describe('unknownVariables', () => {
@@ -85,5 +85,15 @@ describe('sendInBatches', () => {
       { onResult: () => undefined, onWait: () => undefined, stopped: () => false },
     )
     expect(calls).toBe(1)
+  })
+})
+
+describe('withoutEmail', () => {
+  const recipient = { email: 'a@example.com', source: 'adif' as const, others: [], changedFrom: null, noMail: false }
+
+  it('is true without an address or with the mark "no messages"', () => {
+    expect(withoutEmail(recipient)).toBe(false)
+    expect(withoutEmail({ ...recipient, email: null, source: null })).toBe(true)
+    expect(withoutEmail({ ...recipient, noMail: true })).toBe(true)
   })
 })

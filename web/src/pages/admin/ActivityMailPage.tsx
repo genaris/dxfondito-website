@@ -13,10 +13,12 @@ import {
   skipReason,
   testQsl,
   unmarkQsl,
+  withoutEmail,
 } from '../../mail.ts'
 import type { ActivityMail, QslParticipant } from '../../mail.ts'
 import { href } from '../../router.ts'
-import { DeliveryStatus, EmailCell, SendProgress } from './mailParts.tsx'
+import { DeliveryStatus, EmailCell, RowFilterSelect, SendProgress } from './mailParts.tsx'
+import type { RowFilter } from './mailParts.tsx'
 import { useSendProgress } from './useSendProgress.ts'
 
 type State = { kind: 'loading' } | { kind: 'ready'; data: ActivityMail } | { kind: 'error' }
@@ -30,6 +32,7 @@ export function ActivityMailPage({ id }: { id: number }) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [editing, setEditing] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [filter, setFilter] = useState<RowFilter>('all')
   const [notice, setNotice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const progress = useSendProgress()
@@ -52,6 +55,12 @@ export function ActivityMailPage({ id }: { id: number }) {
   const sendable = (item: QslParticipant) => item.recipient.email !== null && !item.recipient.noMail && item.cards > 0
   const pending = participants.filter((item) => item.status !== 'sent' && sendable(item))
   const chosen = participants.filter((item) => selected.has(item.callSign))
+  const matches: Record<RowFilter, (item: QslParticipant) => boolean> = {
+    all: () => true,
+    pending: (item) => item.status !== 'sent',
+    'no-email': (item) => withoutEmail(item.recipient),
+  }
+  const shown = participants.filter(matches[filter])
 
   function toggle(callSign: string) {
     setSelected((current) => {
@@ -159,6 +168,18 @@ export function ActivityMailPage({ id }: { id: number }) {
       <section>
         <div className="title-row">
           <h3>Participantes</h3>
+          <RowFilterSelect
+            value={filter}
+            onChange={(value) => {
+              setFilter(value)
+              setSelected(new Set())
+            }}
+            counts={{
+              all: participants.length,
+              pending: participants.filter(matches.pending).length,
+              'no-email': participants.filter(matches['no-email']).length,
+            }}
+          />
           {data.usage && (
             <span className="hint">
               Correos en la última hora: {data.usage.used} de {data.usage.limit}
@@ -203,9 +224,9 @@ export function ActivityMailPage({ id }: { id: number }) {
                   <input
                     type="checkbox"
                     aria-label="Seleccionar todos"
-                    checked={participants.length > 0 && selected.size === participants.length}
+                    checked={shown.length > 0 && shown.every((item) => selected.has(item.callSign))}
                     onChange={(event) =>
-                      setSelected(event.target.checked ? new Set(participants.map((item) => item.callSign)) : new Set())
+                      setSelected(event.target.checked ? new Set(shown.map((item) => item.callSign)) : new Set())
                     }
                   />
                 </th>
@@ -217,7 +238,7 @@ export function ActivityMailPage({ id }: { id: number }) {
               </tr>
             </thead>
             <tbody>
-              {participants.map((item) =>
+              {shown.map((item) =>
                 editing === item.callSign ? (
                   <tr key={item.callSign}>
                     <td colSpan={6}>
@@ -271,6 +292,7 @@ export function ActivityMailPage({ id }: { id: number }) {
             </tbody>
           </table>
         </div>
+        {shown.length === 0 && <p className="hint">Ningún participante coincide con el filtro.</p>}
         {progress.log.length > 0 && (
           <ul className="send-log">
             {progress.log.map((line) => (
