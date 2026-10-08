@@ -17,7 +17,7 @@ export const PROGRAM = {
     'Las Estaciones Saludables no solo nos cuidan: también dan asesoría nutricional, actividad física ' +
     'al aire libre, cumpleaños saludables y entretenimientos para niños, adultos y mayores.',
   season:
-    'La temporada 2026 empezó el sábado 4 de julio y termina en diciembre. La idea es cubrir 20 eventos ' +
+    'La temporada 2026 empezó el sábado 4 de julio y termina en diciembre. La idea original era cubrir más de 20 eventos ' +
     'entre Puestos de Salud en los parques y efemérides.',
   bands: '2 m (145,750 MHz y la frecuencia de encuentro), 40 m y 80 m',
   modes: 'Solo fonía',
@@ -65,14 +65,18 @@ export const CALENDAR: { season: number; events: CalendarEvent[] } = {
     { date: '2026-09-22', series: 'EFE', name: 'Dr. Luis Agote' },
     { date: '2026-09-27', series: 'DPS', name: 'Puesto de Salud Parque Centenario' },
     { date: '2026-10-04', series: 'DPS', name: 'Puesto de Salud Parque Rivadavia' },
-    { date: '2026-10-11', series: 'DPS', name: 'Puesto de Salud Parque Saavedra' },
-    { date: '2026-10-12', series: 'EFE', name: 'Día del Farmacéutico Argentino' },
     { date: '2026-10-13', series: 'EFE', name: 'Día del Psicólogo' },
     { date: '2026-10-20', series: 'EFE', name: 'Día del Pediatra' },
+    { date: '2026-10-24', series: 'DPS', name: 'Puesto de Salud Parque Saavedra' },
+    { date: '2026-11-01', series: 'DPS', name: 'Puesto de Salud Lagos de Palermo' },
     { date: '2026-11-08', series: 'EFE', name: 'Día Mundial de la Radiología' },
+    { date: '2026-11-15', series: 'DPS', name: 'Puesto de Salud Plaza Almagro' },
     { date: '2026-11-21', series: 'EFE', name: 'Día del Enfermero' },
     { date: '2026-11-22', series: 'EFE', name: 'Natalicio de la Dra. Cecilia Grierson' },
+    { date: '2026-11-29', series: 'DPS', name: 'Puesto de Salud Parque Los Andes' },
     { date: '2026-12-03', series: 'EFE', name: 'Día del Médico' },
+    { date: '2026-12-06', series: 'DPS', name: 'Puesto de Salud Plaza Irlanda' },
+    { date: '2026-12-12', series: 'DPS', name: 'Puesto de Salud Rubén Darío' },
     { date: '2026-12-13', series: 'EFE', name: 'Dr. Julio César Palmaz' },
   ],
 }
