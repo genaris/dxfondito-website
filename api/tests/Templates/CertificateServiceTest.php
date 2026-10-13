@@ -15,6 +15,7 @@ use DxFondito\Templates\TextRenderer;
 use DxFondito\Tests\Audit\MemoryAuditLog;
 use DxFondito\Tests\Auth\MemoryUserStore;
 use DxFondito\Tests\Logs\MemoryFileStore;
+use DxFondito\Tests\Registry\MemoryLicenseeStore;
 use PHPUnit\Framework\TestCase;
 
 final class CertificateServiceTest extends TestCase
@@ -23,6 +24,7 @@ final class CertificateServiceTest extends TestCase
     private MemoryRankingStore $ranking;
     private MemoryFileStore $files;
     private MemoryAuditLog $audit;
+    private MemoryLicenseeStore $licensees;
     private CertificateService $service;
     private User $admin;
 
@@ -37,12 +39,14 @@ final class CertificateServiceTest extends TestCase
         $this->ranking = new MemoryRankingStore();
         $this->files = new MemoryFileStore();
         $this->audit = new MemoryAuditLog();
+        $this->licensees = new MemoryLicenseeStore();
         $this->service = new CertificateService(
             $this->templates,
             $this->ranking,
             $this->files,
             new TextRenderer(new Fonts(dirname(__DIR__, 2) . '/fonts')),
             $this->audit,
+            $this->licensees,
         );
     }
 
@@ -56,7 +60,7 @@ final class CertificateServiceTest extends TestCase
         $template = $this->service->save($this->admin, 2026, 5, $this->image(), $this->fields());
 
         self::assertSame([2026, 5], [$template->season, $template->points]);
-        self::assertSame(['call_sign', 'date'], array_keys($template->fields));
+        self::assertSame(['call_sign', 'name'], array_keys($template->fields));
         self::assertSame(['certificate-template.save'], $this->audit->actions());
     }
 
@@ -104,6 +108,26 @@ final class CertificateServiceTest extends TestCase
         self::assertStringStartsWith('%PDF-', $certificate['content']);
     }
 
+    public function testTheNameOfTheCertificate(): void
+    {
+        // The download shows the name of the official lists, or no name. The mailer gives its own name.
+        $this->licensees->licensees['LU9ZZ'] = ['country' => 'AR', 'name' => 'JUANA DE LA EJEMPLO'];
+
+        self::assertSame('Juana de la Ejemplo', $this->service->officialName('LU9ZZ'));
+        self::assertSame('', $this->service->officialName('PY9ZZ'));
+    }
+
+    public function testAnOwnNameGivesADifferentCertificate(): void
+    {
+        $this->service->save($this->admin, 2026, 5, $this->image(), $this->fields());
+        $this->ranking->contacts = $this->contacts(5);
+
+        $without = $this->service->certificate('LU9ZZ', 2026, 5);
+        $with = $this->service->certificate('LU9ZZ', 2026, 5, 'Juana Ejemplo');
+
+        self::assertNotSame($without['content'], $with['content']);
+    }
+
     public function testNoCertificateBelowTheLevel(): void
     {
         // FR-CER-6: four points do not give the certificate of five points.
@@ -135,8 +159,7 @@ final class CertificateServiceTest extends TestCase
 
     public function testTheValuesOfTheCertificate(): void
     {
-        self::assertSame(['call_sign' => 'LU9ZZ', 'date' => '4 de octubre de 2026'], Certificate::values('LU9ZZ', '2026-10-04'));
-        self::assertSame('1 de enero de 2027', Certificate::longDate('2027-01-01'));
+        self::assertSame(['call_sign' => 'LU9ZZ', 'name' => 'Juana Ejemplo'], Certificate::values('LU9ZZ', 'Juana Ejemplo'));
     }
 
     /**
@@ -178,7 +201,7 @@ final class CertificateServiceTest extends TestCase
 
         return (string) json_encode([
             'call_sign' => ['x' => $x] + $box,
-            'date' => ['x' => 100, 'y' => 300, 'width' => 400, 'height' => 30, 'colour' => '#1A1A1A', 'align' => 'center', 'font' => 'sans'],
+            'name' => ['x' => 100, 'y' => 300, 'width' => 400, 'height' => 30, 'colour' => '#1A1A1A', 'align' => 'center', 'font' => 'sans'],
         ]);
     }
 

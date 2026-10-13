@@ -6,10 +6,12 @@ import type { ContactCard } from '../mail.ts'
 
 /**
  * The entry of a call sign in the address book (FR-MAIL-3 to FR-MAIL-5): an own address, the mark "no messages",
- * notes, and the addresses that the logs gave, with the mark of a bounced address.
+ * the name of the certificates by e-mail, notes, and the addresses that the logs gave, with the mark of a bounced
+ * address.
  */
 export function ContactEditor({ callSign, onDone, onCancel }: { callSign: string; onDone: () => void; onCancel: () => void }) {
   const [card, setCard] = useState<ContactCard | null>(null)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [noMail, setNoMail] = useState(false)
   const [notes, setNotes] = useState('')
@@ -22,6 +24,7 @@ export function ContactEditor({ callSign, onDone, onCancel }: { callSign: string
       .then((data) => {
         if (!active) return
         setCard(data)
+        setName(data.entry?.name ?? '')
         setEmail(data.entry?.email ?? '')
         setNoMail(data.entry?.noMail ?? false)
         setNotes(data.entry?.notes ?? '')
@@ -38,8 +41,7 @@ export function ContactEditor({ callSign, onDone, onCancel }: { callSign: string
     setBusy(true)
     setError(null)
     try {
-      // The name is for a later version: the QSL cards use the name of the official lists (D-28).
-      await saveContact(callSign, { name: card?.entry?.name ?? '', email, noMail, notes })
+      await saveContact(callSign, { name, email, noMail, notes })
       onDone()
     } catch (failure) {
       setError(failure instanceof ApiError && failure.status === 422 ? 'El e-mail no es válido.' : 'No se pudo guardar.')
@@ -97,6 +99,21 @@ export function ContactEditor({ callSign, onDone, onCancel }: { callSign: string
         <input type="checkbox" checked={noMail} onChange={(event) => setNoMail(event.target.checked)} />
         No enviarle correos (lo pidió)
       </label>
+      <label>
+        Nombre completo para los certificados por e-mail
+        <input
+          value={name}
+          maxLength={150}
+          onChange={(event) => setName(event.target.value)}
+          placeholder={card.officialName ?? 'No está en los listados oficiales'}
+        />
+      </label>
+      <p className="hint">
+        {card.officialName
+          ? 'Reemplaza al nombre de los listados oficiales. Vacío: se usa el oficial.'
+          : 'No está en los listados oficiales: sin este nombre no se le puede enviar el certificado.'}{' '}
+        Las QSL y el certificado que se descarga usan solo el nombre oficial.
+      </p>
       <label>
         Notas
         <textarea value={notes} rows={2} maxLength={500} onChange={(event) => setNotes(event.target.value)} />

@@ -11,21 +11,21 @@ export interface CertificateTemplate {
   height: number
 }
 
-export const CERTIFICATE_FIELD_NAMES = ['call_sign', 'date'] as const
+export const CERTIFICATE_FIELD_NAMES = ['call_sign', 'name'] as const
 
 export const CERTIFICATE_LABELS: Record<string, string> = {
   call_sign: 'Indicativo',
-  date: 'Fecha',
+  name: 'Nombre completo',
 }
 
 /** The example data of the API for the sample image. */
 export const CERTIFICATE_SAMPLE: Record<string, string> = {
   call_sign: 'LU1ABC',
-  date: '4 de octubre de 2026',
+  name: 'Juana Pérez',
 }
 
 /**
- * The first boxes of a new certificate template: a large call sign in the centre, and the date below it.
+ * The first boxes of a new certificate template: a large call sign in the centre, and the full name below it.
  */
 export function defaultCertificateFields(width: number, height: number): Fields {
   const box = (top: number, boxWidth: number, boxHeight: number) => {
@@ -35,7 +35,7 @@ export function defaultCertificateFields(width: number, height: number): Fields 
   }
   return {
     call_sign: { ...box(0.42, 0.6, 0.11), colour: '#1A1A1A', align: 'center', font: 'serif-bold' },
-    date: { ...box(0.7, 0.4, 0.045), colour: '#1A1A1A', align: 'center', font: 'serif' },
+    name: { ...box(0.62, 0.6, 0.06), colour: '#1A1A1A', align: 'center', font: 'serif' },
   }
 }
 

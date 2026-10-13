@@ -12,6 +12,8 @@ use DxFondito\Logs\FileStore;
 use DxFondito\Ranking\Calculator;
 use DxFondito\Ranking\ContactRow;
 use DxFondito\Ranking\RankingStore;
+use DxFondito\Registry\LicenseeName;
+use DxFondito\Registry\LicenseeStore;
 
 /**
  * The certificate templates and the certificates (FR-CER-1 to FR-CER-7).
@@ -25,6 +27,7 @@ final class CertificateService
         private readonly FileStore $files,
         private readonly TextRenderer $renderer,
         private readonly AuditLog $audit,
+        private readonly LicenseeStore $licensees,
     ) {
     }
 
@@ -125,33 +128,43 @@ final class CertificateService
     /**
      * The certificate of a participant as a PDF file (FR-CER-4 to FR-CER-7).
      *
+     * @param string|null $name The full name on the certificate. Null for the name of the official lists, or an
+     *   empty text for a participant that is not on the lists: the download. The mailer gives the name.
      * @return array{content: string, name: string}
      * @throws HttpException 404 if the participant does not have the certificate (FR-CER-6), or without a template (FR-CER-7).
      */
-    public function certificate(string $baseCallSign, int $season, int $points): array
+    public function certificate(string $baseCallSign, int $season, int $points, ?string $name = null): array
     {
         $contacts = array_values(array_filter(
             Calculator::firstContacts($this->ranking->byParticipant($baseCallSign)),
             static fn (ContactRow $contact): bool => $contact->season === $season,
         ));
-        $date = null;
+        $reached = false;
         foreach (Calculator::certificates($contacts, $this->ranking->levels()) as $certificate) {
-            if ($certificate['points'] === $points) {
-                $date = $certificate['date'];
-            }
+            $reached = $reached || $certificate['points'] === $points;
         }
-        if ($date === null) {
+        if (!$reached) {
             throw new HttpException(404, 'The participant does not have the certificate');
         }
 
         $template = $this->templates->find($season, $points) ?? throw new HttpException(404, 'The certificate is not available');
         $content = $this->files->read($template->storedName) ?? throw new HttpException(404, 'The certificate is not available');
-        $jpeg = $this->renderer->render($content, $template->fields, Certificate::values($baseCallSign, $date));
+        $jpeg = $this->renderer->render($content, $template->fields, Certificate::values($baseCallSign, $name ?? $this->officialName($baseCallSign)));
 
         return [
             'content' => CertificatePdf::fromJpeg($jpeg),
             'name' => sprintf('Certificado_%s_%d_%d.pdf', $baseCallSign, $season, $points),
         ];
+    }
+
+    /**
+     * The name of the participant in the registries of Argentina and Uruguay, or an empty text (as FR-QSL-3a).
+     */
+    public function officialName(string $baseCallSign): string
+    {
+        $name = $this->licensees->name($baseCallSign);
+
+        return $name === null ? '' : LicenseeName::format($name);
     }
 
     private function find(int $season, int $points): CertificateTemplate

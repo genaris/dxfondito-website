@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace DxFondito\Templates;
 
-use DxFondito\Mail\SpanishDate;
-
 /**
- * The texts of the fields of a certificate (FR-CER-2): the call sign and the certificate date.
+ * The texts of the fields of a certificate (FR-CER-2): the call sign and the full name of the participant.
  */
 final class Certificate
 {
@@ -15,12 +13,12 @@ final class Certificate
     private const LEVEL_NAMES = [5 => 'Bronce', 10 => 'Plata', 15 => 'Oro'];
 
     /**
-     * @param string $date YYYY-MM-DD, the date of the certificate (R-CER-5).
+     * @param string $name The full name of the participant, or an empty text.
      * @return array<string, string>
      */
-    public static function values(string $baseCallSign, string $date): array
+    public static function values(string $baseCallSign, string $name): array
     {
-        return ['call_sign' => $baseCallSign, 'date' => self::longDate($date)];
+        return ['call_sign' => $baseCallSign, 'name' => $name];
     }
 
     /**
@@ -30,15 +28,7 @@ final class Certificate
      */
     public static function sample(): array
     {
-        return self::values('LU1ABC', '2026-10-04');
-    }
-
-    /**
-     * A date in Spanish words, such as "4 de octubre de 2026".
-     */
-    public static function longDate(string $date): string
-    {
-        return SpanishDate::long($date);
+        return self::values('LU1ABC', 'Juana Pérez');
     }
 
     /**

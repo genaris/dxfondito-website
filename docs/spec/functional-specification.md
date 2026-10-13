@@ -300,9 +300,10 @@ All QSL cards have the same fields.
 ### 6.6 Certificates
 
 - **FR-CER-1** An administrator uploads one certificate template for each level of each season.
-- **FR-CER-2** The system writes the call sign and the certificate date on the template.
+- **FR-CER-2** The system writes the call sign and the full name of the participant on the template (D-30). The system keeps the certificate date (R-CER-5), but the certificate does not show it.
 - **FR-CER-2a** The certificate has no serial number.
-- **FR-CER-2b** The call sign on the certificate is the base call sign of the participant (R-CALL-3). The date is in Spanish words, such as "4 de octubre de 2026".
+- **FR-CER-2b** The call sign on the certificate is the base call sign of the participant (R-CALL-3).
+- **FR-CER-2c** The downloaded certificate has the name of the official lists (FR-QSL-3a), or no name. The certificate by e-mail has the name of the address book, or else the name of the official lists. A certificate without a name does not go by e-mail: the system shows the error, and the administrator enters the name in the address book (FR-MAIL-3).
 - **FR-CER-3** An administrator sets the position, the size and the colour of each field on the template.
 - **FR-CER-4** The system makes the certificate when a visitor downloads it.
 - **FR-CER-5** The system supplies the certificate as a PDF file.
@@ -316,8 +317,8 @@ Until 2026, the group sent them by hand. Thus an administrator can also mark the
 
 - **FR-MAIL-1** Only an administrator sends messages and marks them. An administrator knows when all logs of an activity are in the system.
 - **FR-MAIL-2** The system keeps the `EMAIL` field of each record of a log. The logs are the only automatic source of addresses: the system has no connection with QRZ.com.
-- **FR-MAIL-3** An administrator keeps an address book for each base call sign: an own address, a mark "no messages", and notes.
-  The book also has a name, for a later version. The QSL cards use only the name of the official lists (FR-QSL-3a, D-28).
+- **FR-MAIL-3** An administrator keeps an address book for each base call sign: an own address, a mark "no messages", a name, and notes.
+  The name is only for the certificates by e-mail (FR-CER-2c). The QSL cards use only the name of the official lists (FR-QSL-3a, D-28).
 - **FR-MAIL-4** The address of a call sign is the address of the book. Without it, the address of the most recent contact of the call sign in the logs.
   A log with a different address does not delete the old address. If the address is different from the address of the last message, the system shows it.
 - **FR-MAIL-5** An administrator marks an address that bounced. The system does not use it, and uses the next address of FR-MAIL-4.
@@ -397,6 +398,7 @@ The group made these decisions on 2026-10-01.
 | D-25     | Each line of the ranking shows the list of the references of the participant, not the number for each series. A column for each certificate level shows the reached levels (FR-PUB-2, FR-PUB-3). The model is the ranking of the events of Log de Argentina. Decision of 2026-10-02. |
 | D-26     | The template editor finds the field boxes of the image (FR-QSL-12). The search is in the browser, before the save operation, and uses only the colours of the image. The fields go in the boxes in the usual order of a QSL card. Decision of 2026-10-02. |
 | D-28     | The name on the public QSL card comes from the official lists of licensees of Argentina and Uruguay, not from the log (FR-QSL-3a). These lists are public sources. A participant of a different country gets no name. Decision of 2026-10-02. |
+| D-30     | The certificate shows the call sign and the full name of the participant, not the date. The certificate by e-mail can have a name of the address book: a participant that is not in the official lists gets a certificate with a name. The saved templates keep the box of the date for the name. Decision of 2026-10-13. |
 | D-29     | The QSL mailer sends on request of an administrator, through the SMTP server of the host, from one mailbox of the group. One message for each participant and activity. The logs give the addresses, and an address book corrects them. Decision of 2026-10-05. |
 | D-27     | Each contact gives a QSL card, with the template of its operator for its activity. Only the first contact with a reference in a season gives a point (FR-QSL-7, R-OPR-5). This replaces D-9 for the QSL cards, and D-24. Decision of 2026-10-02. |
 

@@ -10,8 +10,6 @@ use DxFondito\Http\HttpException;
 use DxFondito\Ranking\Calculator;
 use DxFondito\Ranking\ContactRow;
 use DxFondito\Ranking\RankingStore;
-use DxFondito\Registry\LicenseeName;
-use DxFondito\Registry\LicenseeStore;
 use DxFondito\Templates\Certificate;
 use DxFondito\Templates\CertificateService;
 use DxFondito\Templates\CertificateTemplateStore;
@@ -37,7 +35,6 @@ final class CertificateMailService
         private readonly CertificateTemplateStore $certificateTemplates,
         private readonly CertificateService $certificates,
         private readonly MailStore $store,
-        private readonly LicenseeStore $licensees,
         private readonly Templates $templates,
         private readonly MailSender $sender,
         private readonly AuditLog $audit,
@@ -123,6 +120,9 @@ final class CertificateMailService
         if ($item['date'] === null || !$item['available']) {
             throw new HttpException(422, 'The certificate is not available');
         }
+        if ($item['name'] === '') {
+            throw new HttpException(422, 'The certificate has no name');
+        }
         $this->sender->sendTest($this->message($season, $item, $actor->email, $subject, $body));
 
         return $actor->email;
@@ -150,6 +150,8 @@ final class CertificateMailService
             $problem = match (true) {
                 $item === null, $item['date'] === null => 'not-reached',
                 !$item['available'] => 'no-template',
+                // The certificate shows the full name: the administrator enters it in the address book.
+                $item['name'] === '' => 'no-name',
                 $item['recipient']->noMail => 'no-mail',
                 $item['recipient']->email === null => 'no-email',
                 $item['last'] !== null && !$again => 'already-sent',
@@ -253,7 +255,7 @@ final class CertificateMailService
      * Each certificate of the season that a participant has now or that went before, by "CALL:points".
      *
      * @return array<string, array{callSign: string, points: int, date: string|null, available: bool, name: string,
-     *   recipient: Recipient, status: string, last: Delivery|null, firstContacts: int}>
+     *   manualName: bool, recipient: Recipient, status: string, last: Delivery|null, firstContacts: int}>
      */
     private function items(int $season): array
     {
@@ -296,13 +298,15 @@ final class CertificateMailService
                 $delivery->certificateDate !== $date => self::CHANGED,
                 default => self::SENT,
             };
-            $name = $this->licensees->name($callSign);
+            // The name of the address book replaces the name of the official lists.
+            $bookName = $entries[$callSign]->name ?? null;
             $items[$key] = [
                 'callSign' => $callSign,
                 'points' => (int) $points,
                 'date' => $date,
                 'available' => $available,
-                'name' => $name === null ? '' : LicenseeName::format($name),
+                'name' => $bookName ?? $this->certificates->officialName($callSign),
+                'manualName' => $bookName !== null,
                 'recipient' => Recipient::resolve($entries[$callSign] ?? null, $known[$callSign] ?? [], $invalid, $lastRecipients[$callSign] ?? null),
                 'status' => $status,
                 'last' => $delivery,
@@ -316,7 +320,7 @@ final class CertificateMailService
 
     /**
      * @return array{callSign: string, points: int, date: string|null, available: bool, name: string,
-     *   recipient: Recipient, status: string, last: Delivery|null, firstContacts: int}
+     *   manualName: bool, recipient: Recipient, status: string, last: Delivery|null, firstContacts: int}
      */
     private function item(int $season, string $callSign, int $points): array
     {
@@ -326,7 +330,7 @@ final class CertificateMailService
 
     /**
      * @param array{callSign: string, points: int, date: string|null, available: bool, name: string,
-     *   recipient: Recipient, status: string, last: Delivery|null, firstContacts: int} $item
+     *   manualName: bool, recipient: Recipient, status: string, last: Delivery|null, firstContacts: int} $item
      * @return array<string, mixed>
      */
     private static function itemData(array $item): array
@@ -338,6 +342,7 @@ final class CertificateMailService
             'date' => $item['date'],
             'available' => $item['available'],
             'name' => $item['name'],
+            'manualName' => $item['manualName'],
             'recipient' => $item['recipient']->data(),
             'status' => $item['status'],
             'last' => $item['last']?->data(),
@@ -346,12 +351,12 @@ final class CertificateMailService
 
     /**
      * @param array{callSign: string, points: int, date: string|null, available: bool, name: string,
-     *   recipient: Recipient, status: string, last: Delivery|null, firstContacts: int} $item
+     *   manualName: bool, recipient: Recipient, status: string, last: Delivery|null, firstContacts: int} $item
      */
     private function message(int $season, array $item, string $to, string $subject, string $body): OutgoingMessage
     {
         $values = $this->values($season, $item);
-        $certificate = $this->certificates->certificate($item['callSign'], $season, $item['points']);
+        $certificate = $this->certificates->certificate($item['callSign'], $season, $item['points'], $item['name']);
 
         return new OutgoingMessage(
             to: $to,
@@ -363,7 +368,7 @@ final class CertificateMailService
 
     /**
      * @param array{callSign: string, points: int, date: string|null, available: bool, name: string,
-     *   recipient: Recipient, status: string, last: Delivery|null, firstContacts: int} $item
+     *   manualName: bool, recipient: Recipient, status: string, last: Delivery|null, firstContacts: int} $item
      * @return array<string, string>
      */
     private function values(int $season, array $item): array

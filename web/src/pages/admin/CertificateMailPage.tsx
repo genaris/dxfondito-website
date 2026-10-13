@@ -62,7 +62,7 @@ export function CertificateMailPage({ season }: { season: number }) {
   const { data } = state
   const items = data.certificates
   const sendable = (item: CertificateItem) =>
-    item.date !== null && item.available && item.recipient.email !== null && !item.recipient.noMail
+    item.date !== null && item.available && item.name !== '' && item.recipient.email !== null && !item.recipient.noMail
   const pending = items.filter((item) => item.status === 'pending' && sendable(item))
   const chosen = items.filter((item) => selected.has(keyOf(item)))
   const matches: Record<RowFilter, (item: CertificateItem) => boolean> = {
@@ -138,6 +138,7 @@ export function CertificateMailPage({ season }: { season: number }) {
 
   const busy = progress.running
   const withDate = items.filter((item) => item.date !== null)
+  const withoutName = withDate.filter((item) => item.name === '')
   return (
     <>
       <p>
@@ -190,6 +191,13 @@ export function CertificateMailPage({ season }: { season: number }) {
           )}
         </div>
         {items.length === 0 && <p>Nadie alcanzó un certificado en la temporada {season} todavía.</p>}
+        {withoutName.length > 0 && (
+          <p className="error">
+            {withoutName.length === 1 ? 'Un certificado no tiene' : `${withoutName.length} certificados no tienen`} nombre:{' '}
+            {withoutName.map((item) => item.callSign).join(', ')}. No están en los listados oficiales. Cargá el nombre
+            completo con “Cargar nombre” para poder enviarlos.
+          </p>
+        )}
         {dirty && <p className="error">Guardá o descartá los cambios del mensaje antes de enviar.</p>}
         <div className="actions mail-actions">
           <button type="button" disabled={busy || dirty || !data.configured || pending.length === 0} onClick={() => void send(pending, false)}>
@@ -264,7 +272,7 @@ export function CertificateMailPage({ season }: { season: number }) {
                       </td>
                       <td className="nowrap">
                         <a href={href(`/participante/${item.callSign}`)}>{item.callSign}</a>
-                        {item.name && <span className="hint"> · {item.name}</span>}
+                        <CertificateName item={item} onEdit={() => setEditing(keyOf(item))} />
                       </td>
                       <td className="nowrap">
                         <span className={levelClass(item.points)} aria-hidden="true" /> {item.level}
@@ -294,6 +302,29 @@ export function CertificateMailPage({ season }: { season: number }) {
         )}
       </section>
     </>
+  )
+}
+
+/** The name of the certificate. A certificate without a name cannot go: the administrator enters it. */
+function CertificateName({ item, onEdit }: { item: CertificateItem; onEdit: () => void }) {
+  if (item.name === '') {
+    if (item.date === null) return null
+    return (
+      <>
+        {' '}
+        <span className="status status-failed">Falta el nombre</span>{' '}
+        <button type="button" className="link" onClick={onEdit}>
+          Cargar nombre
+        </button>
+      </>
+    )
+  }
+  return (
+    <span className="hint">
+      {' '}
+      · {item.name}
+      {item.manualName && <span title="Nombre cargado en la libreta"> (libreta)</span>}
+    </span>
   )
 }
 

@@ -7,7 +7,9 @@ namespace DxFondito\Tests\Mail;
 use DateTimeImmutable;
 use DateTimeZone;
 use DxFondito\Auth\User;
+use DxFondito\Http\HttpException;
 use DxFondito\Http\UploadedFile;
+use DxFondito\Mail\AddressBookEntry;
 use DxFondito\Mail\CertificateMailService;
 use DxFondito\Mail\MailSender;
 use DxFondito\Mail\SendingLimit;
@@ -45,15 +47,17 @@ final class CertificateMailServiceTest extends TestCase
         $this->ranking = new MemoryRankingStore();
         $this->certificateTemplates = new MemoryCertificateTemplateStore();
         $this->audit = new MemoryAuditLog();
+        $this->licensees = new MemoryLicenseeStore();
+        $this->licensees->licensees['LU9ZZA'] = ['country' => 'AR', 'name' => 'JUANA EJEMPLO'];
         $this->certificates = new CertificateService(
             $this->certificateTemplates,
             $this->ranking,
             new MemoryFileStore(),
             new TextRenderer(new Fonts(dirname(__DIR__, 2) . '/fonts')),
             $this->audit,
+            $this->licensees,
         );
         $this->certificates->save($this->admin, 2026, 5, $this->image(), self::fields());
-        $this->licensees = new MemoryLicenseeStore();
         $this->store = new MemoryMailStore();
         $this->store->known = ['LU9ZZA' => [['email' => 'juana@example.com', 'lastQsoAt' => '2026-10-04 12:00:00']]];
         $this->mailer = new MemoryMailer();
@@ -137,6 +141,34 @@ final class CertificateMailServiceTest extends TestCase
         self::assertSame(['pending' => 1, 'changed' => 0], $this->service()->summary([2026]));
     }
 
+    public function testTheNameOfTheAddressBookReplacesTheOfficialName(): void
+    {
+        self::assertSame(['Juana Ejemplo', false], $this->nameOf('LU9ZZA'));
+
+        $this->store->book['LU9ZZA'] = new AddressBookEntry('LU9ZZA', 'Juana I. Ejemplo', null, false, null);
+
+        self::assertSame(['Juana I. Ejemplo', true], $this->nameOf('LU9ZZA'));
+    }
+
+    public function testACertificateWithoutNameDoesNotGo(): void
+    {
+        // Not on the official lists, and no name in the address book: the administrator enters the name.
+        $this->licensees->licensees = [];
+        $service = $this->service();
+
+        $result = $service->send($this->admin, 2026, [['callSign' => 'LU9ZZA', 'points' => 5]], false);
+
+        self::assertSame('no-name', $result['results'][0]['reason']);
+        self::assertSame([], $this->mailer->sent);
+        self::assertSame('', $service->overview(2026)['certificates'][0]['name']);
+        try {
+            $service->test($this->admin, 2026, 'LU9ZZA', 5, 'Asunto', 'Texto');
+            self::fail('The test message went without a name.');
+        } catch (HttpException $e) {
+            self::assertSame(422, $e->status);
+        }
+    }
+
     public function testALevelWithoutTemplateIsNotAvailable(): void
     {
         $this->ranking->contacts = array_merge($this->ranking->contacts, self::contacts('LU9ZZA', 10, 6));
@@ -144,6 +176,19 @@ final class CertificateMailServiceTest extends TestCase
         $items = $this->service()->overview(2026)['certificates'];
 
         self::assertSame(['pending', 'unavailable'], array_column($items, 'status'));
+    }
+
+    /**
+     * @return array{0: string, 1: bool} The name of the certificate of five points, and true for a manual name.
+     */
+    private function nameOf(string $callSign): array
+    {
+        foreach ($this->service()->overview(2026)['certificates'] as $item) {
+            if ($item['callSign'] === $callSign && $item['points'] === 5) {
+                return [$item['name'], $item['manualName']];
+            }
+        }
+        self::fail('No certificate of ' . $callSign);
     }
 
     private function service(): CertificateMailService
@@ -155,7 +200,6 @@ final class CertificateMailServiceTest extends TestCase
             $this->certificateTemplates,
             $this->certificates,
             $this->store,
-            $this->licensees,
             new Templates($this->store, $this->audit),
             new MailSender($this->store, $this->mailer, new SendingLimit($this->store, 90, $now)),
             $this->audit,
@@ -209,7 +253,7 @@ final class CertificateMailServiceTest extends TestCase
 
         return (string) json_encode([
             'call_sign' => ['x' => 100] + $box,
-            'date' => ['x' => 100, 'y' => 300, 'width' => 400, 'height' => 30, 'colour' => '#1A1A1A', 'align' => 'center', 'font' => 'sans'],
+            'name' => ['x' => 100, 'y' => 300, 'width' => 400, 'height' => 30, 'colour' => '#1A1A1A', 'align' => 'center', 'font' => 'sans'],
         ]);
     }
 

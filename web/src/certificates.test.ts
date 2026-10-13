@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { certificateFileName, certificateUrl, defaultCertificateFields } from './certificates.ts'
 
 describe('defaultCertificateFields', () => {
-  it('puts the call sign in the centre, above the date', () => {
-    const { call_sign, date } = defaultCertificateFields(1600, 1131)
+  it('puts the call sign in the centre, above the name', () => {
+    const { call_sign, name } = defaultCertificateFields(1600, 1131)
     expect(call_sign.x + call_sign.width / 2).toBe(800)
-    expect(date.x + date.width / 2).toBe(800)
-    expect(call_sign.y + call_sign.height).toBeLessThan(date.y)
+    expect(name.x + name.width / 2).toBe(800)
+    expect(call_sign.y + call_sign.height).toBeLessThan(name.y)
     expect(call_sign.align).toBe('center')
   })
 

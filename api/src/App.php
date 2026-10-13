@@ -143,6 +143,7 @@ final class App
             $templateFiles,
             $renderer,
             $audit,
+            $licensees,
         );
         $certificates = new CertificateController($auth, $certificateService);
         $mailStore = new PdoMailStore($pdo);
@@ -159,7 +160,7 @@ final class App
             new AddressBookService($mailStore, $licensees, $audit),
             $mailTemplates,
             new QslMailService($activityStore, $rankingStore, $qslTemplates, $qslService, $mailStore, $licensees, $mailTemplates, $sender, $audit, $siteUrl),
-            new CertificateMailService($rankingStore, $certificateTemplates, $certificateService, $mailStore, $licensees, $mailTemplates, $sender, $audit, $siteUrl),
+            new CertificateMailService($rankingStore, $certificateTemplates, $certificateService, $mailStore, $mailTemplates, $sender, $audit, $siteUrl),
         );
 
         $router = new Router();

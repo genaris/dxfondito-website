@@ -372,10 +372,10 @@ The source of the method is `qsl_send/detect.py` of the qsl-send program. The tw
   The page has the proportions of the image and no margin. Its long side is 297 mm, the long side of an A4 sheet.
   Thus an A4 template gives an A4 page. A landscape image gives a landscape page.
   FPDF reads the image from a file. Thus the API writes the JPEG image to a temporary file and deletes it after the PDF file is complete.
-- The texts of the certificate: the base call sign (R-CALL-3), and the certificate date (R-CER-5) in Spanish words, such as `4 de octubre de 2026`.
+- The texts of the certificate: the base call sign (R-CALL-3), and the full name (FR-CER-2c). The download has the name of the official lists or no name. The mailer gives the name of the address book, or else the official name. Migration 0008 changed the `date` box of the saved templates to the `name` box.
 - The name of a QSL card file is `QSL_{base call sign}_{reference}_{YYYYMMDD}_{HHMM}.jpg`, with the date and the time of the contact. Thus each contact has a different file name.
 - The name of the PDF file is `Certificado_{call sign}_{season}_{points}.pdf`. The download link of the browser uses the level name, such as `Certificado_LU1ABC_2026_Bronce.pdf`.
-- The sample image of a certificate uses `LU1ABC` and `4 de octubre de 2026`.
+- The sample image of a certificate uses `LU1ABC` and `Juana Pérez`.
 - The certificate templates use the same field editor as the QSL card templates, with the fields `call_sign` and `date`. The search of the field boxes (section 6.2) is only for QSL card templates.
   The first layout of a new certificate template puts a large call sign in the centre, and the date below it.
 - The API accepts JPEG and PNG templates up to 10 MB and 4096 pixels on each side. Larger images need more memory than PHP has on a shared host.
@@ -450,7 +450,7 @@ The code is in `api/src/Mail/`. The pages are `/admin/envios`, `/admin/envios/ac
 - `mail_templates` keeps the texts by kind (`qsl`, `certificate`) and scope (`default`, `activity:<id>`, `season:<year>`).
   Without a saved text, the scope uses the general text, and the general text uses the default text of `MessageTemplate::DEFAULTS`.
 - The variables are in `MessageTemplate::VARIABLES`. `{saludo}` is the first given name, or the call sign without a name. `{qsos}` has one line for each QSL card.
-- The name in the messages is the name of the official lists, as on the public QSL card (D-28). A later version can use the name of the address book for the messages only.
+- The name in the QSL messages is the name of the official lists, as on the public QSL card (D-28). The certificate messages and their PDF files use the name of the address book, or else the official name (FR-CER-2c). A certificate without a name does not go (`no-name`).
 
 **Tables** (migration 0006)
 

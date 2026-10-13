@@ -101,8 +101,9 @@ export function CertificatesPage() {
         )}
       </div>
       <p className="hint">
-        Cada temporada tiene una plantilla para cada nivel. El sistema escribe el indicativo del participante y la
-        fecha del certificado: la fecha de la actividad que le dio el último punto necesario.
+        Cada temporada tiene una plantilla para cada nivel. El sistema escribe el indicativo y el nombre completo del
+        participante. El certificado que se descarga lleva el nombre de los listados oficiales (o queda vacío); el que
+        se envía por e-mail puede llevar el nombre que cargues en la libreta de direcciones.
       </p>
       {notice && <p role="status">{notice}</p>}
       {error && (

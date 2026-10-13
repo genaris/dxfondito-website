@@ -67,7 +67,10 @@ export interface CertificateItem {
   /** YYYY-MM-DD, or null if the participant does not have the certificate now. */
   date: string | null
   available: boolean
+  /** The name of the certificate: the name of the address book, or of the official lists. Empty if none. */
   name: string
+  /** True for the name of the address book. */
+  manualName: boolean
   recipient: Recipient
   status: 'pending' | 'sent' | 'changed' | 'revoked' | 'unavailable'
   last: DeliveryInfo | null
@@ -323,6 +326,8 @@ export function skipReason(reason: string | undefined): string {
       return 'no tiene el certificado'
     case 'no-template':
       return 'el nivel no tiene plantilla'
+    case 'no-name':
+      return 'falta el nombre (cargalo en la libreta)'
     default:
       return 'omitido'
   }
