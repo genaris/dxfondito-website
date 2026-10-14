@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
-import { activitySchedule, readActivities, readSeasons } from '../activities.ts'
+import { activitySchedule, readActivities, readSeasonCallSigns, readSeasons } from '../activities.ts'
 import type { ActivitySummary, Seasons } from '../activities.ts'
+import { EntityChart } from '../components/EntityChart.tsx'
+import { countEntities } from '../entities.ts'
+import type { EntityCount } from '../entities.ts'
 import { Pagination } from '../components/Pagination.tsx'
 import { pageItems } from '../pagination.ts'
 import { href, navigate } from '../router.ts'
@@ -21,6 +24,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
   const { user } = useSession()
   const [seasons, setSeasons] = useState<Seasons | null>(null)
   const [state, setState] = useState<State>({ kind: 'loading' })
+  const [entities, setEntities] = useState<EntityCount[]>([])
   const { page, size, top, goTo, changeSize } = usePagination()
   const selected = season ?? seasons?.current ?? null
 
@@ -40,6 +44,14 @@ export function ActivitiesPage({ season }: { season: number | null }) {
       })
       .catch(() => {
         if (active) setState({ kind: 'error' })
+      })
+    // The statistics are not necessary for the list: without them the page shows no chart.
+    readSeasonCallSigns(selected)
+      .then((callSigns) => {
+        if (active) setEntities(countEntities(callSigns))
+      })
+      .catch(() => {
+        if (active) setEntities([])
       })
     return () => {
       active = false
@@ -66,6 +78,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
           <SeasonSelect seasons={options} value={selected} onChange={(value) => navigate(`/actividades/${value}`)} />
         )}
       </div>
+      {state.kind === 'ready' && <EntityChart title={`Entidades contactadas en ${selected}`} counts={entities} />}
       {state.kind === 'loading' && <p>Cargando…</p>}
       {state.kind === 'error' && <p className="error">No se pudo leer la lista de actividades.</p>}
       {state.kind === 'ready' && shown.length === 0 && (

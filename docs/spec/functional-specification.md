@@ -171,6 +171,12 @@ The call sign of the user identifies the account.
 - **FR-PUB-13c** The activity list shows 25, 50 or 100 activities on each page, as the ranking (FR-PUB-4a).
 - **FR-PUB-14** The page of an activity shows its data, its operators and the list of all its contacts.
 - **FR-PUB-14a** The page shows the number of participants (different base call signs) and the number of contacts (QSOs).
+- **FR-PUB-14b** Below these numbers, the page shows the entities of its contacts as a bar chart: the number of entities, and the QSOs of each entity.
+  An entity is a province of Argentina (the first letter of the suffix of the call sign, such as D in LU1DAB) or a different country (the prefix).
+  For an Argentine portable station, a suffix of one letter is the province, such as A in LU2GAC/A. A suffix G or X does not tell the province: the base call sign tells it.
+- **FR-PUB-14c** The activity list shows the same chart for all the contacts of the selected season.
+- **FR-PUB-14d** At the left of the chart, a map shows the provinces of Argentina and the neighbour countries, with the colours of the bars. The pointer on a region marks its bar, and the pointer on a bar marks its region.
+  The map shows the Islas Malvinas, the Georgias del Sur and the Sandwich del Sur as part of Argentina, and an inset shows the Antarctic sector of Argentina. These regions are the entity "Antártida e Islas del Atlántico Sur" (suffix Z).
 - **FR-PUB-15** The list has all contacts, in the order of time. A participant with more than one contact, with the same operator or with different operators, has a line for each contact.
 - **FR-PUB-15a** Each line shows the date and the time, the call sign as the log gives it, the operator, the frequency, the mode, and a link to download the QSL card of the contact.
 - **FR-PUB-15b** For a signed-in user, the logs and the QSL card templates of the activity come before the list of contacts. The list can be long.

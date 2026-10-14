@@ -1409,3 +1409,224 @@ button.secondary {
     grid-template-columns: 1fr;
   }
 }
+
+/* The bars of the entities (EntityChart): one colour for the provinces, one for the countries.
+   The pairs pass the checks of contrast and of colour blindness. The text uses the text colours. */
+:root {
+  --chart-province: #2a64b0;
+  --chart-country: #c4620f;
+  --map-empty: #dde4ed;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --chart-province: #4f8fd6;
+    --chart-country: #c97a2a;
+    --map-empty: #2c3b52;
+  }
+}
+
+/* The map at the left of the bars, or above them on a narrow screen. */
+.entity-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 17rem) 1fr;
+  gap: 1rem 2rem;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .entity-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .entity-layout .entity-figure {
+    max-width: 13rem;
+  }
+}
+
+.entity-figure {
+  margin: 0;
+  max-width: 17rem;
+  justify-self: center;
+  width: 100%;
+}
+
+.entity-figure figcaption {
+  min-height: 1.5em;
+  text-align: center;
+}
+
+.entity-map {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.map-region {
+  stroke: var(--surface);
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+  cursor: default;
+}
+
+.map-region.map-empty {
+  fill: var(--map-empty);
+}
+
+.map-region.entity-province {
+  fill: var(--chart-province);
+}
+
+.map-region.entity-country {
+  fill: var(--chart-country);
+}
+
+.map-region.is-active {
+  stroke: var(--text);
+  stroke-width: 1.6;
+  filter: brightness(1.15);
+}
+
+circle.map-region {
+  stroke-width: 1.5;
+}
+
+.map-static {
+  pointer-events: none;
+}
+
+.map-label {
+  font-size: 12px;
+  text-anchor: middle;
+  fill: var(--text);
+  stroke: var(--surface);
+  stroke-width: 2.5px;
+  paint-order: stroke;
+  pointer-events: none;
+}
+
+.map-inset {
+  fill: var(--surface);
+  stroke: var(--border);
+}
+
+/* The sector catches the pointer over the sea of the sector, not only over the land. */
+.map-sector-area {
+  fill: transparent;
+}
+
+.map-sector {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 0.6;
+  stroke-dasharray: 2 2;
+  pointer-events: none;
+}
+
+.entity-total {
+  margin: 0 0 0.75rem;
+}
+
+.entity-bars {
+  display: grid;
+  grid-template-columns: minmax(6rem, max-content) 1fr;
+  gap: 0.375rem 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entity-bars li {
+  position: relative;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+  outline-offset: 2px;
+}
+
+.entity-name {
+  font-size: 0.9em;
+  text-align: right;
+}
+
+.entity-track {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+/* Square at the baseline, rounded at the end of the data. */
+.entity-bar {
+  flex: none;
+  height: 16px;
+  min-width: 2px;
+  border-radius: 0 4px 4px 0;
+}
+
+.entity-province {
+  background: var(--chart-province);
+}
+
+.entity-country {
+  background: var(--chart-country);
+}
+
+.entity-swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-right: 0.3em;
+  border-radius: 2px;
+  vertical-align: baseline;
+}
+
+.entity-value {
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.entity-bars li.is-active .entity-bar {
+  filter: brightness(1.15);
+}
+
+.entity-tip {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  display: none;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 0.85em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.entity-bars li:hover .entity-tip,
+.entity-bars li:focus-visible .entity-tip,
+.entity-bars li.is-active .entity-tip {
+  display: block;
+}
+
+/* The bar of the region under the pointer stays, the other bars fade. */
+.entity-bars.has-active li:not(.is-active) .entity-bar {
+  opacity: 0.35;
+}
+
+@media (max-width: 480px) {
+  .entity-bars {
+    grid-template-columns: minmax(5rem, 40%) 1fr;
+  }
+
+  .entity-tip {
+    left: auto;
+    right: 0;
+  }
+}

@@ -54,6 +54,18 @@ final class RankingController
     }
 
     /**
+     * The call signs of the contacts of a season, for the statistics of the entities.
+     *
+     * @param array<string, string> $params
+     */
+    public function callSigns(array $params): Response
+    {
+        $season = PathId::season($params);
+
+        return Response::json(['season' => $season, 'callSigns' => Calculator::callSigns($this->store->bySeason($season))]);
+    }
+
+    /**
      * The seasons of a participant, the current season first (FR-PUB-8 to FR-PUB-12).
      * A participant without contacts gives an empty list of seasons.
      *

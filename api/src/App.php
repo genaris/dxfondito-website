@@ -179,6 +179,7 @@ final class App
         $router->add('GET', '/audit', fn (Request $request): Response => $auditRecord->list($request));
         $router->add('GET', '/seasons', fn (): Response => $activities->seasons());
         $router->add('GET', '/seasons/{season}/ranking', fn (Request $request, array $params): Response => $ranking->ranking($params));
+        $router->add('GET', '/seasons/{season}/call-signs', fn (Request $request, array $params): Response => $ranking->callSigns($params));
         $router->add('GET', '/participants/{call}', fn (Request $request, array $params): Response => $ranking->participant($params));
         $router->add('GET', '/seasons/{season}/activities', fn (Request $request, array $params): Response => $activities->bySeason($params));
         $router->add('GET', '/activities/{id}', fn (Request $request, array $params): Response => $activities->show($params));

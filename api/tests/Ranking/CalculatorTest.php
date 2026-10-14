@@ -154,6 +154,22 @@ final class CalculatorTest extends TestCase
     /**
      * @return array{callSign: string, referenceId: int, seriesCode: string, number: int}
      */
+    public function testTheCallSignsOfTheContactsWithTheirNumberOfContacts(): void
+    {
+        $callSigns = Calculator::callSigns([
+            $this->contact('LU2ABC', 'DPS-01'),
+            $this->contact('LU2ABC', 'DPS-02', callSign: 'LU2ABC/D'),
+            $this->contact('CX1AA', 'DPS-01'),
+            $this->contact('LU2ABC', 'DPS-03'),
+        ]);
+
+        self::assertSame([
+            ['callSign' => 'CX1AA', 'baseCallSign' => 'CX1AA', 'qsos' => 1],
+            ['callSign' => 'LU2ABC', 'baseCallSign' => 'LU2ABC', 'qsos' => 2],
+            ['callSign' => 'LU2ABC/D', 'baseCallSign' => 'LU2ABC', 'qsos' => 1],
+        ], $callSigns);
+    }
+
     private function reference(string $callSign, string $code): array
     {
         [$series, $number] = explode('-', $code);

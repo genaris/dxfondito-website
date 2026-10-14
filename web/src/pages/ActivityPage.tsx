@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { activityDates, activityHours, argentinaHours, readActivity } from '../activities.ts'
 import type { ActivityDetail } from '../activities.ts'
 import { ApiError } from '../api.ts'
+import { EntityChart } from '../components/EntityChart.tsx'
+import { countEntities } from '../entities.ts'
 import { frequencyText } from '../logs.ts'
 import { qslCardUrl, qslFileName } from '../qsl.ts'
 import { href } from '../router.ts'
@@ -67,6 +69,10 @@ export function ActivityPage({ id }: { id: number }) {
         <dt>QSOs</dt>
         <dd>{activity.contacts.length}</dd>
       </dl>
+      <EntityChart
+        title="Entidades contactadas"
+        counts={countEntities(activity.contacts.map((contact) => ({ ...contact, qsos: 1 })))}
+      />
       {activity.reference.description && <p className="prewrap">{activity.reference.description}</p>}
       {activity.description && <p className="prewrap">{activity.description}</p>}
       {user && <LogsSection activityId={activity.id} user={user} onChange={load} />}

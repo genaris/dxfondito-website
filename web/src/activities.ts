@@ -102,6 +102,17 @@ export function readActivity(id: number): Promise<ActivityDetail> {
   return apiGet<ActivityDetail>(`/activities/${id}`)
 }
 
+/** Each call sign of the contacts of a season, with its number of QSOs: the data of the statistics. */
+export interface SeasonCallSign {
+  callSign: string
+  baseCallSign: string
+  qsos: number
+}
+
+export async function readSeasonCallSigns(season: number): Promise<SeasonCallSign[]> {
+  return (await apiGet<{ season: number; callSigns: SeasonCallSign[] }>(`/seasons/${season}/call-signs`)).callSigns
+}
+
 export function readReferences(): Promise<ReferenceOverview> {
   return apiGet<ReferenceOverview>('/references')
 }

@@ -143,4 +143,23 @@ final class Calculator
     {
         return count(array_unique(array_map(static fn (ContactRow $contact): string => $contact->baseCallSign, $contacts)));
     }
+
+    /**
+     * Each call sign of the contacts, as in the log, with its number of contacts. The browser finds the province or
+     * the country of each call sign for the statistics.
+     *
+     * @param iterable<ContactRow> $contacts
+     * @return list<array{callSign: string, baseCallSign: string, qsos: int}> In the order of the call signs.
+     */
+    public static function callSigns(iterable $contacts): array
+    {
+        $byCall = [];
+        foreach ($contacts as $contact) {
+            $byCall[$contact->callSign] ??= ['callSign' => $contact->callSign, 'baseCallSign' => $contact->baseCallSign, 'qsos' => 0];
+            $byCall[$contact->callSign]['qsos']++;
+        }
+        ksort($byCall, SORT_STRING);
+
+        return array_values($byCall);
+    }
 }
