@@ -120,12 +120,6 @@ function SeasonSection({
                   {contact.callSign !== baseCallSign && (
                     <span className="hint"> · como {contact.callSign}</span>
                   )}
-                  {!contact.point && (
-                    <span className="hint" title="La referencia ya sumó su punto con un contacto anterior de la temporada.">
-                      {' '}
-                      · no suma punto
-                    </span>
-                  )}
                 </td>
                 <td className="nowrap">
                   {contact.qsoAt.slice(0, 10)} {contact.qsoAt.slice(11, 16)}

@@ -78,7 +78,6 @@ export function ActivitiesPage({ season }: { season: number | null }) {
           <SeasonSelect seasons={options} value={selected} onChange={(value) => navigate(`/actividades/${value}`)} />
         )}
       </div>
-      {state.kind === 'ready' && <EntityChart title={`Entidades contactadas en ${selected}`} counts={entities} />}
       {state.kind === 'loading' && <p>Cargando…</p>}
       {state.kind === 'error' && <p className="error">No se pudo leer la lista de actividades.</p>}
       {state.kind === 'ready' && shown.length === 0 && (
@@ -124,6 +123,7 @@ export function ActivitiesPage({ season }: { season: number | null }) {
           />
         </>
       )}
+      {state.kind === 'ready' && <EntityChart title={`Entidades contactadas en ${selected}`} counts={entities} />}
     </>
   )
 }

@@ -157,7 +157,7 @@ The call sign of the user identifies the account.
 - **FR-PUB-8b** For the current season, the page also shows the number of points necessary for the next level.
 - **FR-PUB-8c** For each season, the page also shows the number of contacts (QSOs).
 - **FR-PUB-9** For each season, the page lists all contacts of the participant, in the order of time.
-- **FR-PUB-9a** Each line of that list shows the reference of the contact. A contact that gives no point (R-OPR-5) shows that.
+- **FR-PUB-9a** Each line of that list shows the reference of the contact. The list does not mark the contacts that give no point (R-OPR-5).
 - **FR-PUB-10** Each line shows the operator that the participant contacted.
 - **FR-PUB-10a** Each line shows the date, the time, the frequency and the mode.
 - **FR-PUB-11** Each line gives a link to download the QSL card of that contact (FR-QSL-7).
