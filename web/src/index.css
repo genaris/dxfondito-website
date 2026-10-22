@@ -1630,3 +1630,254 @@ circle.map-region {
     right: 0;
   }
 }
+
+/* Live page (FR-LIVE-1 to FR-LIVE-15) */
+
+.live h2,
+.live h3 {
+  margin: 0;
+}
+
+.live section {
+  margin-top: 1.25rem;
+}
+
+.live-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.live-status {
+  margin: 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #2e7d32;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.live-status-sending {
+  border-color: var(--blue);
+  color: var(--link);
+}
+
+.live-status-offline {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.live-alert {
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--red);
+  color: var(--error);
+  font-weight: 600;
+}
+
+.live-bar,
+.live-form,
+.live-waiting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.live-operators,
+.live-radio,
+.live-band,
+.live-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live-radio {
+  align-items: flex-end;
+  gap: 0.75rem 1.25rem;
+}
+
+.live label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 500;
+}
+
+.live label.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.live input,
+.live select {
+  font: inherit;
+  padding: 0.5rem;
+  border-radius: 0.4rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: inherit;
+}
+
+.live-radio input:not([type='checkbox']) {
+  width: 8rem;
+}
+
+.live-time-input {
+  width: 7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A link with the form of a chip (button.chip), such as the ADIF file of an operator. */
+a.chip {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.85em;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.live button.chip {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.35rem 0.8rem;
+}
+
+/* The current operator is large and red: a contact of a different operator is a frequent mistake. */
+.live-operators button.chip {
+  font-size: 1.1rem;
+  padding: 0.45rem 1rem;
+}
+
+.live-operators button.chip.active {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.live-call {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1.25rem;
+}
+
+.live-call-input {
+  width: 14rem;
+  font-size: 1.6rem !important;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.live-time {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.live-help {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+.live-new-point {
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.live-rst {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+}
+
+.rst-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rst-picker legend {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.rst-picker button.chip {
+  min-width: 3rem;
+  font-size: 1.05rem;
+}
+
+.rst-picker input {
+  width: 4.5rem;
+}
+
+.waiting-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-weight: 700;
+}
+
+.live-chips input {
+  width: 10rem;
+}
+
+.live-table .live-row {
+  cursor: pointer;
+}
+
+.live-table .live-row:hover {
+  background: var(--surface-alt);
+}
+
+.live-edit {
+  font-weight: 700;
+}
+
+.live-conflict {
+  margin-top: 0.4rem;
+  white-space: normal;
+  cursor: default;
+}
+
+.live-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+@media (max-width: 720px) {
+  .live-call-input {
+    width: 100%;
+  }
+
+  .live-call label {
+    flex: 1 1 100%;
+  }
+
+  .live-operators button.chip {
+    flex: 1 1 auto;
+  }
+}

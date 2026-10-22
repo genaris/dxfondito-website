@@ -175,6 +175,44 @@ final class LogServiceTest extends TestCase
         self::assertSame([], $this->logs->logs);
     }
 
+    public function testTheSummaryGivesTheRecordsThatAreAlreadyInTheLiveLog(): void
+    {
+        // The clock of the browser was a minute late. A different operator has a live contact with CX1A.
+        $this->logs->live[$this->activityId . ':' . $this->operator->id] = [['baseCallSign' => 'LU2ABC', 'qsoAt' => '2026-05-10 11:59:00']];
+        $this->logs->live[$this->activityId . ':' . $this->otherOperator->id] = [['baseCallSign' => 'CX1A', 'qsoAt' => '2026-05-10 12:05:00']];
+
+        $summary = $this->service->preview($this->operator, $this->activityId, null, $this->file());
+
+        self::assertSame([['record' => 1, 'callSign' => 'LU2ABC', 'qsoAt' => '2026-05-10T12:00:00Z']], $summary['repeated']);
+    }
+
+    public function testTheUserLeavesOutTheRecordsThatAreAlreadyInTheLiveLog(): void
+    {
+        $this->logs->live[$this->activityId . ':' . $this->operator->id] = [['baseCallSign' => 'LU2ABC', 'qsoAt' => '2026-05-10 12:01:00']];
+
+        $all = $this->service->save($this->operator, $this->activityId, null, $this->file());
+        $log = $this->service->save($this->operator, $this->activityId, null, $this->file(), true);
+
+        self::assertSame(2, $all->contactCount);
+        self::assertSame(1, $log->contactCount);
+        self::assertSame(1, $log->skippedCount);
+        self::assertSame(['CX1A'], array_map(fn ($contact) => $contact->callSign, $this->logs->contacts[$log->id]));
+        // The original file stays complete.
+        self::assertSame(self::ADIF, $this->files->read($log->storedName));
+        self::assertSame(1, $this->audit->entries[1]['detail']['skipped']);
+    }
+
+    public function testRefusesAFileWithOnlyRepeatedRecordsToSave(): void
+    {
+        $this->logs->live[$this->activityId . ':' . $this->operator->id] = [
+            ['baseCallSign' => 'LU2ABC', 'qsoAt' => '2026-05-10 12:00:00'],
+            ['baseCallSign' => 'CX1A', 'qsoAt' => '2026-05-10 12:05:00'],
+        ];
+
+        $this->assertStatus(422, fn () => $this->service->save($this->operator, $this->activityId, null, $this->file(), true));
+        self::assertSame([], $this->files->files);
+    }
+
     public function testOnlyTheOperatorAndTheAdministratorsGetTheOriginalFile(): void
     {
         $log = $this->service->save($this->operator, $this->activityId, null, $this->file());

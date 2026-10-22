@@ -75,6 +75,13 @@ export function ActivityPage({ id }: { id: number }) {
       />
       {activity.reference.description && <p className="prewrap">{activity.reference.description}</p>}
       {activity.description && <p className="prewrap">{activity.description}</p>}
+      {user && (
+        <p>
+          <a className="button" href={href(`/actividad/${activity.id}/en-vivo`)}>
+            Cargar QSOs en vivo
+          </a>
+        </p>
+      )}
       {user && <LogsSection activityId={activity.id} user={user} onChange={load} />}
       {user && <QslTemplatesSection activityId={activity.id} user={user} />}
       <section>

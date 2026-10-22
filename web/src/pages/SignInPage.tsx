@@ -4,7 +4,10 @@ import { signInError } from '../messages.ts'
 import { navigate } from '../router.ts'
 import { useSession } from '../useSession.ts'
 
-export function SignInPage() {
+/**
+ * @param stay True to stay on the page after the sign-in, such as the live page. Else the home page comes.
+ */
+export function SignInPage({ stay = false }: { stay?: boolean }) {
   const { signIn } = useSession()
   const [callSign, setCallSign] = useState('')
   const [password, setPassword] = useState('')
@@ -17,7 +20,7 @@ export function SignInPage() {
     setError(null)
     try {
       await signIn(callSign, password)
-      navigate('/')
+      if (!stay) navigate('/')
     } catch (failure) {
       setError(signInError(failure))
       setPassword('')

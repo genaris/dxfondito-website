@@ -2,8 +2,8 @@
 
 | Item    | Value      |
 | ------- | ---------- |
-| Status  | Draft 5    |
-| Date    | 2026-10-01 |
+| Status  | Draft 6    |
+| Date    | 2026-10-22 |
 
 ## 1. Purpose
 
@@ -178,6 +178,7 @@ Indexes: (`activity_id`, `base_call_sign`, `qso_at`) and (`base_call_sign`).
 | `detail`     | JSON, null   | For example the file name of a deleted log.  |
 | `created_at` | datetime     |                                              |
 
+The actions of the live logs are `live-log.create`, `live-contact.update` (with the changes) and `live-contact.delete`.
 The actions of the QSL card templates are `qsl-template.save` and `qsl-template.delete`.
 The actions of the certificate templates are `certificate-template.save` and `certificate-template.delete`. The detail has the season and the points of the level.
 The actions of the accounts are `user.create`, `user.update`, `user.password.reset` (an administrator sets an initial password) and `user.password.change` (the user changes the own password).
@@ -300,6 +301,43 @@ The build puts a `.user.ini` file next to `api/index.php` with the upload limits
 - The API saves the original file with a random name in `storage/logs/`. If the database transaction fails, the API deletes the file.
 - `GET /activities/{id}` also gives the call signs of the operators with a log (FR-ACT-2a).
 - `GET /activities/{id}/logs` and `GET /logs/{id}` need a session. The download of the file needs the operator of the log or an administrator.
+
+### 5.3 Live logs
+
+The live page `/actividad/{id}/en-vivo` (FR-LIVE-1 to FR-LIVE-15). The code is in `api/src/Live/`, `web/src/live.ts`, `web/src/liveQueue.ts` and `web/src/pages/LivePage.tsx`.
+`api/src/Logs/` is not the place for new files: the line `logs` of `.gitignore` hides new files there on a Mac, where Git ignores the case of letters.
+
+**Data** (migration 0009)
+
+- A live log is a line of `logs` with `source` `live`, `stored_name` null and `live_key` "<activity>:<operator>". The unique key of `live_key` gives one live log for each operator and activity.
+  The API reads the log first, and makes it with `INSERT ... ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)` only when it does not exist: an INSERT uses a number of AUTO_INCREMENT also for a line that exists. The read has no `FOR UPDATE`: two locks of a line that does not exist stop each other at the INSERT.
+- A live contact is a line of `contacts` with `client_id` (a UUID of the browser, unique), `notes`, `entered_by`, `updated_at` and `version`.
+- `live_deletions` keeps the identifier of each deleted live contact, for the other browsers. A new save of the same identifier removes it.
+- `contact_count` of a log comes from `COUNT(*)` in the transaction of each change. A live log without contacts is deleted.
+- `logs.skipped_count` is the number of records of an uploaded file that were already in the live log (FR-LIVE-14).
+- The file of a live log, and the ADIF file of an operator (`GET /activities/{id}/adif`), come from the contacts (`AdifWriter`). The lengths of the fields are in bytes.
+
+**Changes from the browser**
+
+- The browser keeps each change in a queue in `localStorage`, one entry for each contact, and sends the queue with `POST /activities/{id}/live/sync`. A request has 100 changes at most; the API accepts 200.
+- Each change has `clientId`, `op` (`save` or `delete`) and `baseVersion`: the version of the API that the user changed, or null for a new contact.
+- The API applies each change by itself. A save with the same values as the database is a second sending: the answer is `ok` and nothing changes.
+  A save on a different version, or on a contact that a different browser deleted, is a `conflict`, with the contact of the API. The user keeps the own version (it goes again on the version of the API) or the other version.
+  A deletion has no conflict. The deletion of a contact that does not exist is `ok`.
+- The answer has the result of each change and the changes of all browsers since `since`: the live contacts with `updated_at` at that time or later, and the deletions.
+  Its `cursor` is the time of the answer less 10 seconds. Thus the next request gets again the changes of a transaction that ended after the answer. The browser keeps the newest version of each contact.
+- Without changes, the browser asks `GET /activities/{id}/live?since=` every 20 seconds. After a failed request, the wait grows from 5 to 30 seconds. The `online` event and a visible page send at once.
+- A change of the user during a request stays in the queue. If the API saved the earlier change, the next request sends the new change on the new version.
+- An answer 401 or 403 reads the session again (`GET /session`). After a reload without a connection the page has no token: the next reading gives it. Without a session, the sign-in page comes, and the queue stays.
+- `serverTime` of each answer gives the difference of the clock of the device (FR-LIVE-12): the middle of the request is the time of the answer.
+
+**Without a connection**
+
+- `web/public/sw.js` is a service worker for the whole site. The browser program registers it only in the compiled program.
+  It gives the page from the network, and the kept page after 5 seconds without an answer or without a connection. It keeps the files of `assets/`, which have the hash of their content in their names. The page names its scripts and styles: the service worker keeps these and removes the older ones.
+  It does not keep the requests of the API.
+- The live page keeps in `localStorage` the queue, the last data of the activity (operators, uploaded contacts), the settings of the browser and the help table. The session keeps the last user (`dxf-session-user`): without a connection, the sign-in page does not come.
+- The help table (`GET /activities/{id}/live/lookup`) has the names of the address book and of the official lists, and the references of each participant in the season. It is about 600 KB of JSON for 17 000 call signs. The page reads it once for each opening.
 
 ## 6. QSL cards and certificates
 
@@ -510,11 +548,15 @@ A visitor can use the public requests.
 
 | Method and path                                   | Result                                            |
 | ------------------------------------------------- | ------------------------------------------------- |
-| `POST /activities/{id}/logs`                      | The summary (`mode=preview`) or a new log (`mode=save`). |
+| `POST /activities/{id}/logs`                      | The summary (`mode=preview`) or a new log (`mode=save`, and `skipRepeated=1` to leave out the records of the live log). |
 | `GET /activities/{id}/logs`                       | The logs of the activity.                         |
 | `GET /logs/{id}`                                  | The log and its contacts.                         |
 | `GET /logs/{id}/file`                             | The original file.                                |
 | `DELETE /logs/{id}`                               | The deletion of the log.                          |
+| `GET /activities/{id}/live`                       | The activity, the active accounts with their station call signs, the live contacts and the contacts of the uploaded logs. With `since`, only the changes (section 5.3). |
+| `POST /activities/{id}/live/sync`                 | The changes of a browser (`changes`, `since`) and their results. |
+| `GET /activities/{id}/live/lookup`                | The help table of the live page.                  |
+| `GET /activities/{id}/adif`                       | The ADIF file of an operator (`operatorId`, optional `station`). For the operator and the administrators. |
 | `GET /activities/{id}/qsl-templates`              | The templates of the activity.                    |
 | `GET /activities/{id}/qsl-templates/{operatorId}/image` | The image of the template.                  |
 | `POST /activities/{id}/qsl-templates/{operatorId}` | A new or changed template (multipart: `fields`, and `file` for a new image). |
@@ -570,6 +612,7 @@ A new initial password also opens a locked account.
 | `/actividades`               | Activity list of the current season              | Visitor       |
 | `/actividades/{season}`      | Activity list of a different season              | Visitor       |
 | `/actividad/{id}`            | Activity, logs, QSL card templates, contacts     | Visitor, operator |
+| `/actividad/{id}/en-vivo`    | Live entry of contacts (section 5.3)             | Operator, administrator |
 | `/participante/{call}`       | Participant, QSL cards, certificates             | Visitor       |
 | `/log/{id}`                  | Contacts of a log                                | Operator, administrator |
 | `/estado`                    | Status of the API and the database               | Visitor       |

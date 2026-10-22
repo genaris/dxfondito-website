@@ -14,7 +14,8 @@ final class PdoLogStore implements LogStore
     private const BATCH = 500;
 
     private const SELECT = 'SELECT l.id, l.activity_id, l.operator_id, o.call_sign AS operator_call_sign,
-            l.uploaded_by, b.call_sign AS uploaded_by_call_sign, l.file_name, l.stored_name, l.contact_count, l.uploaded_at
+            l.uploaded_by, b.call_sign AS uploaded_by_call_sign, l.file_name, l.stored_name, l.contact_count, l.uploaded_at,
+            l.source, l.skipped_count
         FROM logs l
         JOIN users o ON o.id = l.operator_id
         JOIN users b ON b.id = l.uploaded_by';
@@ -34,14 +35,15 @@ final class PdoLogStore implements LogStore
         string $storedName,
         array $contacts,
         string $uploadedAt,
+        int $skippedCount = 0,
     ): int {
         $pdo = ($this->pdo)();
         $pdo->beginTransaction();
         try {
             $pdo->prepare(
-                'INSERT INTO logs (activity_id, operator_id, uploaded_by, file_name, stored_name, contact_count, uploaded_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)'
-            )->execute([$activityId, $operatorId, $uploadedBy, $fileName, $storedName, count($contacts), $uploadedAt]);
+                'INSERT INTO logs (activity_id, operator_id, uploaded_by, file_name, stored_name, contact_count, skipped_count, uploaded_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+            )->execute([$activityId, $operatorId, $uploadedBy, $fileName, $storedName, count($contacts), $skippedCount, $uploadedAt]);
             $logId = (int) $pdo->lastInsertId();
 
             foreach (array_chunk($contacts, self::BATCH) as $batch) {
@@ -145,6 +147,20 @@ final class PdoLogStore implements LogStore
         );
     }
 
+    public function liveContacts(int $activityId, int $operatorId): array
+    {
+        $statement = ($this->pdo)()->prepare(
+            "SELECT c.base_call_sign, c.qso_at FROM contacts c JOIN logs l ON l.id = c.log_id
+             WHERE l.live_key = ? AND l.source = 'live' ORDER BY c.qso_at"
+        );
+        $statement->execute([$activityId . ':' . $operatorId]);
+
+        return array_map(
+            static fn (array $row): array => ['baseCallSign' => $row['base_call_sign'], 'qsoAt' => $row['qso_at']],
+            $statement->fetchAll(),
+        );
+    }
+
     /**
      * @param array<string, mixed> $row
      */
@@ -161,6 +177,8 @@ final class PdoLogStore implements LogStore
             storedName: $row['stored_name'],
             contactCount: (int) $row['contact_count'],
             uploadedAt: $row['uploaded_at'],
+            source: $row['source'],
+            skippedCount: (int) $row['skipped_count'],
         );
     }
 }

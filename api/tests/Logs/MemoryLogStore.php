@@ -20,13 +20,16 @@ final class MemoryLogStore implements LogStore
 
     public bool $failNextCreate = false;
 
+    /** @var array<string, list<array{baseCallSign: string, qsoAt: string}>> The live contacts of each "<activity>:<operator>". */
+    public array $live = [];
+
     private int $nextId = 1;
 
     public function __construct(private readonly MemoryUserStore $users)
     {
     }
 
-    public function create(int $activityId, int $operatorId, int $uploadedBy, string $fileName, string $storedName, array $contacts, string $uploadedAt): int
+    public function create(int $activityId, int $operatorId, int $uploadedBy, string $fileName, string $storedName, array $contacts, string $uploadedAt, int $skippedCount = 0): int
     {
         if ($this->failNextCreate) {
             throw new RuntimeException('The database failed');
@@ -43,6 +46,7 @@ final class MemoryLogStore implements LogStore
             $storedName,
             count($contacts),
             $uploadedAt,
+            skippedCount: $skippedCount,
         );
         $this->contacts[$id] = $contacts;
 
@@ -77,5 +81,10 @@ final class MemoryLogStore implements LogStore
         }
 
         return array_values($operators);
+    }
+
+    public function liveContacts(int $activityId, int $operatorId): array
+    {
+        return $this->live[$activityId . ':' . $operatorId] ?? [];
     }
 }

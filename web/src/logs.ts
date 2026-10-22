@@ -7,7 +7,11 @@ export interface Log {
   uploadedBy: { id: number; callSign: string }
   fileName: string
   contactCount: number
-  /** UTC, such as 2026-10-01T12:00:00Z. */
+  /** The records of the file that were already in the live log of the operator. */
+  skippedCount: number
+  /** `live`: the log of the live page (FR-LIVE-3). Its file comes from its contacts. */
+  source: 'adif' | 'live'
+  /** UTC, such as 2026-10-01T12:00:00Z. For a live log, the time of its first contact. */
   uploadedAt: string
   /** True for the operator of the log and the administrators. */
   canManage: boolean
@@ -42,6 +46,8 @@ export interface Summary {
   validCount: number
   invalid: { record: number; callSign: string | null; problems: Problem[] }[]
   warnings: Warning[]
+  /** The valid records that are already in the live log of the operator. */
+  repeated: { record: number; callSign: string; qsoAt: string }[]
 }
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -72,8 +78,10 @@ export function previewLog(activityId: number, file: File, operatorId: number | 
 /**
  * The second step: the browser sends the same file again, and the API saves it (FR-LOG-15).
  */
-export function saveLog(activityId: number, file: File, operatorId: number | null): Promise<Log> {
-  return apiUpload<Log>(`/activities/${activityId}/logs`, uploadForm('save', file, operatorId))
+export function saveLog(activityId: number, file: File, operatorId: number | null, skipRepeated = false): Promise<Log> {
+  const form = uploadForm('save', file, operatorId)
+  if (skipRepeated) form.append('skipRepeated', '1')
+  return apiUpload<Log>(`/activities/${activityId}/logs`, form)
 }
 
 function uploadForm(mode: 'preview' | 'save', file: File, operatorId: number | null): FormData {

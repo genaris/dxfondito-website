@@ -21,6 +21,9 @@ interface AuditLog
     public const ACTIVITY_DELETE = 'activity.delete';
     public const LOG_UPLOAD = 'log.upload';
     public const LOG_DELETE = 'log.delete';
+    public const LIVE_LOG_CREATE = 'live-log.create';
+    public const LIVE_CONTACT_UPDATE = 'live-contact.update';
+    public const LIVE_CONTACT_DELETE = 'live-contact.delete';
     public const QSL_TEMPLATE_SAVE = 'qsl-template.save';
     public const QSL_TEMPLATE_DELETE = 'qsl-template.delete';
     public const CERTIFICATE_TEMPLATE_SAVE = 'certificate-template.save';

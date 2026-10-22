@@ -10,6 +10,7 @@ interface LogStore
      * Saves the log and its contacts in one transaction.
      *
      * @param list<Contact> $contacts
+     * @param int $skippedCount The records of the file that were already in the live log of the operator.
      * @return int The identifier of the new log.
      */
     public function create(
@@ -20,6 +21,7 @@ interface LogStore
         string $storedName,
         array $contacts,
         string $uploadedAt,
+        int $skippedCount = 0,
     ): int;
 
     public function find(int $id): ?Log;
@@ -46,4 +48,11 @@ interface LogStore
      * @return list<array{id: int, callSign: string}>
      */
     public function operators(int $activityId): array;
+
+    /**
+     * The contacts of the live log of an operator in an activity, for the warning of an upload (FR-LOG-10).
+     *
+     * @return list<array{baseCallSign: string, qsoAt: string}>
+     */
+    public function liveContacts(int $activityId, int $operatorId): array;
 }

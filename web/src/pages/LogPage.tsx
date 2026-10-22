@@ -42,11 +42,16 @@ export function LogPage({ id }: { id: number }) {
       <p>
         <a href={href(`/actividad/${log.activityId}`)}>← Actividad</a>
       </p>
-      <h2>{log.fileName}</h2>
+      <h2>{log.source === 'live' ? `Log en vivo de ${log.operator.callSign}` : log.fileName}</h2>
+      {log.source === 'live' && (
+        <p>
+          <a href={href(`/actividad/${log.activityId}/en-vivo`)}>Corregir en la página en vivo</a>
+        </p>
+      )}
       <dl className="facts">
         <dt>Operador</dt>
         <dd>{log.operator.callSign}</dd>
-        <dt>Subido</dt>
+        <dt>{log.source === 'live' ? 'Primer QSO cargado' : 'Subido'}</dt>
         <dd>
           {formatUtc(log.uploadedAt)}
           {log.uploadedBy.id !== log.operator.id && ` por ${log.uploadedBy.callSign}`}
@@ -57,7 +62,7 @@ export function LogPage({ id }: { id: number }) {
       {log.canManage && (
         <p>
           <a href={logFileUrl(log.id)} download={log.fileName}>
-            Descargar el archivo original
+            {log.source === 'live' ? 'Descargar el ADIF' : 'Descargar el archivo original'}
           </a>
         </p>
       )}

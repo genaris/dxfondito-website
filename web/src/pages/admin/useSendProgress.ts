@@ -90,10 +90,10 @@ export function useSendProgress(): SendProgressState {
 }
 
 /**
- * Keeps the screen on during a long sending: a sleeping computer breaks the requests. The browser drops the lock
+ * Keeps the screen on during a long sending and on the live page: a sleeping computer breaks the requests. The browser drops the lock
  * when the page is hidden, so the lock comes again when the page is visible. Without support, nothing happens.
  */
-class KeepAwake {
+export class KeepAwake {
   private lock: WakeLockSentinel | null = null
   private released = false
   private readonly onVisible = () => {

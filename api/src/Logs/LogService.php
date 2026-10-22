@@ -50,23 +50,31 @@ final class LogService
         $activity = $this->activity($activityId);
         $operator = $this->operator($actor, $operatorId);
         $content = self::content($file);
+        $live = $this->logs->liveContacts($activity->id, $operator->id);
 
-        return $this->summaryData(LogSummary::read($content, $activity, $operator), $operator, $file);
+        return $this->summaryData(LogSummary::read($content, $activity, $operator, $live), $operator, $file);
     }
 
     /**
      * Reads the file again and saves the log, its valid records and the original file (FR-LOG-15, FR-LOG-18).
+     * The API keeps no data between the summary and the save operation. Thus it compares again with the live log.
      *
-     * @throws HttpException 422 if the file has no valid records (FR-LOG-16).
+     * @param bool $skipRepeated True to leave out the records that are already in the live log of the operator.
+     *     The original file stays complete.
+     * @throws HttpException 422 if the file has no valid records (FR-LOG-16), or only repeated records to save.
      */
-    public function save(User $actor, int $activityId, ?int $operatorId, ?UploadedFile $file): Log
+    public function save(User $actor, int $activityId, ?int $operatorId, ?UploadedFile $file, bool $skipRepeated = false): Log
     {
         $activity = $this->activity($activityId);
         $operator = $this->operator($actor, $operatorId);
         $content = self::content($file);
-        $summary = LogSummary::read($content, $activity, $operator);
+        $summary = LogSummary::read($content, $activity, $operator, $this->logs->liveContacts($activity->id, $operator->id));
         if ($summary->contacts === []) {
             throw new HttpException(422, 'The file has no valid records');
+        }
+        $contacts = $skipRepeated ? $summary->withoutRepeated() : $summary->contacts;
+        if ($contacts === []) {
+            throw new HttpException(422, 'All the records of the file are already in the live log');
         }
 
         $fileName = self::fileName($file);
@@ -78,8 +86,9 @@ final class LogService
                 $actor->id,
                 $fileName,
                 $storedName,
-                $summary->contacts,
+                $contacts,
                 ($this->now)()->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
+                count($summary->contacts) - count($contacts),
             );
         } catch (Throwable $e) {
             $this->files->delete($storedName);
@@ -90,8 +99,8 @@ final class LogService
             'label' => $activity->label(),
             'fileName' => $fileName,
             'operator' => $operator->callSign,
-            'contacts' => count($summary->contacts),
-        ]);
+            'contacts' => count($contacts),
+        ] + ($contacts === $summary->contacts ? [] : ['skipped' => count($summary->contacts) - count($contacts)]));
 
         return $this->find($id);
     }
@@ -127,6 +136,9 @@ final class LogService
     {
         $log = $this->find($id);
         $this->requireOwnerOrAdministrator($actor, $log);
+        if ($log->storedName === null) {
+            throw new HttpException(404, 'The file does not exist');
+        }
         $content = $this->files->read($log->storedName) ?? throw new HttpException(404, 'The file does not exist');
 
         return ['name' => $log->fileName, 'content' => $content];
@@ -142,7 +154,9 @@ final class LogService
         $activity = $this->activities->find($log->activityId);
 
         $this->logs->delete($log->id);
-        $this->files->delete($log->storedName);
+        if ($log->storedName !== null) {
+            $this->files->delete($log->storedName);
+        }
         $this->audit->record($actor->id, AuditLog::LOG_DELETE, $log->id, [
             'label' => $activity?->label(),
             'fileName' => $log->fileName,

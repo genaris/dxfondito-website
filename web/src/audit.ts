@@ -35,6 +35,9 @@ const ACTION_NAMES: Record<string, string> = {
   'activity.delete': 'Borró una actividad',
   'log.upload': 'Subió un log',
   'log.delete': 'Borró un log',
+  'live-log.create': 'Empezó un log en vivo',
+  'live-contact.update': 'Corrigió un QSO en vivo',
+  'live-contact.delete': 'Borró un QSO en vivo',
   'qsl-template.save': 'Guardó una plantilla QSL',
   'qsl-template.delete': 'Borró una plantilla QSL',
   'certificate-template.save': 'Guardó una plantilla de certificado',
@@ -75,6 +78,14 @@ const FIELD_NAMES: Record<string, string> = {
   scope: 'Alcance',
   sent: 'Enviados',
   failed: 'Fallidos',
+  skipped: 'Omitidos por estar en el log en vivo',
+  qsoAt: 'Fecha y hora',
+  operatorId: 'Operador (cuenta)',
+  frequency: 'Frecuencia',
+  mode: 'Modo',
+  rstSent: 'RST enviado',
+  rstRcvd: 'RST recibido',
+  notes: 'Observaciones',
 }
 
 export function actionName(action: string): string {
@@ -102,7 +113,9 @@ export function detailLines(entry: AuditEntry): string[] {
   const detail = entry.detail ?? {}
   const lines: string[] = []
 
-  if (typeof detail.callSign === 'string' && entry.action !== 'user.password.change') {
+  if (typeof detail.callSign === 'string' && entry.action.startsWith('live-contact.')) {
+    lines.push(`QSO con ${detail.callSign}`)
+  } else if (typeof detail.callSign === 'string' && entry.action !== 'user.password.change') {
     lines.push(`Cuenta ${detail.callSign}`)
   }
   if (typeof detail.code === 'string') lines.push(`Referencia ${detail.code}`)
@@ -114,7 +127,10 @@ export function detailLines(entry: AuditEntry): string[] {
     'reference.delete': ['name'],
     'activity.create': ['name', 'startTime', 'endDate', 'endTime', 'description'],
     'activity.delete': ['name'],
-    'log.upload': ['fileName', 'operator', 'contacts'],
+    'log.upload': ['fileName', 'operator', 'contacts', 'skipped'],
+    'live-log.create': ['operator'],
+    'live-contact.delete': ['operator', 'qsoAt'],
+    'live-contact.update': ['qsoAt'],
     'log.delete': ['fileName', 'operator', 'contacts'],
     'qsl-template.save': ['operator'],
     'qsl-template.delete': ['operator'],

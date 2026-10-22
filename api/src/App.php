@@ -17,6 +17,7 @@ use DxFondito\Controller\ActivityController;
 use DxFondito\Controller\AuditController;
 use DxFondito\Controller\CertificateController;
 use DxFondito\Controller\HealthController;
+use DxFondito\Controller\LiveController;
 use DxFondito\Controller\MailController;
 use DxFondito\Controller\LogController;
 use DxFondito\Controller\MigrationController;
@@ -32,6 +33,8 @@ use DxFondito\Http\HttpException;
 use DxFondito\Http\Request;
 use DxFondito\Http\Response;
 use DxFondito\Http\Router;
+use DxFondito\Live\LiveService;
+use DxFondito\Live\PdoLiveStore;
 use DxFondito\Logs\LocalFileStore;
 use DxFondito\Logs\LogService;
 use DxFondito\Logs\PdoLogStore;
@@ -112,13 +115,15 @@ final class App
             $rankingStore,
             $qslTemplates,
         );
+        $liveService = new LiveService(new PdoLiveStore($pdo), $activityStore, $users, $rankingStore, $audit);
+        $live = new LiveController($auth, $liveService);
         $logs = new LogController($auth, new LogService(
             $logStore,
             $activityStore,
             $users,
             new LocalFileStore($config->storageDir . '/logs'),
             $audit,
-        ));
+        ), $liveService);
 
         $qslService = new QslService(
             $qslTemplates,
@@ -191,6 +196,10 @@ final class App
         $router->add('GET', '/logs/{id}', fn (Request $request, array $params): Response => $logs->show($request, $params));
         $router->add('GET', '/logs/{id}/file', fn (Request $request, array $params): Response => $logs->file($request, $params));
         $router->add('DELETE', '/logs/{id}', fn (Request $request, array $params): Response => $logs->delete($request, $params));
+        $router->add('GET', '/activities/{id}/live', fn (Request $request, array $params): Response => $live->show($request, $params));
+        $router->add('POST', '/activities/{id}/live/sync', fn (Request $request, array $params): Response => $live->sync($request, $params));
+        $router->add('GET', '/activities/{id}/live/lookup', fn (Request $request, array $params): Response => $live->lookup($request, $params));
+        $router->add('GET', '/activities/{id}/adif', fn (Request $request, array $params): Response => $live->adif($request, $params));
         $router->add('GET', '/activities/{id}/qsl-templates', fn (Request $request, array $params): Response => $qsl->list($request, $params));
         $router->add('GET', '/activities/{id}/qsl-templates/{operatorId}/image', fn (Request $request, array $params): Response => $qsl->image($request, $params));
         $router->add('POST', '/activities/{id}/qsl-templates/{operatorId}', fn (Request $request, array $params): Response => $qsl->save($request, $params));

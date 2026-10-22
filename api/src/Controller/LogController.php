@@ -10,6 +10,7 @@ use DxFondito\Http\HttpException;
 use DxFondito\Http\PathId;
 use DxFondito\Http\Request;
 use DxFondito\Http\Response;
+use DxFondito\Live\LiveService;
 use DxFondito\Logs\Contact;
 use DxFondito\Logs\Log;
 use DxFondito\Logs\LogService;
@@ -24,6 +25,7 @@ final class LogController
     public function __construct(
         private readonly Authenticator $auth,
         private readonly LogService $logs,
+        private readonly LiveService $live,
     ) {
     }
 
@@ -44,7 +46,7 @@ final class LogController
 
         return match ($request->string('mode')) {
             'preview' => Response::json($this->logs->preview($actor, $activityId, $operatorId, $file)),
-            'save' => Response::json($this->data($this->logs->save($actor, $activityId, $operatorId, $file), $actor), 201),
+            'save' => Response::json($this->data($this->logs->save($actor, $activityId, $operatorId, $file, $request->string('skipRepeated') === '1'), $actor), 201),
             default => throw new HttpException(422, 'The mode must be preview or save'),
         };
     }
@@ -82,7 +84,14 @@ final class LogController
     public function file(Request $request, array $params): Response
     {
         $actor = $this->auth->requireUser($request);
-        $file = $this->logs->file($actor, PathId::from($params, self::NOT_FOUND));
+        $id = PathId::from($params, self::NOT_FOUND);
+        $log = $this->logs->find($id);
+        // A live log has no stored file. The file comes from its contacts.
+        if ($log->isLive() && LogService::canManage($actor, $log)) {
+            $file = $this->live->logFile($log);
+        } else {
+            $file = $this->logs->file($actor, $id);
+        }
 
         return Response::download($file['content'], $file['name']);
     }

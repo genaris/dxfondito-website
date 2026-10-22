@@ -2,8 +2,8 @@
 
 | Item    | Value      |
 | ------- | ---------- |
-| Status  | Draft 8    |
-| Date    | 2026-10-01 |
+| Status  | Draft 9    |
+| Date    | 2026-10-22 |
 
 ## 1. Purpose
 
@@ -354,6 +354,32 @@ Until 2026, the group sent them by hand. Thus an administrator can also mark the
 - **FR-AUD-3** Each entry of the record has the user, the date, the time and the action.
 - **FR-AUD-4** An administrator can see the record.
 
+### 6.9 Live entry of contacts
+
+The operators enter the contacts of an activity on a page of the system, during the activity, without a logger program.
+The upload of ADIF files stays (section 6.4).
+
+- **FR-LIVE-1** A signed-in user enters contacts on the live page of an activity: the call sign, the time, the reports, the name and notes.
+- **FR-LIVE-2** All signed-in users can enter and correct contacts of all active operators on the live page. This is an exception to FR-LOG-3 and FR-LOG-4: the user at the computer enters the contacts of the operator at the microphone.
+  The system keeps the user who entered each contact.
+- **FR-LIVE-3** The contacts of an operator on the live page go to one live log of the operator in the activity. The live log is a log of FR-LOG-19 to FR-LOG-27.
+- **FR-LIVE-4** The station call sign of a live contact is the call sign of the account with /A in a DPS activity, and without a suffix in an EFE activity.
+- **FR-LIVE-5** The user writes the frequency in MHz. The system gives the band, and the mode of the program on that band: SSB on 80 m and 40 m, FM on 2 m. The user can change the mode. The program has only voice modes.
+- **FR-LIVE-6** The time of a contact is the UTC time of the device when the user starts the call sign. The user can correct it. For contacts after the activity, the user enters the date and the time.
+- **FR-LIVE-7** For a complete call sign, the page shows the name (address book, else official lists), the province or the country, the points of the participant in the season, and if the contact gives a new point.
+  It also shows the other contacts of the participant in the activity, with a warning for a second contact with the same station.
+- **FR-LIVE-8** The user notes call signs that wait for a call, and moves them to the form later.
+- **FR-LIVE-9** The page shows all contacts of the activity, of all browsers, the newest first. A click opens a contact for a correction or a deletion.
+- **FR-LIVE-10** The page keeps each change in the browser first. Without a connection, the user continues to enter contacts. The page sends them when the connection comes back, and shows the number of changes that wait.
+  The page opens again without a connection, with the last data.
+- **FR-LIVE-11** Two or more users can enter contacts at the same time, each in a browser. Each browser has its own frequency, operator and waiting call signs.
+  If two browsers change the same contact, the second browser shows the two versions, and the user keeps one.
+- **FR-LIVE-12** The page warns when the clock of the device differs from the clock of the system by more than a minute.
+- **FR-LIVE-13** The operator and the administrators download an ADIF file with all contacts of the operator in an activity, from the live log and the uploaded logs, for QRZ.com and LdA. The notes go in the `COMMENT` field.
+- **FR-LIVE-14** The summary of an upload (FR-LOG-10) shows the records that are already in the live log of the operator: the same base call sign, two minutes or less apart.
+  The user saves them or leaves them out. The original file stays complete, and the log shows the number of records that the user left out.
+- **FR-LIVE-15** The record of actions has the start of each live log, and each correction and deletion of a live contact. A new contact has no entry: an activity has some hundreds.
+
 ## 7. Constraints
 
 - **C-1** The system operates on the DonWeb shared host of the group ("Emprendedor" plan).
@@ -406,6 +432,7 @@ The group made these decisions on 2026-10-01.
 | D-28     | The name on the public QSL card comes from the official lists of licensees of Argentina and Uruguay, not from the log (FR-QSL-3a). These lists are public sources. A participant of a different country gets no name. Decision of 2026-10-02. |
 | D-30     | The certificate shows the call sign and the full name of the participant, not the date. The certificate by e-mail can have a name of the address book: a participant that is not in the official lists gets a certificate with a name. The saved templates keep the box of the date for the name. Decision of 2026-10-13. |
 | D-29     | The QSL mailer sends on request of an administrator, through the SMTP server of the host, from one mailbox of the group. One message for each participant and activity. The logs give the addresses, and an address book corrects them. Decision of 2026-10-05. |
+| D-31     | The operators enter the contacts on a live page of the system, also without a connection for some minutes. All signed-in users enter the contacts of all operators there (FR-LIVE-2). The page keeps the changes in the browser and sends them later. The upload of ADIF files stays, and the system warns about records already in the live log (FR-LIVE-14). Decision of 2026-10-22. |
 | D-27     | Each contact gives a QSL card, with the template of its operator for its activity. Only the first contact with a reference in a season gives a point (FR-QSL-7, R-OPR-5). This replaces D-9 for the QSL cards, and D-24. Decision of 2026-10-02. |
 
 ## 9. Open questions

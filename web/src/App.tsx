@@ -18,6 +18,7 @@ import { ActivitiesPage } from './pages/ActivitiesPage.tsx'
 import { ActivityPage } from './pages/ActivityPage.tsx'
 import { ChangePasswordPage } from './pages/ChangePasswordPage.tsx'
 import { HealthPage } from './pages/HealthPage.tsx'
+import { LivePage } from './pages/LivePage.tsx'
 import { LogPage } from './pages/LogPage.tsx'
 import { ParticipantPage } from './pages/ParticipantPage.tsx'
 import { ProgramPage } from './pages/ProgramPage.tsx'
@@ -134,6 +135,12 @@ function Page({ path }: { path: string }) {
     ) : (
       <NotFound />
     )
+  }
+  const livePage = matchPath('/actividad/:id/en-vivo', path)
+  if (livePage) {
+    // After a sign-in, the user stays on the page: the queue of the page waits for the session.
+    if (!user) return <SignInPage stay />
+    return /^\d+$/.test(livePage.id) ? <LivePage key={livePage.id} activityId={Number(livePage.id)} /> : <NotFound />
   }
   const activityPage = matchPath('/actividad/:id', path)
   if (activityPage) {

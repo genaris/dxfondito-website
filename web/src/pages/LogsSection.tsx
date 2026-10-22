@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { listAccounts } from '../accounts.ts'
 import type { Account } from '../accounts.ts'
 import { formatUtc } from '../audit.ts'
+import { adifUrl } from '../live.ts'
 import {
   deleteLog,
   invalidRecordText,
@@ -47,7 +48,10 @@ export function LogsSection({ activityId, user, onChange }: { activityId: number
 
   async function remove(log: Log) {
     // FR-LOG-24: a confirmation before the deletion.
-    const question = `¿Borrar el log ${log.fileName} de ${log.operator.callSign}? Se borran también sus ${log.contactCount} contactos.`
+    const question =
+      log.source === 'live'
+        ? `¿Borrar el log en vivo de ${log.operator.callSign}? Se borran sus ${log.contactCount} QSOs cargados en la página en vivo.`
+        : `¿Borrar el log ${log.fileName} de ${log.operator.callSign}? Se borran también sus ${log.contactCount} contactos.`
     if (!window.confirm(question)) return
     setNotice(null)
     setError(null)
@@ -111,11 +115,14 @@ export function LogsSection({ activityId, user, onChange }: { activityId: number
               {list.logs.map((log) => (
                 <tr key={log.id}>
                   <td>
-                    <a href={href(`/log/${log.id}`)}>{log.fileName}</a>
+                    <a href={href(`/log/${log.id}`)}>{log.source === 'live' ? 'En vivo' : log.fileName}</a>
                   </td>
                   <td>{log.operator.callSign}</td>
                   <td className="nowrap">{formatUtc(log.uploadedAt)}</td>
-                  <td>{log.contactCount}</td>
+                  <td>
+                    {log.contactCount}
+                    {log.skippedCount > 0 && <span className="hint"> ({log.skippedCount} omitidos: ya estaban en vivo)</span>}
+                  </td>
                   <td className="row-actions">
                     {log.canManage && (
                       <>
@@ -134,7 +141,27 @@ export function LogsSection({ activityId, user, onChange }: { activityId: number
           </table>
         </div>
       )}
+      {list.kind === 'ready' && <AdifLinks activityId={activityId} logs={list.logs} />}
     </section>
+  )
+}
+
+/**
+ * The ADIF file of each operator, for QRZ.com and LdA: all contacts of the operator in the activity, of the live
+ * log and of the uploaded logs (FR-LIVE-13). For the operator and the administrators.
+ */
+function AdifLinks({ activityId, logs }: { activityId: number; logs: Log[] }) {
+  const operators = new Map(logs.filter((log) => log.canManage).map((log) => [log.operator.id, log.operator.callSign]))
+  if (operators.size === 0) return null
+  return (
+    <p className="actions">
+      <span>ADIF para QRZ y LdA:</span>
+      {[...operators].map(([id, callSign]) => (
+        <a key={id} className="chip" href={adifUrl(activityId, id)}>
+          {callSign}
+        </a>
+      ))}
+    </p>
   )
 }
 
@@ -196,12 +223,12 @@ function UploadForm({
     }
   }
 
-  async function save() {
+  async function save(skipRepeated: boolean) {
     if (!file) return
     setBusy(true)
     setError(null)
     try {
-      onDone(await saveLog(activityId, file, isAdministrator ? operatorId : null))
+      onDone(await saveLog(activityId, file, isAdministrator ? operatorId : null, skipRepeated))
     } catch (failure) {
       setError(uploadError(failure))
       setBusy(false)
@@ -260,8 +287,13 @@ function UploadForm({
       {summary && (
         <div className="actions">
           {summary.validCount > 0 && (
-            <button type="button" onClick={() => void save()} disabled={busy}>
+            <button type="button" onClick={() => void save(false)} disabled={busy}>
               {busy ? 'Guardando…' : `Guardar ${summary.validCount} contactos`}
+            </button>
+          )}
+          {summary.repeated.length > 0 && summary.validCount > summary.repeated.length && (
+            <button type="button" onClick={() => void save(true)} disabled={busy}>
+              Guardar sin los repetidos ({summary.validCount - summary.repeated.length})
             </button>
           )}
           <button type="button" onClick={onCancel} disabled={busy}>
@@ -300,6 +332,23 @@ function SummaryView({ summary }: { summary: Summary }) {
               <li key={record.record}>{invalidRecordText(record)}</li>
             ))}
           </ul>
+        </>
+      )}
+      {summary.repeated.length > 0 && (
+        <>
+          <p className="warning-text">
+            {summary.repeated.length === 1
+              ? `1 registro ya está en el log en vivo de ${summary.operator.callSign}:`
+              : `${summary.repeated.length} registros ya están en el log en vivo de ${summary.operator.callSign}:`}
+          </p>
+          <ul className="summary-list">
+            {summary.repeated.map((record) => (
+              <li key={record.record}>
+                Registro {record.record}: {record.callSign}, {record.qsoAt.slice(0, 10)} {record.qsoAt.slice(11, 16)} UTC.
+              </li>
+            ))}
+          </ul>
+          <p className="hint">Puede guardarlos igual u omitirlos. El archivo original se guarda completo.</p>
         </>
       )}
       {warnings.length > 0 && (

@@ -12,6 +12,9 @@ final class MemoryRankingStore implements RankingStore
     /** @var list<ContactRow> */
     public array $contacts = [];
 
+    /** @var list<array{callSign: string, referenceId: int, seriesCode: string, number: int}> */
+    public array $seasonReferences = [];
+
     public function levels(): array
     {
         return [5, 10, 15];
@@ -19,7 +22,7 @@ final class MemoryRankingStore implements RankingStore
 
     public function seasonReferences(int $season): array
     {
-        return [];
+        return $this->seasonReferences;
     }
 
     public function byParticipant(string $baseCallSign): array
