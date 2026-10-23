@@ -317,13 +317,7 @@ export function LivePage({ activityId }: { activityId: number }) {
       // The automatic time of the contact is the time of the first character (FR-LIVE-6). A new call sign
       // after an empty field gives a new time.
       const automatic = callSign === '' ? null : (value.qsoAt ?? deviceTime())
-      const helped = isCompleteCallSign(callSign) ? (callInfo(callSign, lookup, []).name ?? '') : ''
-      return {
-        ...value,
-        callSign,
-        qsoAt: device.manualTime ? value.qsoAt : automatic,
-        name: value.nameTouched ? value.name : helped,
-      }
+      return { ...value, callSign, qsoAt: device.manualTime ? value.qsoAt : automatic }
     })
   }
 
@@ -337,7 +331,7 @@ export function LivePage({ activityId }: { activityId: number }) {
     const input: ContactInput = {
       operatorId: current.id,
       callSign: draft.callSign,
-      name: draft.name.trim(),
+      name: name.trim(),
       qsoAt,
       frequency,
       mode,
@@ -387,6 +381,8 @@ export function LivePage({ activityId }: { activityId: number }) {
   }
 
   const info = isCompleteCallSign(draft.callSign) ? callInfo(draft.callSign, lookup, helpContacts(null)) : null
+  // The name of the help until the user changes it. The help table can come after the call sign.
+  const name = draft.nameTouched ? draft.name : (info?.name ?? '')
   const shown = device.filter === 'operator' && current ? list.filter((row) => row.operatorId === current.id) : list
   const unsent = pendingCount(data)
   const errors = list.filter((row) => row.state === 'error' || row.state === 'conflict').length
@@ -521,12 +517,53 @@ export function LivePage({ activityId }: { activityId: number }) {
             manual={device.manualTime}
             onChange={(qsoAt) => setDraft((value) => ({ ...value, qsoAt }))}
           />
+          {/* Next to the call sign: on a phone, the keyboard on the screen makes a scroll difficult (FR-LIVE-8). */}
+          <div className="live-waiting">
+            <label>
+              En espera
+              <input
+                ref={waitingInput}
+                placeholder="Anotar indicativo"
+                title="Alt+E"
+                autoCapitalize="characters"
+                autoComplete="off"
+                spellCheck={false}
+                enterKeyHint="enter"
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter') return
+                  // Enter adds the call sign. It does not save the contact of the form.
+                  event.preventDefault()
+                  addWaiting(event.currentTarget.value)
+                  event.currentTarget.value = ''
+                }}
+              />
+            </label>
+            {device.waiting.length > 0 && (
+              <div className="live-chips">
+                {device.waiting.map((callSign, index) => (
+                  <span key={`${callSign}-${index}`} className="waiting-chip">
+                    <button type="button" className="link" onClick={() => callWaiting(index)} title="Pasar al formulario">
+                      {callSign}
+                    </button>
+                    <button
+                      type="button"
+                      className="link"
+                      aria-label={`Quitar ${callSign}`}
+                      onClick={() => changeDevice({ waiting: device.waiting.filter((_, position) => position !== index) })}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <CallHelp info={info} reference={lookup?.reference ?? activity.reference.code} station={current?.station ?? null} hasLookup={lookup !== null} />
         <label>
           Nombre
           <input
-            value={draft.name}
+            value={name}
             onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value, nameTouched: true }))}
             autoComplete="off"
           />
@@ -553,41 +590,6 @@ export function LivePage({ activityId }: { activityId: number }) {
           </button>
         </div>
       </form>
-
-      <section className="live-waiting" aria-label="En espera">
-        <h3>En espera</h3>
-        <div className="live-chips">
-          {device.waiting.map((callSign, index) => (
-            <span key={`${callSign}-${index}`} className="waiting-chip">
-              <button type="button" className="link" onClick={() => callWaiting(index)} title="Pasar al formulario">
-                {callSign}
-              </button>
-              <button
-                type="button"
-                className="link"
-                aria-label={`Quitar ${callSign}`}
-                onClick={() => changeDevice({ waiting: device.waiting.filter((_, position) => position !== index) })}
-              >
-                ✕
-              </button>
-            </span>
-          ))}
-          <input
-            ref={waitingInput}
-            aria-label="Anotar un indicativo en espera"
-            placeholder="Anotar (Alt+E)"
-            autoCapitalize="characters"
-            autoComplete="off"
-            spellCheck={false}
-            onKeyDown={(event) => {
-              if (event.key !== 'Enter') return
-              event.preventDefault()
-              addWaiting(event.currentTarget.value)
-              event.currentTarget.value = ''
-            }}
-          />
-        </div>
-      </section>
 
       <section>
         <div className="live-head">
