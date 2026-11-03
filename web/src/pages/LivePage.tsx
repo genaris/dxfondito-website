@@ -608,7 +608,7 @@ export function LivePage({ activityId }: { activityId: number }) {
                 className={device.filter === 'operator' ? 'chip active' : 'chip'}
                 onClick={() => changeDevice({ filter: 'operator' })}
               >
-                Sólo {current.station}
+                Solo {current.station}
               </button>
             </div>
           )}

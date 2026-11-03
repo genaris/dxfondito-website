@@ -22,6 +22,7 @@ describe('bandOf', () => {
   it('gives the band and the mode of the program', () => {
     expect(bandOf('3.650')).toEqual({ band: '80m', mode: 'SSB' })
     expect(bandOf('7.130')).toEqual({ band: '40m', mode: 'SSB' })
+    expect(bandOf('28.400')).toEqual({ band: '10m', mode: 'SSB' })
     expect(bandOf('145.750')).toEqual({ band: '2m', mode: 'FM' })
   })
 

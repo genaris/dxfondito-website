@@ -144,7 +144,7 @@ const BANDS: { lower: number; upper: number; band: string; mode: string | null }
   { lower: 18.068, upper: 18.168, band: '17m', mode: null },
   { lower: 21.0, upper: 21.45, band: '15m', mode: null },
   { lower: 24.89, upper: 24.99, band: '12m', mode: null },
-  { lower: 28.0, upper: 29.7, band: '10m', mode: null },
+  { lower: 28.0, upper: 29.7, band: '10m', mode: 'SSB' },
   { lower: 50.0, upper: 54.0, band: '6m', mode: null },
   { lower: 144.0, upper: 148.0, band: '2m', mode: 'FM' },
   { lower: 222.0, upper: 225.0, band: '1.25m', mode: null },
@@ -162,7 +162,7 @@ export function normalizeFrequency(text: string): string | null {
 }
 
 /**
- * The band of a frequency, and the mode of the program on that band: SSB on 80 m and 40 m, FM on 2 m.
+ * The band of a frequency, and the mode of the program on that band: SSB on 80 m, 40 m and 10 m, FM on 2 m.
  * The mode is null out of the bands of the program.
  */
 export function bandOf(frequency: string): { band: string | null; mode: string | null } {

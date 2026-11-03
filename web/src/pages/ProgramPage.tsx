@@ -56,7 +56,6 @@ export function ProgramPage() {
           <p>
             {PROGRAM.bands}. {PROGRAM.modes}.
           </p>
-          <p>{PROGRAM.power}</p>
         </section>
         <section className="card">
           <h3>Horarios</h3>

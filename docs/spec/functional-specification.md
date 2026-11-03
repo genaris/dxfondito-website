@@ -364,7 +364,7 @@ The upload of ADIF files stays (section 6.4).
   The system keeps the user who entered each contact.
 - **FR-LIVE-3** The contacts of an operator on the live page go to one live log of the operator in the activity. The live log is a log of FR-LOG-19 to FR-LOG-27.
 - **FR-LIVE-4** The station call sign of a live contact is the call sign of the account with /A in a DPS activity, and without a suffix in an EFE activity.
-- **FR-LIVE-5** The user writes the frequency in MHz. The system gives the band, and the mode of the program on that band: SSB on 80 m and 40 m, FM on 2 m. The user can change the mode. The program has only voice modes.
+- **FR-LIVE-5** The user writes the frequency in MHz. The system gives the band, and the mode of the program on that band: SSB on 80 m, 40 m and 10 m, FM on 2 m. The user can change the mode. The program has only voice modes.
 - **FR-LIVE-6** The time of a contact is the UTC time of the device when the user starts the call sign. The user can correct it. For contacts after the activity, the user enters the date and the time.
 - **FR-LIVE-7** For a complete call sign, the page shows the name (address book, else official lists), the province or the country, the points of the participant in the season, and if the contact gives a new point.
   It also shows the other contacts of the participant in the activity, with a warning for a second contact with the same station.
