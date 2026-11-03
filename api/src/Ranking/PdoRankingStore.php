@@ -59,6 +59,28 @@ final class PdoRankingStore implements RankingStore
         );
     }
 
+    public function seasonFirstQsos(int $season): array
+    {
+        // The index contacts_activity_call has the base call sign and the time: no read of the contact lines.
+        $statement = ($this->pdo)()->prepare(
+            'SELECT c.base_call_sign, c.activity_id, MIN(c.qso_at) AS qso_at
+             FROM activities a
+             JOIN contacts c ON c.activity_id = a.id
+             WHERE a.season = ?
+             GROUP BY c.base_call_sign, c.activity_id'
+        );
+        $statement->execute([$season]);
+
+        return array_map(
+            static fn (array $row): array => [
+                'callSign' => $row['base_call_sign'],
+                'activityId' => (int) $row['activity_id'],
+                'qsoAt' => $row['qso_at'],
+            ],
+            $statement->fetchAll(),
+        );
+    }
+
     public function byParticipant(string $baseCallSign): array
     {
         return $this->rows(self::SELECT . ' WHERE c.base_call_sign = ?', [$baseCallSign]);

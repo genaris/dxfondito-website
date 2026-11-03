@@ -94,6 +94,8 @@ export interface ActivityDetail extends Activity {
   operators: string[]
   /** The different base call signs of the contacts (FR-PUB-14a). */
   participantCount: number
+  /** The participants with their first contact of the season in this activity (FR-PUB-14a). */
+  newParticipantCount: number
   /** All contacts, in the order of time. A participant can have more than one contact. */
   contacts: ActivityContact[]
 }

@@ -171,6 +171,7 @@ The call sign of the user identifies the account.
 - **FR-PUB-13c** The activity list shows 25, 50 or 100 activities on each page, as the ranking (FR-PUB-4a).
 - **FR-PUB-14** The page of an activity shows its data, its operators and the list of all its contacts.
 - **FR-PUB-14a** The page shows the number of participants (different base call signs) and the number of contacts (QSOs).
+  It also shows the number of new participants: their first contact of the season is in this activity.
 - **FR-PUB-14b** Below these numbers, the page shows the entities of its contacts as a bar chart: the number of entities, and the QSOs of each entity.
   An entity is a province of Argentina (the first letter of the suffix of the call sign, such as D in LU1DAB) or a different country (the prefix).
   For an Argentine portable station, a suffix of one letter is the province, such as A in LU2GAC/A. A suffix G or X does not tell the province: the base call sign tells it.

@@ -93,6 +93,7 @@ final class ActivityController
                 $this->logs->operators($activity->id),
             ),
             'participantCount' => Calculator::participantCount($contacts),
+            'newParticipantCount' => Calculator::newParticipantCount($this->ranking->seasonFirstQsos($activity->season), $activity->id),
             'contacts' => array_map(
                 static fn (ContactRow $contact): array => [
                     'id' => $contact->id,

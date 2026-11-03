@@ -20,6 +20,14 @@ interface RankingStore
     public function seasonReferences(int $season): array;
 
     /**
+     * The time of the first contact of each participant in each activity of the season.
+     * One line for each participant and activity, not for each contact.
+     *
+     * @return list<array{callSign: string, activityId: int, qsoAt: string}>
+     */
+    public function seasonFirstQsos(int $season): array;
+
+    /**
      * @return list<ContactRow> The contacts of one participant in all seasons.
      */
     public function byParticipant(string $baseCallSign): array;

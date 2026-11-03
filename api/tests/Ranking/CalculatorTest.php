@@ -151,6 +151,28 @@ final class CalculatorTest extends TestCase
         self::assertSame(2, Calculator::participantCount($contacts));
     }
 
+    public function testANewParticipantHasTheFirstContactOfTheSeasonInTheActivity(): void
+    {
+        $firstQsos = [
+            // PY1A was in activity 1 before. CX1A and LU2ABC are new in activity 2.
+            ['callSign' => 'PY1A', 'activityId' => 1, 'qsoAt' => '2026-05-10 12:00:00'],
+            ['callSign' => 'PY1A', 'activityId' => 2, 'qsoAt' => '2026-05-17 12:00:00'],
+            ['callSign' => 'CX1A', 'activityId' => 2, 'qsoAt' => '2026-05-17 13:00:00'],
+            ['callSign' => 'LU2ABC', 'activityId' => 2, 'qsoAt' => '2026-05-17 14:00:00'],
+            // LU2ABC was in activity 3 later. The lines are in any order.
+            ['callSign' => 'LU2ABC', 'activityId' => 3, 'qsoAt' => '2026-05-24 12:00:00'],
+            // Two activities on the same day: the first contact gives the activity.
+            ['callSign' => 'CX2B', 'activityId' => 4, 'qsoAt' => '2026-05-24 13:00:00'],
+            ['callSign' => 'CX2B', 'activityId' => 3, 'qsoAt' => '2026-05-24 15:00:00'],
+        ];
+
+        self::assertSame(1, Calculator::newParticipantCount($firstQsos, 1));
+        self::assertSame(2, Calculator::newParticipantCount($firstQsos, 2));
+        self::assertSame(0, Calculator::newParticipantCount($firstQsos, 3));
+        self::assertSame(1, Calculator::newParticipantCount($firstQsos, 4));
+        self::assertSame(0, Calculator::newParticipantCount([], 1));
+    }
+
     /**
      * @return array{callSign: string, referenceId: int, seriesCode: string, number: int}
      */

@@ -25,6 +25,19 @@ final class MemoryRankingStore implements RankingStore
         return $this->seasonReferences;
     }
 
+    public function seasonFirstQsos(int $season): array
+    {
+        $first = [];
+        foreach ($this->bySeason($season) as $row) {
+            $key = $row->baseCallSign . '|' . $row->activityId;
+            if (!isset($first[$key]) || $row->qsoAt < $first[$key]['qsoAt']) {
+                $first[$key] = ['callSign' => $row->baseCallSign, 'activityId' => $row->activityId, 'qsoAt' => $row->qsoAt];
+            }
+        }
+
+        return array_values($first);
+    }
+
     public function byParticipant(string $baseCallSign): array
     {
         return array_values(array_filter($this->contacts, static fn (ContactRow $row): bool => $row->baseCallSign === $baseCallSign));

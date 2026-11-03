@@ -145,6 +145,26 @@ final class Calculator
     }
 
     /**
+     * The number of new participants of an activity: their first contact of the season is in this activity
+     * (FR-PUB-14a). Two activities with the same time of the first contact: the lower activity id.
+     *
+     * @param iterable<array{callSign: string, activityId: int, qsoAt: string}> $firstQsos
+     *   The first contact of each participant in each activity of the season.
+     */
+    public static function newParticipantCount(iterable $firstQsos, int $activityId): int
+    {
+        $first = [];
+        foreach ($firstQsos as $item) {
+            $key = $item['callSign'];
+            if (!isset($first[$key]) || [$item['qsoAt'], $item['activityId']] < [$first[$key]['qsoAt'], $first[$key]['activityId']]) {
+                $first[$key] = $item;
+            }
+        }
+
+        return count(array_filter($first, static fn (array $item): bool => $item['activityId'] === $activityId));
+    }
+
+    /**
      * Each call sign of the contacts, as in the log, with its number of contacts. The browser finds the province or
      * the country of each call sign for the statistics.
      *

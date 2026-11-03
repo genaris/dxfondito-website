@@ -65,7 +65,15 @@ export function ActivityPage({ id }: { id: number }) {
         <dt>Operadores</dt>
         <dd>{activity.operators.length > 0 ? activity.operators.join(', ') : 'Todavía no hay logs.'}</dd>
         <dt>Participantes</dt>
-        <dd>{activity.participantCount}</dd>
+        <dd>
+          {activity.participantCount}
+          {activity.participantCount > 0 && (
+            <span className="hint">
+              {' '}
+              · {activity.newParticipantCount} {activity.newParticipantCount === 1 ? 'nuevo' : 'nuevos'} en la temporada
+            </span>
+          )}
+        </dd>
         <dt>QSOs</dt>
         <dd>{activity.contacts.length}</dd>
       </dl>
