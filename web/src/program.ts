@@ -70,7 +70,7 @@ export const CALENDAR: { season: number; events: CalendarEvent[] } = {
     { date: '2026-10-31', series: 'DPS', name: 'Estación Saludable Lagos de Palermo' },
     { date: '2026-11-08', series: 'EFE', name: 'Día Mundial de la Radiología' },
     { date: '2026-11-15', series: 'DPS', name: 'Estación Saludable Plaza Almagro' },
-    { date: '2026-11-21', series: 'EFE', name: 'Día del Enfermero' },
+    { date: '2026-11-21', series: 'EFE', name: 'Día Nacional de la Enfermería' },
     { date: '2026-11-22', series: 'EFE', name: 'Natalicio de la Dra. Cecilia Grierson' },
     { date: '2026-11-29', series: 'DPS', name: 'Estación Saludable Parque Los Andes' },
     { date: '2026-12-03', series: 'EFE', name: 'Día del Médico' },
