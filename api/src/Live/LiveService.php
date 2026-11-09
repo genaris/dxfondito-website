@@ -15,6 +15,7 @@ use DxFondito\Audit\AuditLog;
 use DxFondito\Audit\Changes;
 use DxFondito\Auth\User;
 use DxFondito\Auth\UserStore;
+use DxFondito\CallSign;
 use DxFondito\Http\HttpException;
 use DxFondito\Logs\Log;
 use DxFondito\Logs\LogSummary;
@@ -135,15 +136,23 @@ final class LiveService
      * For the operator and the administrators, as the original file of a log (FR-LOG-18).
      *
      * @param string|null $station Only the contacts of this station call sign, such as LU2AOG/A.
+     * @param string|null $suffix The suffix of the station in this file, such as D for an EFE activity away from home.
+     *     Only for the contacts without a suffix. The stored contacts do not change.
      * @return array{name: string, content: string}
      */
-    public function adif(User $actor, int $activityId, int $operatorId, ?string $station): array
+    public function adif(User $actor, int $activityId, int $operatorId, ?string $station, ?string $suffix = null): array
     {
         $activity = $this->activity($activityId);
         if (!$actor->isAdministrator() && $actor->id !== $operatorId) {
             throw new HttpException(403, 'Only the operator or an administrator can do this');
         }
         $operator = $this->users->findById($operatorId) ?? throw new HttpException(404, 'The operator does not exist');
+        if ($suffix !== null) {
+            $suffix = ltrim(CallSign::normalize($suffix), '/');
+            if (preg_match('/^[A-Z0-9]{1,4}$/', $suffix) !== 1) {
+                throw new HttpException(422, 'The suffix is not valid');
+            }
+        }
         $records = $this->live->operatorRecords($activity->id, $operator->id);
         if ($station !== null) {
             $records = array_values(array_filter($records, static fn (AdifRecord $record): bool => $record->station === $station));
@@ -152,10 +161,16 @@ final class LiveService
             throw new HttpException(404, 'The operator has no contacts in the activity');
         }
 
+        $fileStation = $station ?? $operator->callSign;
+        if ($suffix !== null) {
+            $records = array_map(static fn (AdifRecord $record): AdifRecord => $record->withSuffix($suffix), $records);
+            $fileStation = $fileStation === $operator->callSign ? $fileStation . '/' . $suffix : $fileStation;
+        }
+
         $name = sprintf(
             '%s_%s_%s.adi',
             $activity->reference->referenceCode(),
-            str_replace('/', '-', $station ?? $operator->callSign),
+            str_replace('/', '-', $fileStation),
             str_replace('-', '', $activity->startDate),
         );
 

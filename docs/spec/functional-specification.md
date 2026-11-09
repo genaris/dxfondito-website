@@ -377,6 +377,7 @@ The upload of ADIF files stays (section 6.4).
   If two browsers change the same contact, the second browser shows the two versions, and the user keeps one.
 - **FR-LIVE-12** The page warns when the clock of the device differs from the clock of the system by more than a minute.
 - **FR-LIVE-13** The operator and the administrators download an ADIF file with all contacts of the operator in an activity, from the live log and the uploaded logs, for QRZ.com and LdA. The notes go in the `COMMENT` field.
+  For an EFE activity away from home, the user writes a suffix when downloading the file, such as D: the contacts without a suffix have LU2AOG/D in `STATION_CALLSIGN` in that file. The stored contacts do not change.
 - **FR-LIVE-14** The summary of an upload (FR-LOG-10) shows the records that are already in the live log of the operator: the same base call sign, two minutes or less apart.
   The user saves them or leaves them out. The original file stays complete, and the log shows the number of records that the user left out.
 - **FR-LIVE-15** The record of actions has the start of each live log, and each correction and deletion of a live contact. A new contact has no entry: an activity has some hundreds.

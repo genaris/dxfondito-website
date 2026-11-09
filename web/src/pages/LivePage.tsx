@@ -3,7 +3,6 @@ import type { FormEvent, KeyboardEvent, ReactNode } from 'react'
 import { activityPeriod } from '../activities.ts'
 import { ApiError } from '../api.ts'
 import {
-  adifUrl,
   bandOf,
   callInfo,
   clockOffset,
@@ -42,6 +41,7 @@ import {
 import type { QueueData, Row } from '../liveQueue.ts'
 import { href } from '../router.ts'
 import { useSession } from '../useSession.ts'
+import { AdifLinks } from './AdifLinks.tsx'
 import { KeepAwake } from './admin/useSendProgress.ts'
 
 /** The data of the activity for the page. The page keeps the last copy, for a reload without a connection. */
@@ -700,13 +700,11 @@ export function LivePage({ activityId }: { activityId: number }) {
         <section>
           <h3>ADIF para QRZ y LdA</h3>
           <p className="hint">Todos los QSOs del operador en la actividad: los cargados acá y los de los logs subidos.</p>
-          <p className="actions">
-            {canExport.map((operator) => (
-              <a key={operator.id} className="chip" href={adifUrl(activity.id, operator.id)}>
-                {operator.station}
-              </a>
-            ))}
-          </p>
+          <AdifLinks
+            activityId={activity.id}
+            series={activity.reference.series}
+            operators={canExport.map((operator) => ({ id: operator.id, label: operator.station }))}
+          />
         </section>
       )}
     </div>

@@ -68,7 +68,8 @@ final class LiveController
         $actor = $this->auth->requireUser($request);
         $operatorId = PathId::from(['id' => (string) ($request->query['operatorId'] ?? '')], 'The operator does not exist');
         $station = is_string($request->query['station'] ?? null) && $request->query['station'] !== '' ? $request->query['station'] : null;
-        $file = $this->live->adif($actor, PathId::from($params, self::NOT_FOUND), $operatorId, $station);
+        $suffix = is_string($request->query['suffix'] ?? null) && $request->query['suffix'] !== '' ? $request->query['suffix'] : null;
+        $file = $this->live->adif($actor, PathId::from($params, self::NOT_FOUND), $operatorId, $station, $suffix);
 
         return Response::download($file['content'], $file['name']);
     }

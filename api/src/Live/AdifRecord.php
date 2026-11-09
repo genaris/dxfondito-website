@@ -28,4 +28,28 @@ final class AdifRecord
         public readonly ?string $notes,
     ) {
     }
+
+    /**
+     * The record with the suffix on the station call sign. A station with a suffix, such as LU2AOG/A, stays the same.
+     */
+    public function withSuffix(string $suffix): self
+    {
+        if ($this->station !== $this->operator) {
+            return $this;
+        }
+
+        return new self(
+            $this->callSign,
+            $this->qsoAt,
+            $this->frequency,
+            $this->band,
+            $this->mode,
+            $this->rstSent,
+            $this->rstRcvd,
+            $this->name,
+            $this->station . '/' . $suffix,
+            $this->operator,
+            $this->notes,
+        );
+    }
 }

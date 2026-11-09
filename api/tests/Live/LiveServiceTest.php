@@ -285,6 +285,22 @@ final class LiveServiceTest extends TestCase
         $this->assertStatus(404, fn () => $this->service->adif($this->admin, $this->activityId, $this->operator->id, 'LU2AOG/M'));
     }
 
+    public function testTheSuffixOfTheAdifFileGoesOnlyOnTheContactsWithoutASuffix(): void
+    {
+        $this->live->uploadedRecords[$this->activityId . ':' . $this->operator->id] = [
+            new AdifRecord('CX2AB', '2026-10-04 14:00:00', '7.130', '40m', 'SSB', '59', '59', null, 'LU2AOG', 'LU2AOG', null),
+            new AdifRecord('CX3CD', '2026-10-04 14:10:00', '7.130', '40m', 'SSB', '59', '59', null, 'LU2AOG/A', 'LU2AOG', null),
+        ];
+
+        $file = $this->service->adif($this->operator, $this->activityId, $this->operator->id, null, '/d');
+
+        self::assertSame('DPS-05_LU2AOG-D_20261004.adi', $file['name']);
+        self::assertSame(1, substr_count($file['content'], '<STATION_CALLSIGN:8>LU2AOG/D '));
+        self::assertSame(1, substr_count($file['content'], '<STATION_CALLSIGN:8>LU2AOG/A '));
+        self::assertSame(2, substr_count($file['content'], '<OPERATOR:6>LU2AOG '));
+        $this->assertStatus(422, fn () => $this->service->adif($this->operator, $this->activityId, $this->operator->id, null, 'D-1'));
+    }
+
     /**
      * @param array<string, mixed> $values
      * @return array<string, mixed>

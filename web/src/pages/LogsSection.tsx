@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { listAccounts } from '../accounts.ts'
 import type { Account } from '../accounts.ts'
 import { formatUtc } from '../audit.ts'
-import { adifUrl } from '../live.ts'
+import { AdifLinks } from './AdifLinks.tsx'
 import {
   deleteLog,
   invalidRecordText,
@@ -25,7 +25,17 @@ type ListState = { kind: 'loading' } | { kind: 'ready'; logs: Log[] } | { kind: 
 /**
  * The logs of an activity, for the signed-in users (FR-LOG-19 to FR-LOG-24).
  */
-export function LogsSection({ activityId, user, onChange }: { activityId: number; user: User; onChange: () => void }) {
+export function LogsSection({
+  activityId,
+  series,
+  user,
+  onChange,
+}: {
+  activityId: number
+  series: string
+  user: User
+  onChange: () => void
+}) {
   const [list, setList] = useState<ListState>({ kind: 'loading' })
   const [uploading, setUploading] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -141,7 +151,7 @@ export function LogsSection({ activityId, user, onChange }: { activityId: number
           </table>
         </div>
       )}
-      {list.kind === 'ready' && <AdifLinks activityId={activityId} logs={list.logs} />}
+      {list.kind === 'ready' && <OperatorAdifLinks activityId={activityId} series={series} logs={list.logs} />}
     </section>
   )
 }
@@ -150,18 +160,13 @@ export function LogsSection({ activityId, user, onChange }: { activityId: number
  * The ADIF file of each operator, for QRZ.com and LdA: all contacts of the operator in the activity, of the live
  * log and of the uploaded logs (FR-LIVE-13). For the operator and the administrators.
  */
-function AdifLinks({ activityId, logs }: { activityId: number; logs: Log[] }) {
+function OperatorAdifLinks({ activityId, series, logs }: { activityId: number; series: string; logs: Log[] }) {
   const operators = new Map(logs.filter((log) => log.canManage).map((log) => [log.operator.id, log.operator.callSign]))
   if (operators.size === 0) return null
   return (
-    <p className="actions">
+    <AdifLinks activityId={activityId} series={series} operators={[...operators].map(([id, label]) => ({ id, label }))}>
       <span>ADIF para QRZ y LdA:</span>
-      {[...operators].map(([id, callSign]) => (
-        <a key={id} className="chip" href={adifUrl(activityId, id)}>
-          {callSign}
-        </a>
-      ))}
-    </p>
+    </AdifLinks>
   )
 }
 

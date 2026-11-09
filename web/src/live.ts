@@ -125,9 +125,21 @@ export function readLookup(activityId: number): Promise<Lookup> {
   return apiGet<Lookup>(`/activities/${activityId}/live/lookup`)
 }
 
-/** The ADIF file of all contacts of an operator in an activity, for QRZ.com and LdA (FR-LIVE-13). */
-export function adifUrl(activityId: number, operatorId: number): string {
-  return apiUrl(`/activities/${activityId}/adif`, { operatorId: String(operatorId) })
+/**
+ * The ADIF file of all contacts of an operator in an activity, for QRZ.com and LdA (FR-LIVE-13).
+ *
+ * @param suffix The suffix of the station in the file, such as D, for an EFE activity away from home.
+ */
+export function adifUrl(activityId: number, operatorId: number, suffix = ''): string {
+  return apiUrl(`/activities/${activityId}/adif`, { operatorId: String(operatorId), ...(suffix ? { suffix } : {}) })
+}
+
+/** The suffix that a user writes: uppercase, only letters and digits, 4 characters at most. */
+export function normalizeSuffix(text: string): string {
+  return text
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 4)
 }
 
 /** The modes of the program: only voice. */

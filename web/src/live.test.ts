@@ -1,6 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import { bandOf, callInfo, clockOffset, clockWarning, isCompleteCallSign, normalizeFrequency, problemsText } from './live.ts'
+import {
+  adifUrl,
+  bandOf,
+  callInfo,
+  clockOffset,
+  clockWarning,
+  isCompleteCallSign,
+  normalizeFrequency,
+  normalizeSuffix,
+  problemsText,
+} from './live.ts'
 import type { Lookup } from './live.ts'
+
+describe('the suffix of the ADIF file', () => {
+  it('keeps only uppercase letters and digits, 4 at most', () => {
+    expect(normalizeSuffix('/d')).toBe('D')
+    expect(normalizeSuffix(' qrp12 ')).toBe('QRP1')
+  })
+
+  it('goes in the address only when there is one', () => {
+    expect(adifUrl(7, 4)).not.toContain('suffix')
+    expect(adifUrl(7, 4, 'J')).toContain('suffix=J')
+  })
+})
 
 describe('normalizeFrequency', () => {
   it('gives three decimals or more', () => {

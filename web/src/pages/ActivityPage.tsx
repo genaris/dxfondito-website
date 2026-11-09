@@ -90,7 +90,7 @@ export function ActivityPage({ id }: { id: number }) {
           </a>
         </p>
       )}
-      {user && <LogsSection activityId={activity.id} user={user} onChange={load} />}
+      {user && <LogsSection activityId={activity.id} series={activity.reference.series} user={user} onChange={load} />}
       {user && <QslTemplatesSection activityId={activity.id} user={user} />}
       <section>
         <h3>Contactos</h3>
